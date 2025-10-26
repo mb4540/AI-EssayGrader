@@ -12,7 +12,9 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "postinstall": "mkdir -p public/assets && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/assets/"
+    "postinstall": "mkdir -p public/assets && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/assets/",
+    "migrate:auth": "node scripts/run-auth-migration.js",
+    "check:user": "node scripts/check-test-user.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.2",
@@ -29,6 +31,7 @@
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
+    "dotenv": "^16.4.7",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.294.0",
     "mammoth": "^1.6.0",
