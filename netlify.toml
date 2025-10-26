@@ -5,7 +5,7 @@
   functions = "netlify/functions"
 
 [build.environment]
-  NODE_VERSION = "18"
+  NODE_VERSION = "20"
   # DATABASE_URL must be set in Netlify Dashboard → Site settings → Environment variables
   # OPENAI_API_KEY must be set in Netlify Dashboard → Site settings → Environment variables
 
