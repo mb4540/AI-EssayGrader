@@ -23,8 +23,8 @@ export const FeedbackSchema = z.object({
 export type Feedback = z.infer<typeof FeedbackSchema>;
 
 export const IngestRequestSchema = z.object({
-  student_name: z.string().min(1),
-  student_id: z.string().optional(),
+  // PRIVACY: student_name removed - use bridge to resolve UUID locally
+  student_id: z.string().uuid(), // Now required - must be UUID from bridge
   assignment_id: z.string().uuid().optional(),
   assignment_title: z.string().optional(),
   teacher_criteria: z.string().min(1),

@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Dashboard from './pages/Dashboard'
 import Submission from './pages/Submission'
 import Help from './pages/Help'
+import BridgeManager from './components/bridge/BridgeManager'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,6 +21,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/submission/:id?" element={<Submission />} />
+          <Route path="/bridge" element={<BridgeManager />} />
           <Route path="/help" element={<Help />} />
         </Routes>
       </BrowserRouter>
