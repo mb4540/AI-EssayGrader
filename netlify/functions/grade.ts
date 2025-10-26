@@ -2,6 +2,7 @@ import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { OpenAI } from 'openai';
 import { sql } from './db';
 import { FeedbackSchema, GradeRequestSchema } from '../../src/lib/schema';
+import { authenticateRequest } from './lib/auth';
 
 const SYSTEM_MESSAGE = `You are an encouraging 6th-grade ELA grader. Grade fairly to the teacher's criteria. Preserve the student's original words; do not rewrite their essay. Provide concise, supportive feedback that points to specific issues (grammar, spelling, capitalization, sentence structure, organization, evidence, clarity). Never include personal data about the student.`;
 
@@ -82,14 +83,35 @@ RETURN JSON ONLY matching this schema:
 }
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   try {
+    // Authenticate request
+    const auth = await authenticateRequest(event.headers.authorization);
+    const { tenant_id } = auth;
+
     const body = JSON.parse(event.body || '{}');
     
     // Extract custom prompts if provided
@@ -109,18 +131,21 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     const { submission_id } = validation.data;
 
-    // Fetch submission
+    // Fetch submission (filtered by tenant via student_ref)
     const submission = await sql`
-      SELECT id, verbatim_text, rough_draft_text, final_draft_text, draft_mode, teacher_criteria
-      FROM grader.submissions 
-      WHERE id = ${submission_id}
+      SELECT s.id, s.verbatim_text, s.rough_draft_text, s.final_draft_text, s.draft_mode, s.teacher_criteria
+      FROM grader.submissions s
+      JOIN grader.students st ON s.student_ref = st.id
+      WHERE s.id = ${submission_id}
+      AND st.tenant_id = ${tenant_id}
       LIMIT 1
     `;
 
     if (submission.length === 0) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: 'Submission not found' }),
+        headers,
+        body: JSON.stringify({ error: 'Submission not found or access denied' }),
       };
     }
 
@@ -130,6 +155,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     if (!process.env.OPENAI_API_KEY) {
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({ error: 'OpenAI API key not configured' }),
       };
     }
@@ -157,6 +183,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     if (!content) {
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({ error: 'No response from OpenAI' }),
       };
     }
@@ -169,6 +196,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       console.error('AI response validation failed:', feedbackValidation.error);
       return {
         statusCode: 500,
+        headers,
         body: JSON.stringify({ 
           error: 'Invalid AI response format',
           details: feedbackValidation.error.format()
@@ -210,14 +238,29 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     return {
       statusCode: 200,
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(feedback),
     };
   } catch (error) {
     console.error('Grade error:', error);
+    
+    // Handle authentication errors
+    if (error instanceof Error) {
+      if (error.message.includes('Authentication required') || 
+          error.message.includes('Invalid or expired token')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authentication required' }),
+        };
+      }
+    }
+    
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ 
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'

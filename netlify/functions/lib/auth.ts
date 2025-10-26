@@ -445,3 +445,62 @@ export async function getCurrentUser(user_id: string): Promise<User | null> {
 
   return users[0] as User;
 }
+
+// ============================================================================
+// Authentication Middleware
+// ============================================================================
+
+export interface AuthenticatedRequest {
+  user: User;
+  tenant_id: string;
+}
+
+/**
+ * Authenticate request and extract user information
+ * Returns user data if authenticated, throws error if not
+ */
+export async function authenticateRequest(
+  authHeader: string | undefined
+): Promise<AuthenticatedRequest> {
+  // Extract token
+  const token = extractTokenFromHeader(authHeader);
+  if (!token) {
+    throw new Error('Authentication required');
+  }
+
+  // Verify token
+  const payload = verifyToken(token);
+  if (!payload) {
+    throw new Error('Invalid or expired token');
+  }
+
+  // Get current user
+  const user = await getCurrentUser(payload.user_id);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Check if user is active
+  if (!user.is_active) {
+    throw new Error('Account is inactive');
+  }
+
+  return {
+    user,
+    tenant_id: user.tenant_id,
+  };
+}
+
+/**
+ * Optional authentication - returns user if authenticated, null if not
+ * Does not throw errors for missing/invalid tokens
+ */
+export async function optionalAuthentication(
+  authHeader: string | undefined
+): Promise<AuthenticatedRequest | null> {
+  try {
+    return await authenticateRequest(authHeader);
+  } catch {
+    return null;
+  }
+}

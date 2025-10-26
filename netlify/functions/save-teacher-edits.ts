@@ -1,16 +1,38 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { sql } from './db';
 import { SaveEditsRequestSchema } from '../../src/lib/schema';
+import { authenticateRequest } from './lib/auth';
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   try {
+    // Authenticate request
+    const auth = await authenticateRequest(event.headers.authorization);
+    const { tenant_id } = auth;
+
     const body = JSON.parse(event.body || '{}');
     
     // Validate request
@@ -27,18 +49,21 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     const { submission_id, teacher_grade, teacher_feedback } = validation.data;
 
-    // Check if submission exists
+    // Check if submission exists and belongs to tenant
     const existing = await sql`
-      SELECT id, ai_grade, ai_feedback 
-      FROM grader.submissions 
-      WHERE id = ${submission_id}
+      SELECT s.id, s.ai_grade, s.ai_feedback 
+      FROM grader.submissions s
+      JOIN grader.students st ON s.student_ref = st.id
+      WHERE s.id = ${submission_id}
+      AND st.tenant_id = ${tenant_id}
       LIMIT 1
     `;
 
     if (existing.length === 0) {
       return {
         statusCode: 404,
-        body: JSON.stringify({ error: 'Submission not found' }),
+        headers,
+        body: JSON.stringify({ error: 'Submission not found or access denied' }),
       };
     }
 
@@ -73,6 +98,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     return {
       statusCode: 200,
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -82,8 +108,22 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     };
   } catch (error) {
     console.error('Save edits error:', error);
+    
+    // Handle authentication errors
+    if (error instanceof Error) {
+      if (error.message.includes('Authentication required') || 
+          error.message.includes('Invalid or expired token')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authentication required' }),
+        };
+      }
+    }
+    
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ 
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'

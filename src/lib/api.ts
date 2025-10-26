@@ -3,50 +3,83 @@ import { getCustomPrompts } from './prompts';
 
 const API_BASE = '/.netlify/functions';
 
+// ============================================================================
+// Authentication Helper
+// ============================================================================
+
+/**
+ * Get authentication headers with JWT token
+ */
+function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('auth_token');
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
+  return headers;
+}
+
+/**
+ * Handle API response and check for authentication errors
+ */
+async function handleResponse<T>(response: Response): Promise<T> {
+  // Handle 401 Unauthorized - token expired or invalid
+  if (response.status === 401) {
+    // Clear auth data
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    
+    // Redirect to login
+    window.location.href = '/login';
+    
+    throw new Error('Authentication required. Redirecting to login...');
+  }
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || `Request failed with status ${response.status}`);
+  }
+  
+  return response.json() as Promise<T>;
+}
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
 export async function ingestSubmission(data: IngestRequest) {
   const response = await fetch(`${API_BASE}/ingest`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Ingest failed: ${error}`);
-  }
-
-  return response.json() as Promise<{ submission_id: string }>;
+  return handleResponse<{ submission_id: string }>(response);
 }
 
 export async function gradeSubmission(data: GradeRequest) {
   const customPrompts = getCustomPrompts();
   const response = await fetch(`${API_BASE}/grade`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ ...data, ...customPrompts }),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Grading failed: ${error}`);
-  }
-
-  return response.json() as Promise<Feedback>;
+  return handleResponse<Feedback>(response);
 }
 
 export async function saveTeacherEdits(data: SaveEditsRequest) {
   const response = await fetch(`${API_BASE}/save-teacher-edits`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Save failed: ${error}`);
-  }
-
-  return response.json();
+  return handleResponse(response);
 }
 
 export async function listSubmissions(params: ListRequest) {
@@ -57,14 +90,11 @@ export async function listSubmissions(params: ListRequest) {
   queryParams.set('page', params.page?.toString() || '1');
   queryParams.set('limit', params.limit?.toString() || '20');
 
-  const response = await fetch(`${API_BASE}/list?${queryParams}`);
+  const response = await fetch(`${API_BASE}/list?${queryParams}`, {
+    headers: getAuthHeaders(),
+  });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`List failed: ${error}`);
-  }
-
-  return response.json() as Promise<{
+  return handleResponse<{
     submissions: Array<{
       id: string;
       student_name: string;
@@ -75,19 +105,21 @@ export async function listSubmissions(params: ListRequest) {
       created_at: string;
       updated_at: string;
     }>;
-    total: number;
-  }>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
+  }>(response);
 }
 
 export async function getSubmission(id: string) {
-  const response = await fetch(`${API_BASE}/get-submission?id=${id}`);
+  const response = await fetch(`${API_BASE}/get-submission?id=${id}`, {
+    headers: getAuthHeaders(),
+  });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Get submission failed: ${error}`);
-  }
-
-  return response.json() as Promise<{
+  return handleResponse<{
     id: string;
     student_name: string;
     student_id?: string;
@@ -106,18 +138,15 @@ export async function getSubmission(id: string) {
     image_url?: string;
     created_at: string;
     updated_at: string;
-  }>;
+  }>(response);
 }
 
 export async function listAssignments() {
-  const response = await fetch(`${API_BASE}/assignments`);
+  const response = await fetch(`${API_BASE}/assignments`, {
+    headers: getAuthHeaders(),
+  });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`List assignments failed: ${error}`);
-  }
-
-  return response.json() as Promise<{
+  return handleResponse<{
     assignments: Array<{
       id: string;
       title: string;
@@ -125,22 +154,17 @@ export async function listAssignments() {
       grading_criteria?: string;
       created_at: string;
     }>;
-  }>;
+  }>(response);
 }
 
 export async function createAssignment(data: { title: string; description?: string; grading_criteria?: string }) {
   const response = await fetch(`${API_BASE}/assignments`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Create assignment failed: ${error}`);
-  }
-
-  return response.json() as Promise<{
+  return handleResponse<{
     assignment: {
       id: string;
       title: string;
@@ -148,22 +172,17 @@ export async function createAssignment(data: { title: string; description?: stri
       grading_criteria?: string;
       created_at: string;
     };
-  }>;
+  }>(response);
 }
 
 export async function deleteSubmission(submissionId: string) {
   const response = await fetch(`${API_BASE}/delete-submission`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ submission_id: submissionId }),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Delete submission failed: ${error}`);
-  }
-
-  return response.json();
+  return handleResponse(response);
 }
 
 export async function uploadFile(
@@ -173,7 +192,7 @@ export async function uploadFile(
 ): Promise<string> {
   const response = await fetch(`${API_BASE}/upload-file`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({
       file_data: fileData,
       submission_id: submissionId,
@@ -181,12 +200,7 @@ export async function uploadFile(
     }),
   });
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'File upload failed');
-  }
-
-  const data = await response.json();
+  const data = await handleResponse<{ file_url: string }>(response);
   return data.file_url;
 }
 
@@ -221,15 +235,13 @@ export async function getAnnotations(
   pageNumber: number
 ): Promise<AnnotationPageData> {
   const response = await fetch(
-    `${API_BASE}/annotations-get?submission_id=${submissionId}&page_number=${pageNumber}`
+    `${API_BASE}/annotations-get?submission_id=${submissionId}&page_number=${pageNumber}`,
+    {
+      headers: getAuthHeaders(),
+    }
   );
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Get annotations failed: ${error}`);
-  }
-
-  return response.json();
+  return handleResponse<AnnotationPageData>(response);
 }
 
 /**
@@ -249,16 +261,11 @@ export async function upsertAnnotations(data: {
 }) {
   const response = await fetch(`${API_BASE}/annotations-upsert`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify(data),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Upsert annotations failed: ${error}`);
-  }
-
-  return response.json();
+  return handleResponse(response);
 }
 
 /**
@@ -270,16 +277,11 @@ export async function exportAnnotatedPdf(
 ): Promise<{ download_url: string; file_size: number; pages_annotated: number }> {
   const response = await fetch(`${API_BASE}/annotations-export-pdf`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ submission_id: submissionId, pages }),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Export PDF failed: ${error}`);
-  }
-
-  return response.json();
+  return handleResponse<{ download_url: string; file_size: number; pages_annotated: number }>(response);
 }
 
 /**
@@ -290,14 +292,9 @@ export async function convertDocxToPdf(
 ): Promise<{ pdf_url: string; page_count: number }> {
   const response = await fetch(`${API_BASE}/convert-docx-to-pdf`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders(),
     body: JSON.stringify({ submission_id: submissionId }),
   });
 
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`DOCX conversion failed: ${error}`);
-  }
-
-  return response.json();
+  return handleResponse<{ pdf_url: string; page_count: number }>(response);
 }

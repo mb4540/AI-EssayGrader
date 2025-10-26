@@ -1,16 +1,38 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { sql } from './db';
 import { ListRequestSchema } from '../../src/lib/schema';
+import { authenticateRequest } from './lib/auth';
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  // CORS headers
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  };
+
+  // Handle preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
+      headers,
+      body: '',
+    };
+  }
+
   if (event.httpMethod !== 'GET') {
     return {
       statusCode: 405,
+      headers,
       body: JSON.stringify({ error: 'Method not allowed' }),
     };
   }
 
   try {
+    // Authenticate request
+    const auth = await authenticateRequest(event.headers.authorization);
+    const { tenant_id } = auth;
+
     // Parse query parameters
     const params = event.queryStringParameters || {};
     
@@ -40,10 +62,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     let submissions;
 
     if (!assignment_id && !student_id && !search) {
-      // No filters - simple query
+      // No filters - simple query (filtered by tenant)
       countResult = await sql`
         SELECT COUNT(*) as total
         FROM grader.submissions s
+        JOIN grader.students st ON s.student_ref = st.id
+        WHERE st.tenant_id = ${tenant_id}
       `;
 
       submissions = await sql`
@@ -64,6 +88,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         FROM grader.submissions s
         JOIN grader.students st ON s.student_ref = st.id
         LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+        WHERE st.tenant_id = ${tenant_id}
         ORDER BY s.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -76,7 +101,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           SELECT COUNT(*) as total
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
-          WHERE s.assignment_ref = ${assignment_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
             AND st.student_id = ${student_id}
             AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
         `;
@@ -101,7 +127,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           SELECT COUNT(*) as total
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
-          WHERE s.assignment_ref = ${assignment_id} AND st.student_id = ${student_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
+            AND st.student_id = ${student_id}
         `;
         submissions = await sql`
           SELECT 
@@ -113,7 +141,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
           LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE s.assignment_ref = ${assignment_id} AND st.student_id = ${student_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
+            AND st.student_id = ${student_id}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -122,7 +152,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           SELECT COUNT(*) as total
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
-          WHERE s.assignment_ref = ${assignment_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
             AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
         `;
         submissions = await sql`
@@ -135,7 +166,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
           LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE s.assignment_ref = ${assignment_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
             AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
@@ -145,7 +177,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           SELECT COUNT(*) as total
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
-          WHERE st.student_id = ${student_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND st.student_id = ${student_id}
             AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
         `;
         submissions = await sql`
@@ -158,7 +191,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
           LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE st.student_id = ${student_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND st.student_id = ${student_id}
             AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
@@ -167,7 +201,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          WHERE s.assignment_ref = ${assignment_id}
+          JOIN grader.students st ON s.student_ref = st.id
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
         `;
         submissions = await sql`
           SELECT 
@@ -179,7 +215,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
           LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE s.assignment_ref = ${assignment_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND s.assignment_ref = ${assignment_id}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -188,7 +225,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           SELECT COUNT(*) as total
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
-          WHERE st.student_id = ${student_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND st.student_id = ${student_id}
         `;
         submissions = await sql`
           SELECT 
@@ -200,7 +238,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
           LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE st.student_id = ${student_id}
+          WHERE st.tenant_id = ${tenant_id}
+            AND st.student_id = ${student_id}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -209,7 +248,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           SELECT COUNT(*) as total
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
-          WHERE st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern}
+          WHERE st.tenant_id = ${tenant_id}
+            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
         `;
         submissions = await sql`
           SELECT 
@@ -221,7 +261,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           FROM grader.submissions s
           JOIN grader.students st ON s.student_ref = st.id
           LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern}
+          WHERE st.tenant_id = ${tenant_id}
+            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -233,6 +274,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     return {
       statusCode: 200,
       headers: {
+        ...headers,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -247,8 +289,22 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     };
   } catch (error) {
     console.error('List error:', error);
+    
+    // Handle authentication errors
+    if (error instanceof Error) {
+      if (error.message.includes('Authentication required') || 
+          error.message.includes('Invalid or expired token')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authentication required' }),
+        };
+      }
+    }
+    
     return {
       statusCode: 500,
+      headers,
       body: JSON.stringify({ 
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
