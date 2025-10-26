@@ -5,7 +5,6 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import BridgeManager from './BridgeManager';
-import { BridgeEntry } from '../../bridge/bridgeTypes';
 
 // Mock the useBridge hook
 vi.mock('../../hooks/useBridge', () => ({
@@ -15,7 +14,7 @@ vi.mock('../../hooks/useBridge', () => ({
 import { useBridge } from '../../hooks/useBridge';
 
 describe('BridgeManager - Integration Tests', () => {
-  const mockBridge = {
+  const mockBridge: any = {
     isLocked: true,
     students: [],
     hasFileHandle: false,
