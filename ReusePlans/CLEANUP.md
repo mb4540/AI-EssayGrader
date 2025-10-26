@@ -1,6 +1,18 @@
 CLEANUP.md — Safe Cleanup, Refactor, Test, and Rollback Plan
 
-Goal: Tidy the codebase without breaking shipping software. All removals are soft-deleted (renamed/moved) so they can be restored. Any file slated for refactor is backed up first. Root planning .md files for Cascade are moved to OldPlans/. Everything is validated by tests with a quick rollback path.
+**⚠️ THIS IS A REFERENCE TEMPLATE - DO NOT MODIFY FOR SPECIFIC EXECUTIONS**
+
+For specific cleanup tasks, create a new file like `CLEANUP_EXECUTION_YYYY-MM-DD.md` based on this template.
+
+---
+
+Goal: Tidy the codebase without breaking shipping software. All removals are soft-deleted (renamed/moved) so they can be restored. Any file slated for refactor is backed up first. Root planning .md files are moved to OldPlans/ (excluded from Git). Everything is validated by tests with a quick rollback path.
+
+**Key Principles:**
+- **OldPlans/**: Historical documentation, NOT tracked in Git (in .gitignore)
+- **Starting Fresh**: Delete obsolete files permanently, don't archive
+- **Ongoing Work**: Move completed work to OldPlans/ for reference
+- **Safety First**: Always create Git checkpoint before cleanup
 
 ---
 
