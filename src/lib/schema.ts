@@ -23,8 +23,10 @@ export const FeedbackSchema = z.object({
 export type Feedback = z.infer<typeof FeedbackSchema>;
 
 export const IngestRequestSchema = z.object({
-  // PRIVACY: student_name removed - use bridge to resolve UUID locally
-  student_id: z.string().uuid(), // Now required - must be UUID from bridge
+  // TRANSITION: Both student_name and student_id supported during migration
+  // After migration: student_name will be removed, student_id will be required
+  student_name: z.string().min(1).optional(), // Deprecated - will be removed
+  student_id: z.string().uuid().optional(), // Will become required after migration
   assignment_id: z.string().uuid().optional(),
   assignment_title: z.string().optional(),
   teacher_criteria: z.string().min(1),
