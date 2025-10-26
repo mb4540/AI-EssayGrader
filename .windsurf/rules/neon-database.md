@@ -1,3 +1,7 @@
+---
+trigger: model_decision
+---
+
 # Neon Database Connection Rules
 
 ## Overview

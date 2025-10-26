@@ -1,3 +1,7 @@
+---
+trigger: model_decision
+---
+
 # API Design Rules - Netlify Functions
 
 ## Overview

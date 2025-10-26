@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Security Best Practices
 
 ## Overview

@@ -1,3 +1,7 @@
+---
+trigger: model_decision
+---
+
 # Frontend Components Rules - React Patterns
 
 ## Overview

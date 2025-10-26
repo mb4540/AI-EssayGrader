@@ -1,3 +1,7 @@
+---
+trigger: always_on
+---
+
 # Database Design Rules
 
 ## Overview
