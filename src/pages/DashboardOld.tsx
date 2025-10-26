@@ -397,10 +397,10 @@ export default function Dashboard() {
                 </div>
 
                 {/* Pagination */}
-                {data.total > pageSize && (
+                {data.pagination && data.pagination.total > pageSize && (
                   <div className="flex items-center justify-between mt-4">
                     <div className="text-sm text-muted-foreground">
-                      Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, data.total)} of {data.total} submissions
+                      Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, data.pagination.total)} of {data.pagination.total} submissions
                     </div>
                     <div className="flex gap-2">
                       <Button
@@ -415,7 +415,7 @@ export default function Dashboard() {
                         variant="outline"
                         size="sm"
                         onClick={() => setPage(p => p + 1)}
-                        disabled={(page + 1) * pageSize >= data.total}
+                        disabled={(page + 1) * pageSize >= data.pagination.total}
                       >
                         Next
                       </Button>
