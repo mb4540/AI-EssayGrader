@@ -31,14 +31,17 @@ Penalties:
 
 async function enhanceRubricWithAI(simpleRules: string, totalPoints?: number): Promise<string> {
   const customRubricPrompt = localStorage.getItem('ai_rubric_prompt');
+  const requestBody = { 
+    simple_rules: simpleRules,
+    rubric_prompt: customRubricPrompt || undefined,
+    total_points: totalPoints
+  };
+  console.log('📤 Sending to enhance-rubric:', requestBody);
+  
   const response = await fetch('/.netlify/functions/enhance-rubric', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      simple_rules: simpleRules,
-      rubric_prompt: customRubricPrompt || undefined,
-      total_points: totalPoints
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
@@ -68,9 +71,11 @@ export default function CriteriaInput({
       return;
     }
 
+    console.log('🎯 Enhance With AI clicked - Total Points:', totalPoints);
     setIsEnhancing(true);
     try {
       const enhanced = await enhanceRubricWithAI(value, totalPoints);
+      console.log('✅ Enhanced rubric received:', enhanced.substring(0, 100) + '...');
       onChange(enhanced);
     } catch (error) {
       console.error('Enhancement failed:', error);
