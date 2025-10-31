@@ -85,7 +85,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         a.total_points,
         a.rounding_mode,
         a.rounding_decimals
-      FROM grader.submissions s
+        a.document_type,      FROM grader.submissions s
       LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
       JOIN grader.students st ON s.student_id = st.student_id
       WHERE s.submission_id = ${submission_id}
@@ -207,7 +207,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           submission_id,
           customGradingPrompt  // ✅ Pass custom prompt
         );
-
+          submissionData.document_type  // ✅ Pass document type
     const response = await openai.chat.completions.create({
       model,
       response_format: { type: 'json_object' },

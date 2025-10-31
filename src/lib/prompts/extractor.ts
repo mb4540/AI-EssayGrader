@@ -8,6 +8,7 @@
  */
 
 import type { RubricJSON } from '../calculator/types';
+import { getDocumentType } from '../documentTypes';
 
 export const EXTRACTOR_SYSTEM_MESSAGE = `You are a rubric scorer. Your job is to evaluate student work against specific criteria and choose appropriate performance levels.
 
@@ -28,7 +29,8 @@ export function buildExtractorPrompt(
   rubric: RubricJSON,
   essayText: string,
   submissionId: string,
-  customGradingPrompt?: string
+  customGradingPrompt?: string,
+  documentType?: string
 ): string {
   // Build criterion descriptions for the prompt
   const criteriaDescriptions = rubric.criteria
@@ -45,6 +47,12 @@ ${levelsDesc}`;
     .join('\n\n');
 
   // Use custom grading prompt or default
+
+  // Get document type specific guidance
+  const docType = documentType ? getDocumentType(documentType) : null;
+  const documentTypeGuidance = docType?.gradingFocus 
+    ? `\nDOCUMENT TYPE: ${docType.label}\nGRADING FOCUS: ${docType.gradingFocus}\n`
+    : "";
   const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
   
   // Check if grammar/spelling/punctuation are in rubric
@@ -59,6 +67,7 @@ ${levelsDesc}`;
   return `${gradingPhilosophy}
 
 RUBRIC: "${rubric.title}"
+${documentTypeGuidance}
 
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
