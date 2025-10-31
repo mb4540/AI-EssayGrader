@@ -35,7 +35,11 @@ export function parseTeacherRubric(
   }
   
   // Build criteria with levels
-  const criteria = categories.map(cat => buildCriterion(cat, lines));
+  const criteria = categories.map((cat, idx) => {
+    // Pass the next category's line number to limit level extraction
+    const nextCategoryLine = idx < categories.length - 1 ? categories[idx + 1].startLine : undefined;
+    return buildCriterion(cat, lines, nextCategoryLine);
+  });
   
   // Determine scale mode
   const scaleMode = detectScaleMode(lines, finalTotal);
@@ -154,11 +158,11 @@ function extractCategories(lines: string[], _totalPoints: number): Category[] {
 /**
  * Build criterion with levels
  */
-function buildCriterion(category: Category, allLines: string[]) {
+function buildCriterion(category: Category, allLines: string[], nextCategoryLine?: number) {
   const { name, id, points, startLine } = category;
   
-  // Extract level descriptions after this category
-  const levels = extractLevels(allLines, startLine, points);
+  // Extract level descriptions after this category (up to next category)
+  const levels = extractLevels(allLines, startLine, points, nextCategoryLine);
   
   // If no levels found, generate default levels
   const finalLevels = levels.length > 0 ? levels : generateDefaultLevels(points);
@@ -181,15 +185,20 @@ interface Level {
   descriptor: string;
 }
 
-function extractLevels(lines: string[], startLine: number, _maxPoints: number): Level[] {
+function extractLevels(lines: string[], startLine: number, _maxPoints: number, nextCategoryLine?: number): Level[] {
   const levels: Level[] = [];
   
-  // Look at next 10 lines for level descriptions
-  for (let i = startLine + 1; i < Math.min(startLine + 11, lines.length); i++) {
+  // Determine where to stop looking (next category or 10 lines, whichever comes first)
+  const endLine = nextCategoryLine !== undefined 
+    ? Math.min(nextCategoryLine, startLine + 11)
+    : Math.min(startLine + 11, lines.length);
+  
+  // Look for level descriptions between this category and the next
+  for (let i = startLine + 1; i < endLine; i++) {
     const line = lines[i];
     
-    // Stop if we hit another category
-    if (/\*\*.*\(\d+\s*(?:pts?|points?)\)\*\*/.test(line)) {
+    // Stop if we hit another category (double-check)
+    if (/[-*]*\s*\*\*.*\(\d+\s*(?:pts?|points?)\)\*\*/.test(line)) {
       break;
     }
     
