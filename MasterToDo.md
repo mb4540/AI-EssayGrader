@@ -342,8 +342,10 @@ ADD CONSTRAINT valid_document_type CHECK (
 
 ---
 
-### 4. Update Essay Grading Prompt - Professional Tone ⭐⭐ HIGH PRIORITY
+### 4. Update Essay Grading Prompt - Professional Tone ⭐⭐ ⚠️ NEEDS UPDATE
 **Goal:** Change grading tone from "encouraging" to "constructive and professional"
+
+**Status:** ⚠️ **PARTIALLY COMPLETE** - Extractor prompt is professional, but SettingsModal default needs update
 
 **Background:** Beta tester feedback: "Constructive Criticism does not need to be rainbows butterflies and unicorns." Teachers want direct, honest feedback that follows the rubric strictly.
 
@@ -381,12 +383,17 @@ Never include personal data about the student.
 - ✅ "concrete examples from the text" (specific feedback)
 - ✅ Maintains respect and professionalism
 
-**Tasks:**
-- [ ] Update `DEFAULT_GRADING_PROMPT` in `src/components/SettingsModal.tsx`
-- [ ] Add migration note for existing users (prompt stored in localStorage)
-- [ ] Update any documentation referencing the prompt
+**What's Done:**
+- [x] Extractor prompt (`src/lib/prompts/extractor.ts`) uses professional tone
+  - "You are a rubric scorer" (neutral, professional)
+  - Focus on evidence-based evaluation
+  - No "encouraging" or "supportive" language
+
+**What Needs Update:**
+- [ ] Update `DEFAULT_GRADING_PROMPT` in `src/components/SettingsModal.tsx` (line 14)
+- [ ] Change from "encouraging 6th-grade ELA grader" to professional tone
 - [ ] Test with sample essays to verify tone is appropriate
-- [ ] Consider adding "Reset to Default" reminder for existing users
+- [ ] Consider adding "Reset to Default" reminder for existing users with old prompt
 
 **Additional Considerations:**
 - [ ] Add prompt preset options? (Encouraging, Professional, Strict)
