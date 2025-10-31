@@ -199,8 +199,10 @@ ADD COLUMN calculator_version text;
 
 ---
 
-### 3. Expand Assignment Types & Subject Areas ⭐⭐⭐ CRITICAL
+### 3. Expand Assignment Types & Subject Areas ⭐⭐⭐ ✅ COMPLETE (ELA Only)
 **Goal:** Support comprehensive document types across all subject areas (not just essays)
+
+**Status:** ✅ **COMPLETE** - Simplified implementation for ELA only
 
 **Background:** Teachers need to grade various writing types beyond essays, specific to their subject area (ELA, History, Science, Math, CTE, Arts, Health/PE).
 
@@ -290,16 +292,37 @@ We'll use a programmatic JSON structure to define:
 }
 ```
 
-**Tasks:**
-- [ ] Create `src/lib/documentTypes.json` with full structure above
-- [ ] Create `src/lib/documentTypes.ts` TypeScript module to load/parse JSON
-- [ ] Add subject area dropdown to Assignment modal (first selection)
-- [ ] Add document type dropdown (filtered by selected subject)
-- [ ] Store both `subject_area` and `document_type` in assignments table
-- [ ] Update AI grading prompt to adjust based on document type
-- [ ] Create document-type-specific rubric templates
-- [ ] Handle aliases (e.g., "persuasive" → "argumentative")
-- [ ] Add tooltips/help text for less common document types
+**Simplified Implementation (ELA Only):**
+- [x] Created `src/lib/documentTypes.ts` with 13 ELA document types
+- [x] Added document type dropdown to Create Assignment modal
+- [x] Stored `document_type` in assignments table
+- [x] Added database migration (`migrations/add_document_type.sql`)
+- [x] Updated db_ref.md with new column and index
+
+**ELA Document Types Implemented:**
+1. Personal Narrative
+2. Argumentative Essay
+3. Informational/Explanatory
+4. Literary Analysis
+5. Compare & Contrast
+6. Research Paper
+7. Book Review/Report
+8. Descriptive Essay
+9. Creative Writing/Short Story
+10. Poetry
+11. Reflection
+12. Summary
+13. Other
+
+**Not Implemented (Future Enhancement):**
+- [ ] Multi-subject support (History, Science, Math, CTE, Arts, Health/PE)
+- [ ] Subject area dropdown
+- [ ] Filtered document type lists by subject
+- [ ] Document-type-specific rubric templates
+- [ ] Aliases handling
+- [ ] AI prompt adjustment based on document type
+
+**Completed:** October 31, 2025
 
 **UI Flow:**
 ```
