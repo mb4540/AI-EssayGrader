@@ -1,42 +1,132 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import OpenAI from 'openai';
+import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Structured output schema for rubric
+const RUBRIC_SCHEMA = {
+  type: 'object',
+  properties: {
+    total_points: {
+      type: 'number',
+      description: 'Total points for the entire rubric'
+    },
+    categories: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          name: {
+            type: 'string',
+            description: 'Category name (e.g., "Focus and Theme")'
+          },
+          points: {
+            type: 'number',
+            description: 'Maximum points for this category'
+          },
+          levels: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                label: {
+                  type: 'string',
+                  description: 'Level label (e.g., "Exemplary", "Proficient")'
+                },
+                points: {
+                  type: 'number',
+                  description: 'Points awarded for achieving this level'
+                },
+                description: {
+                  type: 'string',
+                  description: 'What the student must demonstrate for this level'
+                }
+              },
+              required: ['label', 'points', 'description'],
+              additionalProperties: false
+            }
+          }
+        },
+        required: ['name', 'points', 'levels'],
+        additionalProperties: false
+      }
+    },
+    penalties: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          reason: {
+            type: 'string',
+            description: 'Reason for penalty (e.g., "Late submission")'
+          },
+          deduction: {
+            type: 'number',
+            description: 'Points deducted'
+          }
+        },
+        required: ['reason', 'deduction'],
+        additionalProperties: false
+      }
+    }
+  },
+  required: ['total_points', 'categories'],
+  additionalProperties: false
+} as const;
+
+/**
+ * Convert structured rubric JSON to markdown format for display
+ */
+function convertRubricToMarkdown(rubric: any): string {
+  let markdown = `**Scoring (${rubric.total_points} pts total):**\n\n`;
+  
+  // Add each category
+  for (const category of rubric.categories) {
+    markdown += `- **${category.name} (${category.points} pts)**:\n`;
+    
+    // Add levels for this category
+    for (const level of category.levels) {
+      markdown += `  - ${level.points} pts: ${level.description}\n`;
+    }
+    markdown += '\n';
+  }
+  
+  // Add penalties if present
+  if (rubric.penalties && rubric.penalties.length > 0) {
+    markdown += '**Penalties (if applicable)**:\n';
+    for (const penalty of rubric.penalties) {
+      markdown += `- **${penalty.reason}:** -${penalty.deduction} pts\n`;
+    }
+  }
+  
+  return markdown.trim();
+}
+
 function buildRubricEnhancementPrompt(totalPoints: number): string {
-  return `You are an expert educator helping teachers create detailed, effective grading rubrics.
+  return `You are an expert educator creating a grading rubric.
 
-Your task: Transform simple grading rules into a clear, comprehensive rubric that:
-- Uses a ${totalPoints}-point scale
-- Breaks down into specific categories with point values
-- Provides clear criteria for each category
-- Is concise but thorough (aim for 150-300 words)
-- Uses bullet points for easy scanning
-- Includes any penalties if relevant
+Transform the simple grading rules into a structured rubric with:
+- EXACTLY ${totalPoints} total points
+- 4-8 categories that logically break down the assignment
+- 2-4 performance levels per category
+- Clear, specific descriptions for each level
 
-CRITICAL RULES:
-1. Categories MUST sum to EXACTLY ${totalPoints} points - not more, not less
-2. Use the format "Scoring (${totalPoints} pts total):" at the top
-3. Double-check your math - verify all categories add up to ${totalPoints}
-4. Distribute points logically based on importance
-5. Include 2-4 performance levels per category (e.g., 20 pts, 10 pts, 0 pts)
+CRITICAL MATH RULES:
+1. All category.points MUST sum to EXACTLY ${totalPoints}
+2. Within each category, levels should have DESCENDING points (highest level = category max)
+3. Lowest level is typically 0 points
+4. Distribute points based on importance
 
-Keep the rubric practical and easy to apply. Focus on clarity over complexity.
+Guidelines:
+- Be specific and measurable
+- Use clear language
+- Make levels distinguishable
+- Keep descriptions concise (1-2 sentences per level)
 
-Format example:
-Scoring (${totalPoints} pts total):
-- Category Name (XX pts): 
-  - XX pts: Excellent performance description
-  - XX pts: Good performance description
-  - 0 pts: Poor performance description
-- Another Category (XX pts): what to look for
-
-Penalties (if applicable):
-- Issue: -X pts
-
-REMEMBER: All category maximums must sum to EXACTLY ${totalPoints} points!`;
+Return a structured JSON object that will be used for grading.`;
 }
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
@@ -61,10 +151,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const totalPoints = total_points && typeof total_points === 'number' ? total_points : 100;
     
     // Build the prompt with the specified total points
-    const systemPrompt = rubric_prompt || buildRubricEnhancementPrompt(totalPoints);
+    const systemPrompt = buildRubricEnhancementPrompt(totalPoints);
 
+    // Use structured outputs to guarantee format
     const completion = await openai.chat.completions.create({
-      model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+      model: 'gpt-4o-2024-08-06', // Structured outputs require this model or newer
       messages: [
         {
           role: 'system',
@@ -72,18 +163,36 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         },
         {
           role: 'user',
-          content: `Transform these simple grading rules into a detailed rubric with EXACTLY ${totalPoints} total points:\n\n${simple_rules}`,
+          content: `Simple grading rules:\n\n${simple_rules}`,
         },
       ],
+      response_format: {
+        type: 'json_schema',
+        json_schema: {
+          name: 'rubric',
+          strict: true,
+          schema: RUBRIC_SCHEMA
+        }
+      },
       temperature: 0.7,
-      max_tokens: 800,
     });
 
-    const enhanced_rubric = completion.choices[0]?.message?.content?.trim() || '';
-
-    if (!enhanced_rubric) {
+    const content = completion.choices[0]?.message?.content?.trim();
+    if (!content) {
       throw new Error('No rubric generated');
     }
+
+    // Parse the structured JSON response
+    const rubricData = JSON.parse(content);
+    
+    // Validate the math
+    const categorySum = rubricData.categories.reduce((sum: number, cat: any) => sum + cat.points, 0);
+    if (Math.abs(categorySum - rubricData.total_points) > 0.01) {
+      throw new Error(`Category points sum to ${categorySum}, but total_points is ${rubricData.total_points}`);
+    }
+    
+    // Convert JSON to markdown format for display
+    const enhanced_rubric = convertRubricToMarkdown(rubricData);
 
     return {
       statusCode: 200,
