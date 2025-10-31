@@ -30,9 +30,483 @@
 
 ---
 
+## 🔥 CRITICAL - Beta Tester Feedback (October 30, 2025)
+
+### 1. Point-Based Scoring System ⭐⭐⭐ CRITICAL
+**Goal:** Support flexible point allocation for essays (full or partial assignments)
+
+**Background:** Teachers need to grade essays that may be:
+- **Mode 1:** Essay = 100% of assignment (simple grading)
+- **Mode 2:** Essay = partial assignment (e.g., 60 pts out of 100-pt assignment)
+
+**Example Scenario (Mode 2):**
+```
+Total Assignment: 100 points
+├── Picture: 20 points (graded elsewhere)
+├── Class Notes: 20 points (graded elsewhere)
+└── Essay: 60 points (graded in this app)
+    ├── Organization: 15 points
+    ├── Evidence: 15 points
+    ├── Grammar: 15 points
+    └── Style: 15 points
+```
+
+**Tasks:**
+- [ ] Add "Essay is partial assignment" toggle to Assignment modal
+- [ ] If partial: Show two fields:
+  - [ ] "Essay Point Value" (e.g., 60)
+  - [ ] "Total Assignment Points" (e.g., 100)
+- [ ] If full: Essay points = 100 automatically
+- [ ] Update rubric to distribute points across categories
+- [ ] Display category scores as points (e.g., "Organization: 12/15 pts")
+- [ ] Display total essay score as points (e.g., "Essay: 48/60 pts")
+- [ ] Add optional percentage toggle for gradebook entry (e.g., "80%")
+- [ ] Update AI grading prompt to work with point-based rubrics
+- [ ] Store scoring mode in database
+
+**Database Changes:**
+```sql
+ALTER TABLE grader.assignments
+ADD COLUMN is_partial_assignment boolean DEFAULT false,
+ADD COLUMN essay_points integer DEFAULT 100,
+ADD COLUMN total_assignment_points integer DEFAULT 100;
+```
+
+**Files:** 
+- `src/components/CreateAssignmentModal.tsx`
+- `src/pages/Submission.tsx`
+- `netlify/functions/grade.ts`
+- Database migration: `migrations/add_point_based_scoring.sql`
+
+**Time:** 4-6 hours
+
+---
+
+### 2. Expand Assignment Types & Subject Areas ⭐⭐⭐ CRITICAL
+**Goal:** Support comprehensive document types across all subject areas (not just essays)
+
+**Background:** Teachers need to grade various writing types beyond essays, specific to their subject area (ELA, History, Science, Math, CTE, Arts, Health/PE).
+
+**Document Type Hierarchy:**
+We'll use a programmatic JSON structure to define:
+- **25 document types** (argumentative, informational, research report, narrative, lab report, etc.)
+- **7 subject areas** (English/ELA, History/Social Studies, Science, Math, CTE/Engineering, Arts, Health/PE)
+- **Subject-specific document types** (each subject shows only relevant types)
+- **Aliases** for common terms (persuasive → argumentative, book report → book review, etc.)
+
+**JSON Structure:** (stored in `src/lib/documentTypes.json`)
+```json
+{
+  "version": "1.0.0",
+  "doc_types": {
+    "argumentative": { "label": "Argument/Position Paper", "common": true },
+    "informational": { "label": "Explanatory/Informational Report", "common": true },
+    "research_report": { "label": "Research Report/Paper", "common": true },
+    "summary": { "label": "Summary/Abstract/Executive Summary", "common": true },
+    "compare_contrast": { "label": "Compare–Contrast Analysis", "common": true },
+    "cause_effect": { "label": "Cause–Effect Analysis", "common": true },
+    "problem_solution": { "label": "Problem–Solution Proposal", "common": true },
+    "reflection": { "label": "Reflection/Learning Log", "common": true },
+    "data_commentary": { "label": "Data Commentary (explain a chart/table)", "common": true },
+    "case_study": { "label": "Case Study Analysis", "common": true },
+    "procedural": { "label": "Procedural/How-To/Methodology", "common": true },
+    "field_observation": { "label": "Field/Observation Report", "common": true },
+    "policy_brief": { "label": "Policy Brief/Memo", "common": true },
+    "source_analysis_dbq": { "label": "DBQ/Source Analysis", "common": true },
+    "narrative_personal": { "label": "Personal Narrative", "common": true },
+    "descriptive": { "label": "Descriptive Essay", "common": false },
+    "literary_analysis": { "label": "Literary Analysis", "common": false },
+    "rhetorical_analysis": { "label": "Rhetorical Analysis", "common": false },
+    "short_story": { "label": "Short Story (Creative)", "common": false },
+    "poetry": { "label": "Poetry", "common": false },
+    "book_review": { "label": "Book Review/Critique", "common": false },
+    "lab_report": { "label": "Lab Report", "common": false },
+    "design_proposal": { "label": "Design/Engineering Proposal", "common": false },
+    "technical_spec": { "label": "Technical Specification", "common": false },
+    "math_explanation": { "label": "Math Explanation/Proof Write-Up", "common": false },
+    "critique_review": { "label": "Critique/Review (Art/Performance)", "common": false }
+  },
+  "subjects": {
+    "english_ela": {
+      "label": "English/ELA",
+      "doc_type_ids": ["narrative_personal", "descriptive", "reflection", "literary_analysis", "rhetorical_analysis", "argumentative", "informational", "compare_contrast", "cause_effect", "problem_solution", "research_report", "short_story", "poetry", "book_review", "summary"]
+    },
+    "history_social_studies": {
+      "label": "History/Social Studies",
+      "doc_type_ids": ["argumentative", "informational", "research_report", "summary", "compare_contrast", "cause_effect", "problem_solution", "case_study", "policy_brief", "source_analysis_dbq", "reflection", "data_commentary"]
+    },
+    "science": {
+      "label": "Science",
+      "doc_type_ids": ["informational", "research_report", "summary", "lab_report", "data_commentary", "procedural", "field_observation", "design_proposal", "argumentative", "reflection"]
+    },
+    "math": {
+      "label": "Math",
+      "doc_type_ids": ["math_explanation", "informational", "summary", "compare_contrast", "data_commentary", "argumentative", "reflection"]
+    },
+    "cte_engineering": {
+      "label": "CTE/Engineering/Technology",
+      "doc_type_ids": ["design_proposal", "technical_spec", "case_study", "procedural", "informational", "summary", "research_report", "argumentative", "reflection", "data_commentary"]
+    },
+    "arts": {
+      "label": "Arts (Visual/Performing)",
+      "doc_type_ids": ["critique_review", "reflection", "informational", "argumentative", "case_study", "summary", "compare_contrast"]
+    },
+    "health_pe": {
+      "label": "Health/PE",
+      "doc_type_ids": ["informational", "reflection", "case_study", "policy_brief", "procedural", "summary"]
+    }
+  },
+  "aliases": {
+    "persuasive": "argumentative",
+    "position_paper": "argumentative",
+    "expository": "informational",
+    "executive_summary": "summary",
+    "abstract": "summary",
+    "book_report": "book_review",
+    "lab_writeup": "lab_report",
+    "cer": "argumentative",
+    "how_to": "procedural",
+    "sop": "procedural",
+    "dbq": "source_analysis_dbq",
+    "review": "critique_review"
+  }
+}
+```
+
+**Tasks:**
+- [ ] Create `src/lib/documentTypes.json` with full structure above
+- [ ] Create `src/lib/documentTypes.ts` TypeScript module to load/parse JSON
+- [ ] Add subject area dropdown to Assignment modal (first selection)
+- [ ] Add document type dropdown (filtered by selected subject)
+- [ ] Store both `subject_area` and `document_type` in assignments table
+- [ ] Update AI grading prompt to adjust based on document type
+- [ ] Create document-type-specific rubric templates
+- [ ] Handle aliases (e.g., "persuasive" → "argumentative")
+- [ ] Add tooltips/help text for less common document types
+
+**UI Flow:**
+```
+Assignment Modal:
+1. Select Subject: [English/ELA ▼]
+2. Select Document Type: [Personal Narrative ▼] (filtered list)
+3. Rest of assignment fields...
+```
+
+**Database Changes:**
+```sql
+ALTER TABLE grader.assignments
+ADD COLUMN subject_area text,
+ADD COLUMN document_type text;
+
+-- Add check constraint for valid document types
+ALTER TABLE grader.assignments
+ADD CONSTRAINT valid_document_type CHECK (
+  document_type IN (
+    'argumentative', 'informational', 'research_report', 'summary',
+    'compare_contrast', 'cause_effect', 'problem_solution', 'reflection',
+    'data_commentary', 'case_study', 'procedural', 'field_observation',
+    'policy_brief', 'source_analysis_dbq', 'narrative_personal', 'descriptive',
+    'literary_analysis', 'rhetorical_analysis', 'short_story', 'poetry',
+    'book_review', 'lab_report', 'design_proposal', 'technical_spec',
+    'math_explanation', 'critique_review'
+  )
+);
+```
+
+**Files:** 
+- New: `src/lib/documentTypes.json`
+- New: `src/lib/documentTypes.ts`
+- `src/components/CreateAssignmentModal.tsx`
+- `src/pages/Submission.tsx`
+- `netlify/functions/grade.ts`
+- Database migration: `migrations/add_document_types.sql`
+
+**Time:** 5-7 hours
+
+---
+
+### 3. Update Essay Grading Prompt - Professional Tone ⭐⭐ HIGH PRIORITY
+**Goal:** Change grading tone from "encouraging" to "constructive and professional"
+
+**Background:** Beta tester feedback: "Constructive Criticism does not need to be rainbows butterflies and unicorns." Teachers want direct, honest feedback that follows the rubric strictly.
+
+**Current Prompt (in SettingsModal.tsx):**
+```
+You are an encouraging 6th-grade ELA grader. Grade fairly to the teacher's criteria. 
+Preserve the student's original words; do not rewrite their essay. Provide concise, 
+supportive feedback that points to specific issues (grammar, spelling, capitalization, 
+sentence structure, organization, evidence, clarity). Never include personal data about 
+the student.
+```
+
+**Issues with Current Prompt:**
+- ❌ "encouraging" - too soft, not direct enough
+- ❌ "supportive" - implies sugar-coating
+- ❌ Doesn't emphasize strict rubric adherence
+- ❌ Too lenient in grading approach
+
+**New Prompt (Professional & Constructive):**
+```
+You are a professional writing evaluator. Grade strictly according to the provided rubric 
+and teacher's criteria. Preserve the student's original words; do not rewrite their work. 
+Provide clear, direct, constructive feedback that identifies specific issues with concrete 
+examples from the text. Focus on: grammar, spelling, punctuation, capitalization, sentence 
+structure, organization, evidence quality, and clarity. Be honest about weaknesses while 
+acknowledging strengths. Use professional language appropriate for educational feedback. 
+Never include personal data about the student.
+```
+
+**Key Changes:**
+- ✅ "professional writing evaluator" (not "encouraging grader")
+- ✅ "Grade strictly according to rubric" (tighten criteria)
+- ✅ "clear, direct, constructive" (not "supportive")
+- ✅ "Be honest about weaknesses" (no sugar-coating)
+- ✅ "concrete examples from the text" (specific feedback)
+- ✅ Maintains respect and professionalism
+
+**Tasks:**
+- [ ] Update `DEFAULT_GRADING_PROMPT` in `src/components/SettingsModal.tsx`
+- [ ] Add migration note for existing users (prompt stored in localStorage)
+- [ ] Update any documentation referencing the prompt
+- [ ] Test with sample essays to verify tone is appropriate
+- [ ] Consider adding "Reset to Default" reminder for existing users
+
+**Additional Considerations:**
+- [ ] Add prompt preset options? (Encouraging, Professional, Strict)
+- [ ] Allow grade-level adjustment in prompt? (6th grade vs high school)
+- [ ] Document type should influence tone? (creative writing vs research paper)
+
+**Files:** 
+- `src/components/SettingsModal.tsx` (line 14: DEFAULT_GRADING_PROMPT)
+- `netlify/functions/grade.ts` (uses prompt from localStorage or default)
+
+**Time:** 1-2 hours
+
+**Note:** This change affects the default prompt. Users who have customized their prompt will keep their version unless they click "Reset to Default."
+
+---
+
+### 4. Add "Clean Text" Feature for Copy-Pasted PDF Content ⭐⭐ HIGH PRIORITY
+**Goal:** Clean up markdown artifacts and formatting issues when teachers paste text from PDFs
+
+**Background:** When teachers copy/paste text from PDF documents into the TEXT tab, markdown elements and formatting artifacts appear that are problematic for both the user and the LLM grading.
+
+**Current State:**
+- ✅ "Enhance Text" button exists for IMAGE tab (OCR cleanup)
+- ❌ No cleanup option for TEXT tab (pasted content)
+- ❌ PDF artifacts (markdown chars, formatting issues) remain in pasted text
+
+**Problem Examples:**
+- Markdown characters: `**`, `__`, `#`, `*`, `-`, `|`
+- Extra spaces and line breaks
+- Special characters from PDF encoding
+- Formatting artifacts that confuse the LLM
+
+**Solution:**
+Add "Clean Text" button to TEXT tab that uses the existing OCR cleanup prompt to remove artifacts.
+
+**UI Changes:**
+```
+TEXT Tab (before):
+┌─────────────────────────────────────┐
+│ Paste student essay here...        │
+│                                     │
+└─────────────────────────────────────┘
+[Use This Text]
+
+TEXT Tab (after):
+┌─────────────────────────────────────┐
+│ Paste student essay here...        │
+│                                     │
+└─────────────────────────────────────┘
+[Clean Text]  [Use This Text]
+```
+
+**Tasks:**
+- [ ] Add "Clean Text" button to TEXT tab (similar to "Enhance Text" on IMAGE tab)
+- [ ] Reuse existing OCR cleanup prompt from SettingsModal
+- [ ] Call `enhance-text` function with pasted text
+- [ ] Replace textarea content with cleaned text
+- [ ] Show loading state during cleanup
+- [ ] Add tooltip: "Remove PDF artifacts and formatting issues"
+- [ ] Optional: Auto-detect common PDF artifacts and suggest cleanup
+
+**Reuse Existing Code:**
+- OCR cleanup prompt: `src/components/SettingsModal.tsx` (DEFAULT_OCR_PROMPT)
+- Enhance text function: `netlify/functions/enhance-text.ts`
+- Similar UI pattern: IMAGE tab "Enhance Text" button
+
+**Files:** 
+- `src/pages/Submission.tsx` (add button to TEXT tab)
+- `netlify/functions/enhance-text.ts` (already exists, reuse)
+- `src/components/SettingsModal.tsx` (OCR prompt already exists)
+
+**Time:** 2-3 hours
+
+**Implementation Notes:**
+- Button should be positioned next to "Use This Text" button
+- Use same green styling as "Enhance Text" on IMAGE tab
+- Show word count before/after cleanup
+- Consider adding "Undo" option if cleanup removes too much
+
+---
+
+### 5. Anchor Chart Integration ⭐ MEDIUM PRIORITY - BLOCKED
+**Goal:** Support district-provided anchor charts that guide grading (with flexibility for variation from rubrics)
+
+**Background:** Districts provide anchor charts that don't 100% match the rubrics they supply. Teachers need to reference these during grading.
+
+**Reference:** "look in back of the class see page 50 of student edition book"
+
+**Status:** ⚠️ BLOCKED - Need sample anchor chart from Shana
+
+**Questions to Answer Before Implementation:**
+1. What format is the anchor chart? (PDF, image, text, table?)
+2. How does it differ from the rubric?
+3. Should it be stored per assignment or per teacher?
+4. Should it override rubric or supplement it?
+5. How should AI incorporate anchor chart guidance?
+6. Is it a reference document or active grading criteria?
+
+**Potential Implementation:**
+- [ ] Add "Anchor Chart" field to assignment (optional)
+- [ ] Support text input, file upload, or both
+- [ ] Display anchor chart alongside rubric during grading
+- [ ] Include anchor chart context in AI grading prompt
+- [ ] Add note about acceptable variation from rubric
+- [ ] Store in database or as file reference
+
+**Database Changes (tentative):**
+```sql
+ALTER TABLE grader.assignments
+ADD COLUMN anchor_chart text,
+ADD COLUMN anchor_chart_file_url text;
+```
+
+**Files (tentative):** 
+- `src/components/CreateAssignmentModal.tsx`
+- `src/pages/Submission.tsx`
+- `netlify/functions/grade.ts`
+- Database migration: `migrations/add_anchor_chart.sql`
+
+**Time:** 3-4 hours (after receiving sample)
+
+**Next Steps:**
+- [ ] Get sample anchor chart from Shana
+- [ ] Review page 50 of student edition book
+- [ ] Determine format and usage pattern
+- [ ] Spec out exact implementation
+
+---
+
+### 6. PDF Annotation with Inline Feedback ⭐⭐⭐ HIGH PRIORITY - COMPLEX
+**Goal:** Overlay feedback directly on student work using traditional teacher markup symbols
+
+**Background:** Teachers want to "circle spelling and punctuation" and mark up student work like traditional grading. Feedback should be attached to specific portions of the original text.
+
+**Teacher Quote:** "Circle spelling and punctuation"
+
+**Requirements:**
+- Identify specific locations in original text where issues occur
+- Attach comments to specific portions of text
+- Overlay feedback on PDF (if PDF submission)
+- Use traditional teacher markup symbols
+- Provide "markup key" for students to understand shorthand
+
+**Traditional Teacher Markup Symbols (to research):**
+- sp (spelling error)
+- ^ (insert word/punctuation)
+- ¶ (new paragraph needed)
+- cap (capitalization)
+- frag (sentence fragment)
+- ro (run-on sentence)
+- awk (awkward phrasing)
+- ? (unclear meaning)
+- ✓ (good point)
+- Others to be determined
+
+**Questions to Answer Before Implementation:**
+1. Should this work for all submission types or just PDFs?
+2. How should LLM identify text locations? (character positions, line numbers, text matching?)
+3. What PDF annotation library should we use? (pdf-lib, PDFKit, other?)
+4. Should markup be interactive or static?
+5. How detailed should the markup key be?
+6. Should students see markup key automatically or on request?
+7. Should teachers be able to customize markup symbols?
+8. How to handle handwritten submissions (images)?
+
+**Research Needed:**
+- [ ] Ask LLM for comprehensive list of traditional teacher markup symbols
+- [ ] Research PDF annotation libraries (pdf-lib, PDFKit, pdf.js)
+- [ ] Determine how to map feedback to text locations
+- [ ] Design markup key format (legend, guide, reference sheet)
+- [ ] Test with various PDF formats and layouts
+
+**Potential Implementation:**
+- [ ] Modify AI prompt to return feedback with text locations
+- [ ] Return feedback with character positions or line numbers
+- [ ] Implement PDF annotation library
+- [ ] Overlay markup symbols and comments on PDF
+- [ ] Generate annotated PDF for download
+- [ ] Create student-facing "markup key" component
+- [ ] Add markup key to Help page or as modal
+- [ ] Support both inline symbols and margin comments
+
+**Technical Challenges:**
+- Text location identification (especially for handwritten/OCR text)
+- PDF layout preservation during annotation
+- Symbol placement accuracy
+- Multi-page document handling
+- File size management for annotated PDFs
+
+**Database Changes:**
+```sql
+-- Store markup data with submission
+ALTER TABLE grader.submissions
+ADD COLUMN markup_data jsonb,
+ADD COLUMN annotated_pdf_url text;
+
+-- Markup data structure:
+-- {
+--   "markups": [
+--     {
+--       "type": "spelling",
+--       "symbol": "sp",
+--       "location": { "page": 1, "x": 100, "y": 200 },
+--       "text": "teh",
+--       "comment": "Check spelling"
+--     }
+--   ]
+-- }
+```
+
+**Files:** 
+- `netlify/functions/grade.ts` (AI prompt modification for location data)
+- `src/pages/Submission.tsx` (display annotated PDF)
+- New: `src/lib/pdfAnnotation.ts` (PDF annotation logic)
+- New: `src/components/MarkupKey.tsx` (student reference guide)
+- New: `netlify/functions/annotate-pdf.ts` (generate annotated PDF)
+
+**Time:** 8-12 hours (complex feature)
+
+**Implementation Phases:**
+1. **Phase 1:** LLM returns feedback with text locations (2-3 hours)
+2. **Phase 2:** PDF annotation library integration (3-4 hours)
+3. **Phase 3:** Markup symbol system and key (2-3 hours)
+4. **Phase 4:** Testing and refinement (1-2 hours)
+
+**Next Steps:**
+- [ ] Research and select PDF annotation library
+- [ ] Create comprehensive markup symbol list
+- [ ] Design markup key format
+- [ ] Prototype text location identification
+- [ ] Test with sample PDFs
+
+---
+
 ## 🎯 High Priority - Next Up
 
-### 1. Dashboard Enhancements
+### 2. Dashboard Enhancements
 **Goal:** Make Dashboard more useful for teachers
 
 #### A. Add Sorting Options ⭐
