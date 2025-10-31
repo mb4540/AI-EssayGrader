@@ -244,13 +244,158 @@ OUTPUT ONLY THIS JSON:
       "criterion_id": "string",
       "level": "string",
       "points_awarded": "string",
-      "rationale": "string"
+      "rationale": "string"  // Specific to this criterion
     }
   ],
-  "notes": "string or null"
-}`;
+  "feedback": {
+    "grammar_findings": ["string"],      // Grammar issues (informational only if not in rubric)
+    "spelling_findings": ["string"],     // Spelling issues (informational only if not in rubric)
+    "punctuation_findings": ["string"],  // Punctuation issues (informational only if not in rubric)
+    "strengths": ["string"],             // What the student did well
+    "areas_for_improvement": ["string"], // Constructive suggestions based on rubric
+    "top_3_suggestions": ["string"]      // Most impactful improvements
+  },
+  "notes": "string or null"  // Overall observations
+}
+
+CRITICAL: 
+- Grammar/spelling/punctuation feedback is INFORMATIONAL ONLY if not in rubric
+- Do NOT deduct points for grammar/spelling/punctuation unless they are explicit rubric criteria
+- Focus constructive criticism on rubric categories
+- Be encouraging and specific in all feedback
+`;
 }
 ```
+
+---
+
+### Task 2.5: Constructive Feedback Strategy
+
+**Goal:** Provide helpful feedback without penalizing for non-rubric items
+
+**Key Principle:**
+> **Only deduct points for criteria explicitly in the rubric. Everything else is informational feedback to help the student improve.**
+
+**Implementation:**
+
+1. **Check if grammar/spelling/punctuation are in rubric:**
+   ```typescript
+   const rubricCategories = rubric.criteria.map(c => c.id.toLowerCase());
+   const hasGrammar = rubricCategories.some(id => 
+     id.includes('grammar') || 
+     id.includes('convention') || 
+     id.includes('mechanics')
+   );
+   ```
+
+2. **Prompt Instructions:**
+   ```
+   FEEDBACK GUIDELINES:
+   
+   1. Rubric-Based Feedback (AFFECTS SCORE):
+      - Provide specific rationale for each rubric criterion
+      - Cite examples from the essay
+      - Explain why you chose that level
+   
+   2. Grammar/Spelling/Punctuation (INFORMATIONAL ONLY if not in rubric):
+      - Note any errors you observe
+      - Be specific: "Line 3: 'their' should be 'there'"
+      - Keep it constructive and encouraging
+      - DO NOT deduct points unless rubric includes these criteria
+   
+   3. Strengths:
+      - Highlight what the student did well
+      - Be specific and genuine
+      - Connect to rubric criteria when possible
+   
+   4. Areas for Improvement:
+      - Focus on rubric categories
+      - Provide actionable suggestions
+      - Prioritize most impactful changes
+   
+   5. Top 3 Suggestions:
+      - Most important improvements for next time
+      - Should align with rubric categories
+      - Be specific and achievable
+   ```
+
+3. **Example Output:**
+   ```json
+   {
+     "scores": [
+       {
+         "criterion_id": "focus_and_content",
+         "level": "Proficient",
+         "points_awarded": "22.0",
+         "rationale": "Essay has clear focus on missing the bus. Strong opening with sensory details ('cold air slipped through the kitchen window'). Middle section effectively conveys the panic. Conclusion ties back to the lesson learned."
+       }
+     ],
+     "feedback": {
+       "grammar_findings": [
+         "Line 5: 'their' should be 'there' (location)",
+         "Line 12: Run-on sentence - consider splitting at 'choices'"
+       ],
+       "spelling_findings": [
+         "Line 8: 'embarassing' → 'embarrassing'"
+       ],
+       "punctuation_findings": [
+         "Line 3: Missing comma after introductory phrase",
+         "Line 15: Consider adding quotation marks around dialogue"
+       ],
+       "strengths": [
+         "Excellent use of sensory details in the opening",
+         "Strong narrative voice throughout",
+         "Effective dialogue that moves the story forward",
+         "Clear lesson learned in conclusion"
+       ],
+       "areas_for_improvement": [
+         "Add more internal thoughts during the conflict to deepen character development",
+         "Expand the resolution section - what happened after the apology?",
+         "Consider varying sentence structure for better flow"
+       ],
+       "top_3_suggestions": [
+         "1. Develop the character's internal conflict more (would boost Character Development score)",
+         "2. Expand the resolution to show how the conflict was fully resolved (would boost Conflict & Resolution score)",
+         "3. Proofread for grammar and spelling to polish the final draft"
+       ]
+     },
+     "notes": "Strong narrative with good pacing. The student shows promise in storytelling. Focus on deepening the emotional journey and proofreading for the next draft."
+   }
+   ```
+
+4. **Frontend Display:**
+   - **Scores Section:** Show rubric-based scores with rationales
+   - **Feedback Section:** Show grammar/spelling/punctuation as "Additional Feedback" (not affecting score)
+   - **Strengths:** Highlight in green
+   - **Improvements:** Show in blue (constructive)
+   - **Top 3:** Emphasize as action items
+
+5. **Clear Communication:**
+   ```
+   📊 Rubric Score: 85/100
+   
+   ✅ Strengths:
+   - Excellent sensory details
+   - Strong narrative voice
+   
+   💡 Areas for Improvement (Rubric-Based):
+   - Deepen character development
+   - Expand resolution section
+   
+   📝 Additional Feedback (Not Affecting Score):
+   Grammar: 2 issues found
+   Spelling: 1 issue found
+   Punctuation: 2 suggestions
+   
+   [View Details]
+   ```
+
+**Why This Matters:**
+- **Fair Grading:** Only rubric criteria affect score
+- **Helpful Feedback:** Students still learn about grammar/spelling
+- **Clear Expectations:** Students know what counts toward grade
+- **Teacher Control:** Rubric defines what matters
+- **Encouragement:** Separate feedback from scoring reduces discouragement
 
 ---
 
@@ -397,17 +542,44 @@ Your task: Transform simple grading rules into a clear, comprehensive rubric tha
 
 ## 🔧 Implementation Order
 
-### Sprint 1: Critical Path (2-3 hours)
+### Sprint 1: Critical Path (3-4 hours)
 1. ✅ Create `rubricParser.ts` with text parsing logic
-2. ✅ Update `buildExtractorPrompt()` to include custom grading prompt
-3. ✅ Integrate parser into `grade-bulletproof.ts`
-4. ✅ Test with actual rubric from screenshot
+2. ✅ Update `buildExtractorPrompt()` to include:
+   - Custom grading prompt
+   - Feedback structure (grammar/spelling/punctuation)
+   - Clear instructions about rubric-only scoring
+3. ✅ Update TypeScript types to include feedback structure:
+   ```typescript
+   interface ExtractedScoresJSON {
+     submission_id: string;
+     scores: Array<{
+       criterion_id: string;
+       level: string;
+       points_awarded: string;
+       rationale: string;
+     }>;
+     feedback: {
+       grammar_findings: string[];
+       spelling_findings: string[];
+       punctuation_findings: string[];
+       strengths: string[];
+       areas_for_improvement: string[];
+       top_3_suggestions: string[];
+     };
+     notes: string | null;
+   }
+   ```
+4. ✅ Integrate parser into `grade-bulletproof.ts`
+5. ✅ Update frontend to display feedback sections
+6. ✅ Test with actual rubric from screenshot
 
 ### Sprint 2: Testing & Refinement (1-2 hours)
 1. Test with various rubric formats
-2. Handle edge cases (missing points, malformed text)
-3. Add validation and error messages
-4. Update frontend to show parsed rubric preview
+2. Test with rubrics that include/exclude grammar
+3. Verify feedback is informational when not in rubric
+4. Handle edge cases (missing points, malformed text)
+5. Add validation and error messages
+6. Update frontend to show parsed rubric preview
 
 ### Sprint 3: Prompt Management (Future)
 1. Move prompts to database
