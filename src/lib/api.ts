@@ -63,7 +63,8 @@ export async function ingestSubmission(data: IngestRequest) {
 
 export async function gradeSubmission(data: GradeRequest) {
   const customPrompts = getCustomPrompts();
-  const response = await fetch(`${API_BASE}/grade`, {
+  // Use bulletproof grading endpoint for deterministic scoring
+  const response = await fetch(`${API_BASE}/grade-bulletproof`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ ...data, ...customPrompts }),

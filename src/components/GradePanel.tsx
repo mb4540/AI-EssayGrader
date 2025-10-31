@@ -3,8 +3,9 @@ import { Input } from './ui/input';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Loader2, CheckCircle } from 'lucide-react';
+import { Loader2, CheckCircle, Calculator } from 'lucide-react';
 import type { Feedback } from '@/lib/schema';
+import type { ComputedScores, ExtractedScoresJSON } from '@/lib/calculator/types';
 
 interface GradePanelProps {
   aiFeedback: Feedback | null;
@@ -77,7 +78,185 @@ export default function GradePanel({
                 </div>
               </div>
 
-              {aiFeedback.rubric_scores && aiFeedback.rubric_scores.length > 0 && (
+              {/* BulletProof Grading Breakdown */}
+              {(aiFeedback as any).bulletproof?.extracted_scores && (aiFeedback as any).bulletproof?.computed_scores && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium mb-3 flex items-center gap-2">
+                    <Calculator className="w-4 h-4 text-purple-600" />
+                    <span>Detailed Breakdown</span>
+                    <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">
+                      BulletProof
+                    </span>
+                  </p>
+                  
+                  {/* Per-Criterion Scores */}
+                  <div className="space-y-3 mb-4">
+                    {((aiFeedback as any).bulletproof.extracted_scores as ExtractedScoresJSON).scores.map((score, idx) => (
+                      <div key={idx} className="bg-white dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-medium text-sm">{score.criterion_id}</span>
+                          <div className="text-right">
+                            <span className="font-bold text-purple-600 dark:text-purple-400">{score.points_awarded}</span>
+                            <span className="text-xs text-gray-500 ml-1">pts</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
+                            {score.level}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 dark:text-gray-300">{score.rationale}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Computed Scores */}
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950 p-4 rounded-lg border-2 border-purple-200 dark:border-purple-800">
+                    <p className="text-xs font-medium text-purple-700 dark:text-purple-300 mb-2">FINAL CALCULATION</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Raw Score:</span>
+                        <span className="font-mono font-medium">
+                          {((aiFeedback as any).bulletproof.computed_scores as ComputedScores).raw_points} / {((aiFeedback as any).bulletproof.computed_scores as ComputedScores).max_points}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Percentage:</span>
+                        <span className="font-mono font-bold text-purple-600 dark:text-purple-400">
+                          {((aiFeedback as any).bulletproof.computed_scores as ComputedScores).percent}%
+                        </span>
+                      </div>
+                      {((aiFeedback as any).bulletproof.computed_scores as ComputedScores).final_points && (
+                        <div className="flex justify-between border-t pt-2">
+                          <span>Final Points:</span>
+                          <span className="font-mono font-bold text-lg text-purple-700 dark:text-purple-300">
+                            {((aiFeedback as any).bulletproof.computed_scores as ComputedScores).final_points}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-3 font-mono">
+                      ✓ Calculated with {(aiFeedback as any).bulletproof.calculator_version}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Feedback Section (from bulletproof) */}
+              {(aiFeedback as any).bulletproof?.extracted_scores?.feedback && (
+                <div className="border-t pt-4 space-y-4">
+                  {/* Strengths */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.strengths?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <span className="text-green-600 dark:text-green-400">✓</span>
+                        Strengths
+                      </p>
+                      <ul className="space-y-1">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.strengths.map((strength: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 pl-4">
+                            • {strength}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Areas for Improvement */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.areas_for_improvement?.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <span className="text-blue-600 dark:text-blue-400">💡</span>
+                        Areas for Improvement
+                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
+                          Rubric-Based
+                        </span>
+                      </p>
+                      <ul className="space-y-1">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.areas_for_improvement.map((area: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 pl-4">
+                            • {area}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Additional Feedback (Grammar/Spelling/Punctuation) */}
+                  {((aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings?.length > 0 ||
+                    (aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings?.length > 0 ||
+                    (aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings?.length > 0) && (
+                    <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <span className="text-gray-600 dark:text-gray-400">📝</span>
+                        Additional Feedback
+                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded">
+                          Not Affecting Score
+                        </span>
+                      </p>
+                      
+                      {(aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings?.length > 0 && (
+                        <div className="mb-2">
+                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Grammar:</p>
+                          <ul className="space-y-0.5">
+                            {(aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings.map((finding: string, idx: number) => (
+                              <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 pl-3">
+                                • {finding}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {(aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings?.length > 0 && (
+                        <div className="mb-2">
+                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Spelling:</p>
+                          <ul className="space-y-0.5">
+                            {(aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings.map((finding: string, idx: number) => (
+                              <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 pl-3">
+                                • {finding}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      
+                      {(aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings?.length > 0 && (
+                        <div>
+                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Punctuation:</p>
+                          <ul className="space-y-0.5">
+                            {(aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings.map((finding: string, idx: number) => (
+                              <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 pl-3">
+                                • {finding}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Top 3 Suggestions */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.top_3_suggestions?.length > 0 && (
+                    <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 p-3 rounded-lg border-2 border-yellow-200 dark:border-yellow-800">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
+                        <span className="text-yellow-600 dark:text-yellow-400">⭐</span>
+                        Top 3 Suggestions for Next Time
+                      </p>
+                      <ol className="space-y-1">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.top_3_suggestions.map((suggestion: string, idx: number) => (
+                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 pl-2">
+                            {suggestion}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Legacy Category Scores (fallback) */}
+              {aiFeedback.rubric_scores && aiFeedback.rubric_scores.length > 0 && !(aiFeedback as any).bulletproof && (
                 <div>
                   <p className="text-sm font-medium mb-2">Category Scores</p>
                   <div className="space-y-2">

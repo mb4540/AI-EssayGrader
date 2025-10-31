@@ -106,16 +106,24 @@ Load Rubric → LLM Extractor (JSON only) → Python Calculator (Decimal math) �
 4. **Audit Trail** - Store rubric JSON, extracted scores, computed scores, calculator version
 
 **Tasks:**
-- [ ] Create Python calculator module with Decimal math
-- [ ] Implement percent mode: `(raw / max) * 100`
-- [ ] Implement points mode: `(raw / max) * total_points`
-- [ ] Add rounding modes: HALF_UP, HALF_EVEN, HALF_DOWN
-- [ ] Create unit tests for calculator (all edge cases)
-- [ ] Design LLM extractor prompt (strict JSON output)
-- [ ] Implement Pydantic validation with retry logic
-- [ ] Update grade.ts to call Python calculator
-- [ ] Add audit trail storage (rubric + scores + computed + versions)
-- [ ] Update frontend to display computed breakdown
+- [x] Create Python calculator module with Decimal math
+- [x] Implement percent mode: `(raw / max) * 100`
+- [x] Implement points mode: `(raw / max) * total_points`
+- [x] Add rounding modes: HALF_UP, HALF_EVEN, HALF_DOWN
+- [x] Create unit tests for calculator (all edge cases) - 17/17 passing
+- [x] Port calculator to TypeScript with decimal.js - 17/17 tests passing
+- [x] Design LLM extractor prompt (strict JSON output)
+- [x] Create rubric builder for backward compatibility
+- [x] Integrate calculator with grading workflow (grade-bulletproof.ts)
+- [x] Add audit trail storage (extracted_scores + computed_scores + calculator_version)
+- [x] Update frontend to display computed breakdown (GradePanel.tsx)
+- [x] Switch API to use bulletproof endpoint
+- [ ] End-to-end testing with sample essays
+- [ ] Beta test with Shana
+- [ ] Deploy to production
+
+**Status:** ✅ 95% Complete - Implementation Done, Testing Pending  
+**Commits:** 14 | **Tests:** 34/34 Passing | **Build:** ✅ Passing
 
 **Database Changes:**
 ```sql

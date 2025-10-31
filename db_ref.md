@@ -1,11 +1,20 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** October 31, 2025 - 7:32 AM UTC-05:00  
+**Last Updated:** October 31, 2025 - 1:42 PM UTC-05:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
 > ⚠️ **IMPORTANT**: This file must be updated whenever database schema changes are made.
 > Always reference this file before making database changes.
+
+## 📝 Recent Migrations
+
+### October 31, 2025 - BulletProof Grading Schema
+**Migration:** `migrations/add_bulletproof_grading.sql`
+- Added rubric JSON storage to assignments
+- Added scale mode (percent/points) configuration
+- Added computed scores and audit trail to submissions
+- Added calculator version tracking
 
 ---
 
@@ -22,7 +31,7 @@
 
 ### 1. assignments
 
-**Purpose:** Store assignment definitions with grading criteria
+**Purpose:** Store assignment definitions with grading criteria and bulletproof grading configuration
 
 | Column | Type | Nullable | Default | Key |
 |--------|------|----------|---------|-----|
@@ -32,16 +41,35 @@
 | created_at | timestamptz | NO | now() | |
 | tenant_id | uuid | NO | null | FK → tenants |
 | grading_criteria | text | YES | null | |
+| **rubric_json** | **jsonb** | **YES** | **null** | |
+| **scale_mode** | **text** | **YES** | **'percent'** | **CHECK** |
+| **total_points** | **numeric(10,4)** | **YES** | **null** | |
+| **rounding_mode** | **text** | **YES** | **'HALF_UP'** | |
+| **rounding_decimals** | **integer** | **YES** | **2** | |
 
 **Row Count:** 1  
 **Size:** 48 KB
 
+**New Columns (BulletProof Grading):**
+- `rubric_json` - Structured rubric with criteria, levels, and weights (JSON)
+- `scale_mode` - Grading scale mode: 'percent' (0-100) or 'points' (custom total)
+- `total_points` - Total points for assignment (used when scale_mode='points')
+- `rounding_mode` - Rounding mode for calculator: HALF_UP, HALF_EVEN, or HALF_DOWN
+- `rounding_decimals` - Number of decimal places for rounding (0-4)
+
 **Indexes:**
 - `assignments_pkey` - PRIMARY KEY (assignment_id)
 - `idx_assignments_tenant` - (tenant_id)
+- `idx_assignments_scale_mode` - (scale_mode)
 
 **Foreign Keys:**
 - `tenant_id` → `tenants.tenant_id` (ON DELETE RESTRICT)
+
+**Constraints:**
+- `chk_total_points_required` - Ensures total_points is set and > 0 when scale_mode='points'
+- `chk_rounding_decimals_range` - Ensures rounding_decimals is between 0-4
+- `chk_rounding_mode_valid` - Ensures rounding_mode is HALF_UP, HALF_EVEN, or HALF_DOWN
+- CHECK on scale_mode - Must be 'percent' or 'points'
 
 ---
 
@@ -75,7 +103,7 @@
 
 ### 3. submissions
 
-**Purpose:** Store student essay submissions and grades
+**Purpose:** Store student essay submissions, grades, and bulletproof grading audit trail
 
 | Column | Type | Nullable | Default | Key |
 |--------|------|----------|---------|-----|
@@ -97,15 +125,24 @@
 | final_draft_text | text | YES | null | |
 | image_url | text | YES | null | |
 | original_file_url | text | YES | null | |
+| **extracted_scores** | **jsonb** | **YES** | **null** | |
+| **computed_scores** | **jsonb** | **YES** | **null** | |
+| **calculator_version** | **text** | **YES** | **null** | |
 
 **Row Count:** 6  
 **Size:** 176 KB
+
+**New Columns (BulletProof Grading):**
+- `extracted_scores` - LLM-extracted per-criterion scores and rationales (JSON)
+- `computed_scores` - Deterministically computed final scores from Python calculator (JSON)
+- `calculator_version` - Version/hash of calculator used for audit trail
 
 **Indexes:**
 - `submissions_pkey` - PRIMARY KEY (submission_id)
 - `idx_submissions_student` - (student_id)
 - `idx_submissions_assignment` - (assignment_id)
 - `idx_submissions_tenant` - (tenant_id)
+- `idx_submissions_calculator_version` - (calculator_version)
 
 **Foreign Keys:**
 - `student_id` → `students.student_id` (ON DELETE RESTRICT)
