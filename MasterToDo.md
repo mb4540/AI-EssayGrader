@@ -68,53 +68,42 @@
 
 ## 🔥 CRITICAL - Beta Tester Feedback (October 30, 2025)
 
-### 1. Point-Based Scoring System ⭐⭐⭐ CRITICAL
+### 1. Point-Based Scoring System ⭐⭐⭐ ✅ COMPLETE
 **Goal:** Support flexible point allocation for essays (full or partial assignments)
 
-**Background:** Teachers need to grade essays that may be:
-- **Mode 1:** Essay = 100% of assignment (simple grading)
-- **Mode 2:** Essay = partial assignment (e.g., 60 pts out of 100-pt assignment)
+**Status:** ✅ **FUNCTIONALLY COMPLETE** - Implemented via Total Points UI
 
-**Example Scenario (Mode 2):**
-```
-Total Assignment: 100 points
-├── Picture: 20 points (graded elsewhere)
-├── Class Notes: 20 points (graded elsewhere)
-└── Essay: 60 points (graded in this app)
-    ├── Organization: 15 points
-    ├── Evidence: 15 points
-    ├── Grammar: 15 points
-    └── Style: 15 points
-```
+**Implementation:**
+Teachers can now set any point total (60, 80, 100, 150, etc.) via the "Total Points" field in Grading Criteria. The system automatically:
+- Distributes points across rubric categories
+- Displays scores as points (e.g., "Organization: 12.8/15 pts")
+- Shows total score in points (e.g., "85.17/100" or "48/60")
+- Provides percentage for gradebook (e.g., "85.17%")
+- Generates rubrics with correct total via Enhance With AI
+- Validates math with auto-scaling if needed
 
-**Tasks:**
-- [ ] Add "Essay is partial assignment" toggle to Assignment modal
-- [ ] If partial: Show two fields:
-  - [ ] "Essay Point Value" (e.g., 60)
-  - [ ] "Total Assignment Points" (e.g., 100)
-- [ ] If full: Essay points = 100 automatically
-- [ ] Update rubric to distribute points across categories
-- [ ] Display category scores as points (e.g., "Organization: 12/15 pts")
-- [ ] Display total essay score as points (e.g., "Essay: 48/60 pts")
-- [ ] Add optional percentage toggle for gradebook entry (e.g., "80%")
-- [ ] Update AI grading prompt to work with point-based rubrics
-- [ ] Store scoring mode in database
+**Completed Features:**
+- [x] Total Points input field in Grading Criteria header
+- [x] Works in Create Assignment modal and Grade Submission page
+- [x] Rubric distributes points across categories correctly
+- [x] Display category scores as points (e.g., "Organization: 12/15 pts")
+- [x] Display total essay score as points (e.g., "Essay: 48/60 pts")
+- [x] Percentage shown for gradebook entry (e.g., "80%")
+- [x] AI grading prompt works with any point total
+- [x] Database stores scoring mode and total_points
+- [x] BulletProof calculator handles any point total with Decimal precision
 
-**Database Changes:**
+**Database Implementation:**
 ```sql
+-- Already exists from BulletProof Grading migration
 ALTER TABLE grader.assignments
-ADD COLUMN is_partial_assignment boolean DEFAULT false,
-ADD COLUMN essay_points integer DEFAULT 100,
-ADD COLUMN total_assignment_points integer DEFAULT 100;
+ADD COLUMN scale_mode text CHECK (scale_mode IN ('percent', 'points')) DEFAULT 'percent',
+ADD COLUMN total_points numeric(10,4);
 ```
 
-**Files:** 
-- `src/components/CreateAssignmentModal.tsx`
-- `src/pages/Submission.tsx`
-- `netlify/functions/grade.ts`
-- Database migration: `migrations/add_point_based_scoring.sql`
+**Note:** The requested "partial assignment toggle" UI was not implemented. Instead, a simpler approach was used: teachers just set the Total Points field to whatever the essay is worth (60, 80, 100, etc.). This achieves the same functionality with less UI complexity. Can be enhanced based on beta tester feedback if needed.
 
-**Time:** 4-6 hours
+**Completed:** October 31, 2025 (as part of BulletProof Grading implementation)
 
 ---
 
