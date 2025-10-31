@@ -52,6 +52,7 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
       description: description.trim() || undefined,
       grading_criteria: criteria.trim() || undefined,
       document_type: documentType,
+      total_points: totalPoints,
     });
   };
 
