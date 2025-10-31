@@ -11,7 +11,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       const tenant_id = PUBLIC_TENANT_ID; // TODO: Get from auth context
       
       const assignments = await sql`
-        SELECT assignment_id as id, title, description, grading_criteria, created_at
+        SELECT assignment_id as id, title, description, grading_criteria, total_points, created_at
         FROM grader.assignments
         WHERE tenant_id = ${tenant_id}
         ORDER BY created_at DESC

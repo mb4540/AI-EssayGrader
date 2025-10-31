@@ -59,6 +59,9 @@ export default function Submission() {
       if (selectedAssignment?.grading_criteria && !criteria) {
         setCriteria(selectedAssignment.grading_criteria);
       }
+      if (selectedAssignment?.total_points) {
+        setTotalPoints(selectedAssignment.total_points);
+      }
     }
   }, [assignmentId, assignmentsData]);
 
