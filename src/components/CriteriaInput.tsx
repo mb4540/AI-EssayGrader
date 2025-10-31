@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Sparkles, Loader2 } from 'lucide-react';
@@ -8,6 +9,8 @@ import { Sparkles, Loader2 } from 'lucide-react';
 interface CriteriaInputProps {
   value: string;
   onChange: (value: string) => void;
+  totalPoints?: number;
+  onTotalPointsChange?: (points: number) => void;
   showCard?: boolean;
   title?: string;
   required?: boolean;
@@ -26,14 +29,15 @@ Penalties:
 - Off-topic: -10
 - Too short (< 200 words): -10`;
 
-async function enhanceRubricWithAI(simpleRules: string): Promise<string> {
+async function enhanceRubricWithAI(simpleRules: string, totalPoints?: number): Promise<string> {
   const customRubricPrompt = localStorage.getItem('ai_rubric_prompt');
   const response = await fetch('/.netlify/functions/enhance-rubric', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ 
       simple_rules: simpleRules,
-      rubric_prompt: customRubricPrompt || undefined
+      rubric_prompt: customRubricPrompt || undefined,
+      total_points: totalPoints
     }),
   });
 
@@ -48,6 +52,8 @@ async function enhanceRubricWithAI(simpleRules: string): Promise<string> {
 export default function CriteriaInput({ 
   value, 
   onChange,
+  totalPoints = 100,
+  onTotalPointsChange,
   showCard = true,
   title = 'Grading Criteria',
   required = true,
@@ -64,7 +70,7 @@ export default function CriteriaInput({
 
     setIsEnhancing(true);
     try {
-      const enhanced = await enhanceRubricWithAI(value);
+      const enhanced = await enhanceRubricWithAI(value, totalPoints);
       onChange(enhanced);
     } catch (error) {
       console.error('Enhancement failed:', error);
@@ -80,25 +86,42 @@ export default function CriteriaInput({
         <Label htmlFor="criteria" className="text-gray-700 dark:text-gray-300 font-medium">
           {title} {required && <span className="text-red-500">*</span>}
         </Label>
-        <Button
-          type="button"
-          onClick={handleEnhance}
-          disabled={isEnhancing || !value.trim() || disabled}
-          size="sm"
-          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-        >
-          {isEnhancing ? (
-            <>
-              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-              Enhancing...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-3 h-3 mr-1" />
-              Enhance With AI
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="totalPoints" className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+              Total Points:
+            </Label>
+            <Input
+              id="totalPoints"
+              type="number"
+              min="1"
+              max="1000"
+              value={totalPoints}
+              onChange={(e) => onTotalPointsChange?.(parseInt(e.target.value) || 100)}
+              disabled={disabled}
+              className="w-20 h-8 text-sm"
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={handleEnhance}
+            disabled={isEnhancing || !value.trim() || disabled}
+            size="sm"
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          >
+            {isEnhancing ? (
+              <>
+                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                Enhancing...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3 h-3 mr-1" />
+                Enhance With AI
+              </>
+            )}
+          </Button>
+        </div>
       </div>
       <Textarea
         id="criteria"

@@ -30,6 +30,12 @@ export function parseTeacherRubric(
   // Extract categories with points
   const categories = extractCategories(lines, finalTotal);
   
+  // DEBUG: Log extracted categories
+  console.log('Extracted categories:');
+  categories.forEach(cat => {
+    console.log(`  - ${cat.name}: ${cat.points} pts (line ${cat.startLine})`);
+  });
+  
   if (categories.length === 0) {
     throw new Error('No categories found in rubric text. Expected format: "**Category (XX pts):**"');
   }
@@ -40,6 +46,48 @@ export function parseTeacherRubric(
     const nextCategoryLine = idx < categories.length - 1 ? categories[idx + 1].startLine : undefined;
     return buildCriterion(cat, lines, nextCategoryLine);
   });
+  
+  // DEBUG: Log parsed criteria
+  console.log('Parsed criteria details:');
+  criteria.forEach(c => {
+    console.log(`  - ${c.name}: max_points=${c.max_points}, weight=${c.weight}, levels=${c.levels.length}`);
+    c.levels.forEach(l => {
+      console.log(`    → ${l.label}: ${l.points} pts`);
+    });
+  });
+  
+  // Calculate total max points
+  const calculatedTotal = criteria.reduce((sum, c) => sum + parseFloat(c.max_points) * parseFloat(c.weight), 0);
+  console.log(`Calculated total max points: ${calculatedTotal} (expected: ${finalTotal})`);
+  
+  // CRITICAL: If total doesn't match, scale the categories proportionally
+  if (Math.abs(calculatedTotal - finalTotal) > 0.1) {
+    console.warn(`WARNING: Rubric categories sum to ${calculatedTotal}, but rubric says ${finalTotal} total.`);
+    console.warn(`Scaling all categories proportionally to match ${finalTotal}.`);
+    
+    const scaleFactor = finalTotal / calculatedTotal;
+    console.log(`Scale factor: ${scaleFactor.toFixed(4)}`);
+    
+    // Scale all max_points and level points
+    criteria.forEach(criterion => {
+      const originalMax = parseFloat(criterion.max_points);
+      const scaledMax = originalMax * scaleFactor;
+      criterion.max_points = scaledMax.toFixed(2);
+      
+      // Scale all level points too
+      criterion.levels.forEach(level => {
+        const originalPoints = parseFloat(level.points);
+        const scaledPoints = originalPoints * scaleFactor;
+        level.points = scaledPoints.toFixed(2);
+      });
+      
+      console.log(`  Scaled ${criterion.name}: ${originalMax} → ${criterion.max_points} pts`);
+    });
+    
+    // Verify new total
+    const newTotal = criteria.reduce((sum, c) => sum + parseFloat(c.max_points) * parseFloat(c.weight), 0);
+    console.log(`New calculated total: ${newTotal.toFixed(2)}`);
+  }
   
   // Determine scale mode
   const scaleMode = detectScaleMode(lines, finalTotal);
