@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, FileText, GitCompare, Printer, Download, Info, PenTool } from 'lucide-react';
+import { FileText, GitCompare, Printer, Download, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -319,91 +320,61 @@ export default function Submission() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Header with gradient */}
-      <div className="bg-gradient-to-r from-indigo-600 to-blue-600 shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => navigate('/')}
-                className="text-white hover:bg-white/20"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Dashboard
-              </Button>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Grade Submission</h1>
-                <p className="text-blue-100 text-sm mt-1">AI-powered essay grading assistant</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto px-4 py-6">
+        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <span className="text-2xl">📝</span>
+                </div>
+                <CardTitle className="text-2xl text-gray-900">Grade Submission</CardTitle>
+              </div>
+              <div className="flex gap-2">
+                {submissionId && aiFeedback && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePrint}
+                    >
+                      <Printer className="w-4 h-4 mr-2" />
+                      Print
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownload}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                    <div className="w-px h-8 bg-gray-300 mx-2" />
+                  </>
+                )}
+                <Button
+                  variant={draftMode === 'single' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setDraftMode('single')}
+                  className={draftMode === 'single' ? 'bg-indigo-600' : ''}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Single Essay
+                </Button>
+                <Button
+                  variant={draftMode === 'comparison' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setDraftMode('comparison')}
+                  className={draftMode === 'comparison' ? 'bg-indigo-600' : ''}
+                >
+                  <GitCompare className="w-4 h-4 mr-2" />
+                  Draft Comparison
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => navigate('/help')}
-                className="bg-white/20 hover:bg-white/30 text-white border-2 border-white/40 font-bold px-4"
-                size="sm"
-                title="Need Help? Click here for guide"
-              >
-                <Info className="w-5 h-5 mr-2" />
-                HELP
-              </Button>
-              {submissionId && aiFeedback && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handlePrint}
-                    className="text-white hover:bg-white/20"
-                  >
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleDownload}
-                    className="text-white hover:bg-white/20"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                </>
-              )}
-              {submissionId && (
-                <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <p className="text-xs text-blue-100">Submission ID</p>
-                  <p className="text-sm font-mono text-white">{submissionId.slice(0, 8)}...</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8">
-        {/* Mode Toggle with enhanced styling */}
-        <div className="mb-8 flex justify-center">
-          <Tabs value={draftMode} onValueChange={(v) => setDraftMode(v as 'single' | 'comparison')}>
-            <TabsList className="grid w-full max-w-md grid-cols-2 h-12 bg-white dark:bg-slate-800 shadow-md">
-              <TabsTrigger 
-                value="single" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
-              >
-                <FileText className="w-4 h-4" />
-                Single Essay
-              </TabsTrigger>
-              <TabsTrigger 
-                value="comparison" 
-                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white"
-              >
-                <GitCompare className="w-4 h-4" />
-                Draft Comparison
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+          </CardHeader>
+        </Card>
 
         {/* Top Row: Student Info and Grading Criteria side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

@@ -1,13 +1,15 @@
 // Navigation Component
 // Top navigation bar with user menu and logout
 
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, User, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -54,6 +56,25 @@ export default function Navigation() {
             >
               Submit
             </Link>
+            <button
+              onClick={() => {
+                // If on dashboard, trigger modal directly
+                if (location.pathname === '/') {
+                  const event = new CustomEvent('openAssignmentModal');
+                  window.dispatchEvent(event);
+                } else {
+                  // Navigate to dashboard and trigger modal
+                  navigate('/');
+                  setTimeout(() => {
+                    const event = new CustomEvent('openAssignmentModal');
+                    window.dispatchEvent(event);
+                  }, 100);
+                }
+              }}
+              className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              New Assignment
+            </button>
             <Link
               to="/bridge"
               className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"

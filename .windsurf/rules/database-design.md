@@ -4,6 +4,24 @@ trigger: always_on
 
 # Database Design Rules
 
+## 📋 Database Reference File
+
+**ALWAYS consult [/db_ref.md](cci:7://file:///Users/michaelberry/Documents/CascadeProjects/AI-EssayGrader/AI-EssayGrader/db_ref.md:0:0-0:0) before making database changes!**
+
+This file contains the complete, up-to-date schema including:
+- All tables and columns
+- All foreign keys and relationships
+- All indexes and constraints
+- Current row counts and sizes
+- FERPA compliance status
+
+### Workflow:
+1. **BEFORE changes**: Read [/db_ref.md](cci:7://file:///Users/michaelberry/Documents/CascadeProjects/AI-EssayGrader/AI-EssayGrader/db_ref.md:0:0-0:0) to understand current schema
+2. **AFTER changes**: Update [/db_ref.md](cci:7://file:///Users/michaelberry/Documents/CascadeProjects/AI-EssayGrader/AI-EssayGrader/db_ref.md:0:0-0:0) with new schema
+   - Run [/get_complete_schema.sql](cci:7://file:///Users/michaelberry/Documents/CascadeProjects/AI-EssayGrader/AI-EssayGrader/get_complete_schema.sql:0:0-0:0) in Neon
+   - Update timestamp and migration history
+   - Commit both migration SQL and updated db_ref.md
+
 ## Overview
 Standards and best practices for database schema design in the FastAI Grader project.
 
