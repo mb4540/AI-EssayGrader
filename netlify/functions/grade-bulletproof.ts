@@ -85,8 +85,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         a.total_points,
         a.rounding_mode,
         a.rounding_decimals,
-      document_type
-        a.document_type,      FROM grader.submissions s
+        a.document_type
+      FROM grader.submissions s
       LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
       JOIN grader.students st ON s.student_id = st.student_id
       WHERE s.submission_id = ${submission_id}
