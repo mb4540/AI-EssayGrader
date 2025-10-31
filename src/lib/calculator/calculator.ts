@@ -87,10 +87,11 @@ function sumAwardedPoints(rubric: Rubric, extracted: ExtractedScores): Decimal {
 
 /**
  * Round Decimal value using specified rounding mode and precision
+ * Returns as string with trailing zeros preserved
  */
-function roundDecimal(value: Decimal, rounding: Rounding): Decimal {
+function roundDecimal(value: Decimal, rounding: Rounding): string {
   const mode = ROUNDING_MODES[rounding.mode];
-  return value.toDecimalPlaces(rounding.decimals, mode);
+  return value.toFixed(rounding.decimals, mode);
 }
 
 /**
@@ -113,7 +114,7 @@ export function computeScores(rubric: Rubric, extracted: ExtractedScores): Compu
 
   const percent = rawWeighted.dividedBy(maxWeighted).times(100);
 
-  // Round values
+  // Round values (roundDecimal now returns strings)
   const rounding = rubric.scale.rounding;
   const rawRounded = roundDecimal(rawWeighted, rounding);
   const maxRounded = roundDecimal(maxWeighted, rounding);
@@ -122,9 +123,9 @@ export function computeScores(rubric: Rubric, extracted: ExtractedScores): Compu
   // Return based on scale mode
   if (rubric.scale.mode === 'percent') {
     return {
-      raw_points: rawRounded.toString(),
-      max_points: maxRounded.toString(),
-      percent: percentRounded.toString(),
+      raw_points: rawRounded,
+      max_points: maxRounded,
+      percent: percentRounded,
       final_points: null,
     };
   }
@@ -139,10 +140,10 @@ export function computeScores(rubric: Rubric, extracted: ExtractedScores): Compu
   const finalRounded = roundDecimal(scaled, rounding);
 
   return {
-    raw_points: rawRounded.toString(),
-    max_points: maxRounded.toString(),
-    percent: percentRounded.toString(),
-    final_points: finalRounded.toString(),
+    raw_points: rawRounded,
+    max_points: maxRounded,
+    percent: percentRounded,
+    final_points: finalRounded,
   };
 }
 
