@@ -1,6 +1,6 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** October 31, 2025 - 1:42 PM UTC-05:00  
+**Last Updated:** October 31, 2025 - 4:25 PM UTC-05:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
@@ -8,6 +8,12 @@
 > Always reference this file before making database changes.
 
 ## 📝 Recent Migrations
+
+### October 31, 2025 - Document Type Column
+**Migration:** `migrations/add_document_type.sql`
+- Added `document_type` column to assignments table
+- Added index on document_type for filtering
+- Supports ELA document type selection (personal_narrative, argumentative, etc.)
 
 ### October 31, 2025 - BulletProof Grading Schema
 **Migration:** `migrations/add_bulletproof_grading.sql`
@@ -46,6 +52,7 @@
 | **total_points** | **numeric(10,4)** | **YES** | **null** | |
 | **rounding_mode** | **text** | **YES** | **'HALF_UP'** | |
 | **rounding_decimals** | **integer** | **YES** | **2** | |
+| **document_type** | **text** | **YES** | **null** | |
 
 **Row Count:** 1  
 **Size:** 48 KB
@@ -56,11 +63,13 @@
 - `total_points` - Total points for assignment (used when scale_mode='points')
 - `rounding_mode` - Rounding mode for calculator: HALF_UP, HALF_EVEN, or HALF_DOWN
 - `rounding_decimals` - Number of decimal places for rounding (0-4)
+- `document_type` - Type of document (e.g., personal_narrative, argumentative) - helps AI provide relevant feedback
 
 **Indexes:**
 - `assignments_pkey` - PRIMARY KEY (assignment_id)
 - `idx_assignments_tenant` - (tenant_id)
 - `idx_assignments_scale_mode` - (scale_mode)
+- `idx_assignments_document_type` - (document_type)
 
 **Foreign Keys:**
 - `tenant_id` → `tenants.tenant_id` (ON DELETE RESTRICT)
