@@ -27,7 +27,8 @@ Your output will be validated and passed to a deterministic calculator for final
 export function buildExtractorPrompt(
   rubric: RubricJSON,
   essayText: string,
-  submissionId: string
+  submissionId: string,
+  customGradingPrompt?: string
 ): string {
   // Build criterion descriptions for the prompt
   const criteriaDescriptions = rubric.criteria
@@ -43,7 +44,21 @@ ${levelsDesc}`;
     })
     .join('\n\n');
 
-  return `RUBRIC: "${rubric.title}"
+  // Use custom grading prompt or default
+  const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
+  
+  // Check if grammar/spelling/punctuation are in rubric
+  const rubricIds = rubric.criteria.map(c => c.id.toLowerCase());
+  const hasGrammar = rubricIds.some(id => 
+    id.includes('grammar') || 
+    id.includes('convention') || 
+    id.includes('mechanics') ||
+    id.includes('language')
+  );
+
+  return `${gradingPhilosophy}
+
+RUBRIC: "${rubric.title}"
 
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
@@ -59,11 +74,42 @@ Evaluate the essay against EACH criterion above. For each criterion:
 2. Award the points associated with that level
 3. Provide a specific rationale citing evidence from the essay
 
+FEEDBACK GUIDELINES:
+
+1. Rubric-Based Scoring (AFFECTS GRADE):
+   - Provide specific rationale for each rubric criterion
+   - Cite examples from the essay
+   - Explain why you chose that level
+   - Points must be within [0, max_points] for each criterion
+
+2. Grammar/Spelling/Punctuation Feedback:
+   ${hasGrammar 
+     ? '- These ARE in the rubric - include in scoring'
+     : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
+   }
+   - Be specific: "Line 3: 'their' should be 'there'"
+   - Keep it constructive and encouraging
+   ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
+
+3. Strengths:
+   - Highlight what the student did well
+   - Be specific and genuine
+   - Connect to rubric criteria when possible
+
+4. Areas for Improvement:
+   - Focus on rubric categories
+   - Provide actionable suggestions
+   - Prioritize most impactful changes
+
+5. Top 3 Suggestions:
+   - Most important improvements for next time
+   - Should align with rubric categories
+   - Be specific and achievable
+
 CONSTRAINTS:
 - Do NOT calculate totals, percentages, or final grades
 - Do NOT sum points across criteria
 - Only evaluate and score each criterion individually
-- Points must be within [0, max_points] for each criterion
 - Be specific in rationales - cite actual text when possible
 - Never include student names or personal information
 
@@ -72,13 +118,21 @@ OUTPUT ONLY THIS JSON STRUCTURE:
   "submission_id": "${submissionId}",
   "scores": [
     {
-      "criterion_id": "string",  // e.g., "organization"
-      "level": "string",          // e.g., "Proficient"
-      "points_awarded": "string", // e.g., "3.0" (as string, Decimal format)
-      "rationale": "string"       // Specific evidence from essay
+      "criterion_id": "string",
+      "level": "string",
+      "points_awarded": "string",
+      "rationale": "string"
     }
   ],
-  "notes": "string or null"       // Optional overall observations
+  "feedback": {
+    "grammar_findings": ["string"],
+    "spelling_findings": ["string"],
+    "punctuation_findings": ["string"],
+    "strengths": ["string"],
+    "areas_for_improvement": ["string"],
+    "top_3_suggestions": ["string"]
+  },
+  "notes": "string or null"
 }
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
@@ -91,7 +145,8 @@ export function buildComparisonExtractorPrompt(
   rubric: RubricJSON,
   roughDraft: string,
   finalDraft: string,
-  submissionId: string
+  submissionId: string,
+  customGradingPrompt?: string
 ): string {
   const criteriaDescriptions = rubric.criteria
     .map((c) => {
@@ -106,7 +161,21 @@ ${levelsDesc}`;
     })
     .join('\n\n');
 
-  return `RUBRIC: "${rubric.title}"
+  // Use custom grading prompt or default
+  const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
+  
+  // Check if grammar/spelling/punctuation are in rubric
+  const rubricIds = rubric.criteria.map(c => c.id.toLowerCase());
+  const hasGrammar = rubricIds.some(id => 
+    id.includes('grammar') || 
+    id.includes('convention') || 
+    id.includes('mechanics') ||
+    id.includes('language')
+  );
+
+  return `${gradingPhilosophy}
+
+RUBRIC: "${rubric.title}"
 
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
@@ -127,12 +196,44 @@ TASK:
 3. Award points and provide rationale based on the FINAL draft
 4. In your rationale, you may note improvements from the rough draft
 
+FEEDBACK GUIDELINES:
+
+1. Rubric-Based Scoring (AFFECTS GRADE):
+   - Provide specific rationale for each rubric criterion
+   - Cite examples from the FINAL draft
+   - Explain why you chose that level
+   - You may note improvements from rough draft
+   - Points must be within [0, max_points] for each criterion
+
+2. Grammar/Spelling/Punctuation Feedback:
+   ${hasGrammar 
+     ? '- These ARE in the rubric - include in scoring'
+     : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
+   }
+   - Note any errors in the FINAL draft
+   - Be specific and constructive
+   ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
+
+3. Strengths:
+   - Highlight what improved between drafts
+   - Note what the student did well in final draft
+   - Be specific and encouraging
+
+4. Areas for Improvement:
+   - Focus on rubric categories
+   - Suggest next steps for further revision
+   - Prioritize most impactful changes
+
+5. Top 3 Suggestions:
+   - Most important improvements for next time
+   - Should align with rubric categories
+   - Be specific and achievable
+
 CONSTRAINTS:
 - Grade the FINAL DRAFT (not the rough draft)
 - Do NOT calculate totals, percentages, or final grades
 - Do NOT sum points across criteria
 - Only evaluate and score each criterion individually
-- Points must be within [0, max_points] for each criterion
 - Be specific in rationales - cite actual text when possible
 - Never include student names or personal information
 
@@ -144,10 +245,18 @@ OUTPUT ONLY THIS JSON STRUCTURE:
       "criterion_id": "string",
       "level": "string",
       "points_awarded": "string",
-      "rationale": "string"  // May include improvement notes
+      "rationale": "string"
     }
   ],
-  "notes": "string or null"  // Optional observations about growth
+  "feedback": {
+    "grammar_findings": ["string"],
+    "spelling_findings": ["string"],
+    "punctuation_findings": ["string"],
+    "strengths": ["string"],
+    "areas_for_improvement": ["string"],
+    "top_3_suggestions": ["string"]
+  },
+  "notes": "string or null"
 }
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;

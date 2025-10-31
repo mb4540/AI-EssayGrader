@@ -94,5 +94,13 @@ export interface ExtractedScoresJSON {
     points_awarded: string;
     rationale: string;
   }[];
+  feedback?: {
+    grammar_findings: string[];
+    spelling_findings: string[];
+    punctuation_findings: string[];
+    strengths: string[];
+    areas_for_improvement: string[];
+    top_3_suggestions: string[];
+  };
   notes?: string | null;
 }

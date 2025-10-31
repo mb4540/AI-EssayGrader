@@ -13,6 +13,7 @@ import { authenticateRequest } from './lib/auth';
 import { computeScores, validateRubric } from '../../src/lib/calculator/calculator';
 import { rubricFromJSON, extractedScoresFromJSON } from '../../src/lib/calculator/converters';
 import { createDefaultRubric, isValidRubric } from '../../src/lib/calculator/rubricBuilder';
+import { parseTeacherRubric, validateParsedRubric } from '../../src/lib/calculator/rubricParser';
 import { 
   EXTRACTOR_SYSTEM_MESSAGE, 
   buildExtractorPrompt, 
@@ -118,7 +119,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     let rubric: RubricJSON;
     
     if (rubric_json && isValidRubric(rubric_json)) {
-      // Use existing rubric from assignment
+      // Use existing structured rubric from assignment
       rubric = rubric_json as RubricJSON;
       
       // Override scale settings if provided
@@ -134,9 +135,40 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       if (rounding_decimals !== null && rounding_decimals !== undefined) {
         rubric.scale.rounding.decimals = rounding_decimals;
       }
+    } else if (teacher_criteria && teacher_criteria.trim().length > 0) {
+      // ✅ SOLUTION: Parse the teacher's rubric text
+      try {
+        rubric = parseTeacherRubric(
+          teacher_criteria, 
+          assignment_id || 'default',
+          total_points
+        );
+        
+        // Validate parsed rubric
+        const validation = validateParsedRubric(rubric);
+        if (!validation.valid) {
+          console.warn('Parsed rubric validation warnings:', validation.errors);
+        }
+        
+        // Override scale settings if provided in assignment
+        if (scale_mode) rubric.scale.mode = scale_mode;
+        if (total_points) rubric.scale.total_points = total_points.toString();
+        if (rounding_mode) rubric.scale.rounding.mode = rounding_mode as 'HALF_UP' | 'HALF_EVEN' | 'HALF_DOWN';
+        if (rounding_decimals !== null) rubric.scale.rounding.decimals = rounding_decimals;
+        
+        console.log('Successfully parsed rubric:', {
+          categories: rubric.criteria.length,
+          total_points: rubric.scale.total_points,
+          mode: rubric.scale.mode,
+        });
+        
+      } catch (parseError) {
+        console.warn('Failed to parse teacher rubric, using default:', parseError);
+        rubric = createDefaultRubric(assignment_id || 'default', teacher_criteria);
+      }
     } else {
-      // Create default rubric from teacher criteria
-      rubric = createDefaultRubric(assignment_id || 'default', teacher_criteria);
+      // Fallback: No criteria provided
+      throw new Error('No grading criteria provided. Please add criteria to grade this submission.');
     }
 
     // Validate rubric
@@ -156,11 +188,25 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
+    // Get custom grading prompt from request body
+    const customGradingPrompt = body.grading_prompt;
+
     // Build extractor prompt based on draft mode
     const essayText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
     const extractorPrompt = draft_mode === 'comparison'
-      ? buildComparisonExtractorPrompt(rubric, rough_draft_text, final_draft_text, submission_id)
-      : buildExtractorPrompt(rubric, essayText, submission_id);
+      ? buildComparisonExtractorPrompt(
+          rubric, 
+          rough_draft_text, 
+          final_draft_text, 
+          submission_id,
+          customGradingPrompt  // ✅ Pass custom prompt
+        )
+      : buildExtractorPrompt(
+          rubric, 
+          essayText, 
+          submission_id,
+          customGradingPrompt  // ✅ Pass custom prompt
+        );
 
     const response = await openai.chat.completions.create({
       model,
