@@ -111,11 +111,14 @@ Load Rubric → LLM Extractor (JSON only) → Python Calculator (Decimal math) �
 - [x] Implement points mode: `(raw / max) * total_points`
 - [x] Add rounding modes: HALF_UP, HALF_EVEN, HALF_DOWN
 - [x] Create unit tests for calculator (all edge cases) - 17/17 passing
-- [ ] Design LLM extractor prompt (strict JSON output)
-- [ ] Implement Pydantic validation with retry logic
-- [ ] Update grade.ts to call Python calculator
-- [ ] Add audit trail storage (rubric + scores + computed + versions)
+- [x] Port calculator to TypeScript with decimal.js - 17/17 tests passing
+- [x] Design LLM extractor prompt (strict JSON output)
+- [x] Create rubric builder for backward compatibility
+- [x] Integrate calculator with grading workflow (grade-bulletproof.ts)
+- [x] Add audit trail storage (extracted_scores + computed_scores + calculator_version)
 - [ ] Update frontend to display computed breakdown
+- [ ] End-to-end testing with sample essays
+- [ ] Beta test with Shana
 
 **Database Changes:**
 ```sql
