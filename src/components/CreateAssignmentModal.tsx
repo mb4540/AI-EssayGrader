@@ -5,8 +5,10 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { createAssignment } from '@/lib/api';
 import CriteriaInput from './CriteriaInput';
+import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
   const [description, setDescription] = useState('');
   const [criteria, setCriteria] = useState('');
   const [totalPoints, setTotalPoints] = useState(100);
+  const [documentType, setDocumentType] = useState('personal_narrative');
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -43,11 +46,12 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
       alert('Please enter an assignment title');
       return;
     }
-    console.log('📝 Creating assignment:', { title: title.trim(), has_criteria: !!criteria.trim() });
+    console.log('📝 Creating assignment:', { title: title.trim(), document_type: documentType, has_criteria: !!criteria.trim() });
     createMutation.mutate({ 
       title: title.trim(), 
       description: description.trim() || undefined,
       grading_criteria: criteria.trim() || undefined,
+      document_type: documentType,
     });
   };
 
@@ -59,6 +63,7 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
     setDescription('');
     setCriteria('');
     setTotalPoints(100);
+    setDocumentType('personal_narrative');
     onClose();
   };
 
@@ -101,6 +106,27 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
               disabled={createMutation.isPending}
               autoFocus
             />
+          </div>
+
+          <div>
+            <Label htmlFor="document-type" className="text-gray-700 dark:text-gray-300 font-medium">
+              Document Type
+            </Label>
+            <Select value={documentType} onValueChange={setDocumentType}>
+              <SelectTrigger id="document-type" className="mt-1 border-2 focus:border-blue-500">
+                <SelectValue placeholder="Select document type" />
+              </SelectTrigger>
+              <SelectContent>
+                {ELA_DOCUMENT_TYPES.map((type) => (
+                  <SelectItem key={type.id} value={type.id}>
+                    {type.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Helps AI provide more relevant feedback
+            </p>
           </div>
 
           <div>

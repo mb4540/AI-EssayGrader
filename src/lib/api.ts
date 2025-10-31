@@ -158,7 +158,7 @@ export async function listAssignments() {
   }>(response);
 }
 
-export async function createAssignment(data: { title: string; description?: string; grading_criteria?: string }) {
+export async function createAssignment(data: { title: string; description?: string; grading_criteria?: string; document_type?: string }) {
   const response = await fetch(`${API_BASE}/assignments`, {
     method: 'POST',
     headers: getAuthHeaders(),
