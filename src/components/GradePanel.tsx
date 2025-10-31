@@ -144,17 +144,19 @@ export default function GradePanel({
 
               {/* Feedback Section (from bulletproof) */}
               {(aiFeedback as any).bulletproof?.extracted_scores?.feedback && (
-                <div className="border-t pt-4 space-y-4">
-                  {/* Strengths */}
+                <div className="border-t pt-4 space-y-3">
+                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">Feedback & Suggestions</p>
+                  
+                  {/* Strengths Card */}
                   {(aiFeedback as any).bulletproof.extracted_scores.feedback.strengths?.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                        <span className="text-green-600 dark:text-green-400">✓</span>
+                    <div className="bg-green-50 dark:bg-green-950 p-4 rounded-lg border-2 border-green-200 dark:border-green-800">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2 text-green-700 dark:text-green-300">
+                        <span>✓</span>
                         Strengths
                       </p>
-                      <ul className="space-y-1">
+                      <ul className="space-y-1.5">
                         {(aiFeedback as any).bulletproof.extracted_scores.feedback.strengths.map((strength: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 pl-4">
+                          <li key={idx} className="text-sm text-green-800 dark:text-green-200 pl-4">
                             • {strength}
                           </li>
                         ))}
@@ -162,19 +164,19 @@ export default function GradePanel({
                     </div>
                   )}
 
-                  {/* Areas for Improvement */}
+                  {/* Areas for Improvement Card */}
                   {(aiFeedback as any).bulletproof.extracted_scores.feedback.areas_for_improvement?.length > 0 && (
-                    <div>
-                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                        <span className="text-blue-600 dark:text-blue-400">💡</span>
+                    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border-2 border-blue-200 dark:border-blue-800">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2 text-blue-700 dark:text-blue-300">
+                        <span>💡</span>
                         Areas for Improvement
-                        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-0.5 rounded">
                           Rubric-Based
                         </span>
                       </p>
-                      <ul className="space-y-1">
+                      <ul className="space-y-1.5">
                         {(aiFeedback as any).bulletproof.extracted_scores.feedback.areas_for_improvement.map((area: string, idx: number) => (
-                          <li key={idx} className="text-sm text-gray-700 dark:text-gray-300 pl-4">
+                          <li key={idx} className="text-sm text-blue-800 dark:text-blue-200 pl-4">
                             • {area}
                           </li>
                         ))}
@@ -182,57 +184,66 @@ export default function GradePanel({
                     </div>
                   )}
 
-                  {/* Additional Feedback (Grammar/Spelling/Punctuation) */}
-                  {((aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings?.length > 0 ||
-                    (aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings?.length > 0 ||
-                    (aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings?.length > 0) && (
-                    <div className="bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
-                      <p className="text-sm font-medium mb-2 flex items-center gap-2">
-                        <span className="text-gray-600 dark:text-gray-400">📝</span>
-                        Additional Feedback
-                        <span className="text-xs bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded">
+                  {/* Grammar Card */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings?.length > 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm font-medium mb-1 flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                        <span>📝</span>
+                        Grammar
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
                           Not Affecting Score
                         </span>
                       </p>
-                      
-                      {(aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings?.length > 0 && (
-                        <div className="mb-2">
-                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Grammar:</p>
-                          <ul className="space-y-0.5">
-                            {(aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings.map((finding: string, idx: number) => (
-                              <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 pl-3">
-                                • {finding}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {(aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings?.length > 0 && (
-                        <div className="mb-2">
-                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Spelling:</p>
-                          <ul className="space-y-0.5">
-                            {(aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings.map((finding: string, idx: number) => (
-                              <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 pl-3">
-                                • {finding}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      
-                      {(aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings?.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Punctuation:</p>
-                          <ul className="space-y-0.5">
-                            {(aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings.map((finding: string, idx: number) => (
-                              <li key={idx} className="text-xs text-gray-600 dark:text-gray-400 pl-3">
-                                • {finding}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mb-2 italic">Constructive feedback to help you improve</p>
+                      <ul className="space-y-1">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.grammar_findings.map((finding: string, idx: number) => (
+                          <li key={idx} className="text-sm text-amber-900 dark:text-amber-100 pl-3">
+                            • {finding}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {/* Spelling Card */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings?.length > 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm font-medium mb-1 flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                        <span>✏️</span>
+                        Spelling
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                          Not Affecting Score
+                        </span>
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mb-2 italic">Constructive feedback to help you improve</p>
+                      <ul className="space-y-1">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.spelling_findings.map((finding: string, idx: number) => (
+                          <li key={idx} className="text-sm text-amber-900 dark:text-amber-100 pl-3">
+                            • {finding}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {/* Punctuation Card */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings?.length > 0 && (
+                    <div className="bg-amber-50 dark:bg-amber-950 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm font-medium mb-1 flex items-center gap-2 text-amber-800 dark:text-amber-200">
+                        <span>🔤</span>
+                        Punctuation
+                        <span className="text-xs bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded">
+                          Not Affecting Score
+                        </span>
+                      </p>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mb-2 italic">Constructive feedback to help you improve</p>
+                      <ul className="space-y-1">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.punctuation_findings.map((finding: string, idx: number) => (
+                          <li key={idx} className="text-sm text-amber-900 dark:text-amber-100 pl-3">
+                            • {finding}
+                          </li>
+                        ))}
+                      </ul>
                     </div>
                   )}
 
