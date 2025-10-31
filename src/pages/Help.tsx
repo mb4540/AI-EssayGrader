@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 export default function Help() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
+      <div className="container mx-auto px-4 py-6">
         {/* Help Guide Header Card */}
         <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
