@@ -82,7 +82,91 @@ ADD COLUMN total_assignment_points integer DEFAULT 100;
 
 ---
 
-### 2. Expand Assignment Types & Subject Areas ⭐⭐⭐ CRITICAL
+### 2. BulletProof Grading with Python Calculator ⭐⭐⭐ CRITICAL
+**Goal:** Eliminate float math errors and ensure deterministic, auditable grading by using Python Decimal-based calculator
+
+**Background:** Current LLM-based grading has potential numerical inaccuracies due to:
+- Float arithmetic errors (0.30000000000000004)
+- LLM attempting to do math (inconsistent)
+- No audit trail for calculations
+- No validation of computed scores
+
+**Solution: Agentic Architecture**
+> **"LLM for language, tools for math."**
+
+**Architecture:**
+```
+Load Rubric → LLM Extractor (JSON only) → Python Calculator (Decimal math) → Save Audit Trail
+```
+
+**Key Components:**
+1. **LLM Extractor** - Outputs structured JSON with per-criterion scores and rationales (NO totals)
+2. **Python Calculator** - Deterministic Decimal-based math for totals, scaling, rounding
+3. **Validator** - Schema enforcement, range checks, retry logic
+4. **Audit Trail** - Store rubric JSON, extracted scores, computed scores, calculator version
+
+**Tasks:**
+- [ ] Create Python calculator module with Decimal math
+- [ ] Implement percent mode: `(raw / max) * 100`
+- [ ] Implement points mode: `(raw / max) * total_points`
+- [ ] Add rounding modes: HALF_UP, HALF_EVEN, HALF_DOWN
+- [ ] Create unit tests for calculator (all edge cases)
+- [ ] Design LLM extractor prompt (strict JSON output)
+- [ ] Implement Pydantic validation with retry logic
+- [ ] Update grade.ts to call Python calculator
+- [ ] Add audit trail storage (rubric + scores + computed + versions)
+- [ ] Update frontend to display computed breakdown
+
+**Database Changes:**
+```sql
+ALTER TABLE grader.assignments
+ADD COLUMN rubric_json jsonb,
+ADD COLUMN scale_mode text CHECK (scale_mode IN ('percent', 'points')) DEFAULT 'percent',
+ADD COLUMN total_points numeric(10,4),
+ADD COLUMN rounding_mode text DEFAULT 'HALF_UP',
+ADD COLUMN rounding_decimals integer DEFAULT 2;
+
+ALTER TABLE grader.submissions
+ADD COLUMN computed_scores jsonb,
+ADD COLUMN calculator_version text;
+```
+
+**Files:** 
+- New: `netlify/functions/python/calculator.py`
+- New: `netlify/functions/python/models.py` (Pydantic schemas)
+- New: `netlify/functions/python/validator.py`
+- New: `netlify/functions/python/test_calculator.py`
+- New: `src/lib/prompts/extractor.ts`
+- Update: `netlify/functions/grade.ts`
+- Update: `src/pages/Submission.tsx`
+- Database migration: `migrations/add_bulletproof_grading.sql`
+
+**Time:** 20-26 hours (over 2-3 weeks)
+
+**Implementation Phases:**
+- **Phase 1:** Python calculator + unit tests (6-9 hours)
+- **Phase 2:** LLM integration + validation (5-7 hours)
+- **Phase 3:** Integration + testing (5-6 hours)
+- **Phase 4:** Audit trail + monitoring (3-4 hours)
+
+**Success Metrics:**
+- ✅ Zero float errors (0.30000000000000004 eliminated)
+- ✅ 100% audit trail coverage
+- ✅ Deterministic scoring (same input = same output)
+- ✅ < 5 seconds per essay
+- ✅ Matches manual grading within 2%
+
+**Integration with Point-Based Scoring:**
+- BulletProofing provides the **backend calculator**
+- Point-Based Scoring provides the **UI toggle**
+- Both share `scale_mode` and `total_points` database fields
+- Implement BulletProofing calculator FIRST, then Point-Based Scoring UI
+
+**Detailed Plan:** See `/BulletProofing.md`
+
+---
+
+### 3. Expand Assignment Types & Subject Areas ⭐⭐⭐ CRITICAL
 **Goal:** Support comprehensive document types across all subject areas (not just essays)
 
 **Background:** Teachers need to grade various writing types beyond essays, specific to their subject area (ELA, History, Science, Math, CTE, Arts, Health/PE).
@@ -225,7 +309,7 @@ ADD CONSTRAINT valid_document_type CHECK (
 
 ---
 
-### 3. Update Essay Grading Prompt - Professional Tone ⭐⭐ HIGH PRIORITY
+### 4. Update Essay Grading Prompt - Professional Tone ⭐⭐ HIGH PRIORITY
 **Goal:** Change grading tone from "encouraging" to "constructive and professional"
 
 **Background:** Beta tester feedback: "Constructive Criticism does not need to be rainbows butterflies and unicorns." Teachers want direct, honest feedback that follows the rubric strictly.
@@ -286,7 +370,7 @@ Never include personal data about the student.
 
 ---
 
-### 4. Add "Clean Text" Feature for Copy-Pasted PDF Content ⭐⭐ HIGH PRIORITY
+### 5. Add "Clean Text" Feature for Copy-Pasted PDF Content ⭐⭐ HIGH PRIORITY
 **Goal:** Clean up markdown artifacts and formatting issues when teachers paste text from PDFs
 
 **Background:** When teachers copy/paste text from PDF documents into the TEXT tab, markdown elements and formatting artifacts appear that are problematic for both the user and the LLM grading.
@@ -351,7 +435,7 @@ TEXT Tab (after):
 
 ---
 
-### 5. Anchor Chart Integration ⭐ MEDIUM PRIORITY - BLOCKED
+### 6. Anchor Chart Integration ⭐ MEDIUM PRIORITY - BLOCKED
 **Goal:** Support district-provided anchor charts that guide grading (with flexibility for variation from rubrics)
 
 **Background:** Districts provide anchor charts that don't 100% match the rubrics they supply. Teachers need to reference these during grading.
@@ -399,7 +483,7 @@ ADD COLUMN anchor_chart_file_url text;
 
 ---
 
-### 6. PDF Annotation with Inline Feedback ⭐⭐⭐ HIGH PRIORITY - COMPLEX
+### 7. PDF Annotation with Inline Feedback ⭐⭐⭐ HIGH PRIORITY - COMPLEX
 **Goal:** Overlay feedback directly on student work using traditional teacher markup symbols
 
 **Background:** Teachers want to "circle spelling and punctuation" and mark up student work like traditional grading. Feedback should be attached to specific portions of the original text.
@@ -506,7 +590,7 @@ ADD COLUMN annotated_pdf_url text;
 
 ## 🎯 High Priority - Next Up
 
-### 2. Dashboard Enhancements
+### 8. Dashboard Enhancements
 **Goal:** Make Dashboard more useful for teachers
 
 #### A. Add Sorting Options ⭐
@@ -547,7 +631,7 @@ ADD COLUMN annotated_pdf_url text;
 
 ---
 
-### 2. Submission Form Improvements
+### 9. Submission Form Improvements
 **Goal:** Prevent data loss and speed up workflow
 
 #### A. Add Draft Auto-Save ⭐
@@ -575,7 +659,7 @@ ADD COLUMN annotated_pdf_url text;
 
 ---
 
-### 3. CSV Export Enhancement
+### 10. CSV Export Enhancement
 **Goal:** Give teachers more control over exports
 
 - [ ] Add export options modal
