@@ -1,38 +1,26 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BookOpen, Upload, Sparkles, FileText, Printer, Settings, Image, PenTool } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { BookOpen, Upload, Sparkles, FileText, Printer, Settings, Image, PenTool } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function Help() {
-  const navigate = useNavigate();
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-blue-600 shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(-1)}
-              className="text-white hover:bg-white/20"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div>
-              <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                <BookOpen className="w-8 h-8" />
-                Help Guide
-              </h1>
-              <p className="text-blue-100 text-sm mt-1">Simple guide for teachers</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto px-4 py-6 max-w-4xl">
+        {/* Help Guide Header Card */}
+        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl text-gray-900">Help Guide</CardTitle>
+                  <p className="text-sm text-gray-600">Simple guide for teachers</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+          </CardHeader>
+        </Card>
         {/* Introduction */}
         <Card className="mb-6 shadow-xl border-t-4 border-t-indigo-500">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700">
@@ -437,17 +425,6 @@ export default function Help() {
           </CardContent>
         </Card>
 
-        {/* Back Button */}
-        <div className="text-center mt-8">
-          <Button 
-            onClick={() => navigate(-1)}
-            size="lg"
-            className="bg-gradient-to-r from-indigo-500 to-blue-500 hover:from-indigo-600 hover:to-blue-600"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Grading
-          </Button>
-        </div>
       </div>
     </div>
   );
