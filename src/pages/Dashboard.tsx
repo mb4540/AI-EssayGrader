@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Download, Search, Trash2, User, FolderOpen } from 'lucide-react';
@@ -33,6 +33,13 @@ export default function Dashboard() {
   // Refs for scroll synchronization (unused - was for flat table view)
   // const headerScrollRef = useRef<HTMLDivElement>(null);
   // const bodyScrollRef = useRef<HTMLDivElement>(null);
+
+  // Listen for assignment modal trigger from navigation
+  useEffect(() => {
+    const handleOpenModal = () => setIsAssignmentModalOpen(true);
+    window.addEventListener('openAssignmentModal', handleOpenModal);
+    return () => window.removeEventListener('openAssignmentModal', handleOpenModal);
+  }, []);
 
   // Fetch submissions data
   const { data, isLoading } = useQuery({
