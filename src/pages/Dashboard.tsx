@@ -1,7 +1,7 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Download, Search, FolderPlus, ChevronUp, ChevronDown, Trash2, List, FolderOpen } from 'lucide-react';
+import { Plus, Download, Search, FolderPlus, Trash2, User, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,15 +23,16 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
-  const [sortField, setSortField] = useState<SortField>('created_at');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortField] = useState<SortField>('created_at'); // setSortField unused - for future sorting
+  const [sortDirection] = useState<SortDirection>('desc'); // setSortDirection unused - for future sorting
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteAssignmentTitle, setDeleteAssignmentTitle] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grouped'>('list');
   const pageSize = 20;
   
-  const headerScrollRef = useRef<HTMLDivElement>(null);
-  const bodyScrollRef = useRef<HTMLDivElement>(null);
+  // Refs for scroll synchronization (unused - was for flat table view)
+  // const headerScrollRef = useRef<HTMLDivElement>(null);
+  // const bodyScrollRef = useRef<HTMLDivElement>(null);
 
   // Fetch submissions data
   const { data, isLoading } = useQuery({
@@ -52,15 +53,15 @@ export default function Dashboard() {
     },
   });
 
-  // Handle sorting
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+  // Handle sorting (currently unused - can be re-enabled for future sorting features)
+  // const handleSort = (field: SortField) => {
+  //   if (sortField === field) {
+  //     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+  //   } else {
+  //     setSortField(field);
+  //     setSortDirection('asc');
+  //   }
+  // };
 
   // Handle delete operations
   const handleDelete = (id: string) => {
@@ -93,18 +94,18 @@ export default function Dashboard() {
     }
   };
 
-  // Handle scrolling synchronization
-  const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (bodyScrollRef.current) {
-      bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
+  // Handle scrolling synchronization (currently unused - was for flat table view)
+  // const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  //   if (bodyScrollRef.current) {
+  //     bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+  //   }
+  // };
 
-  const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (headerScrollRef.current) {
-      headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-    }
-  };
+  // const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
+  //   if (headerScrollRef.current) {
+  //     headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
+  //   }
+  // };
 
   // Handle CSV export - resolve student names from bridge
   const handleExport = () => {
@@ -151,6 +152,20 @@ export default function Dashboard() {
     acc[assignmentKey].push(submission);
     return acc;
   }, {} as Record<string, typeof sortedSubmissions>);
+
+  // Group submissions by student
+  const groupedByStudent = sortedSubmissions.reduce((acc, submission) => {
+    const student = submission.student_id ? bridge.findByUuid(submission.student_id) : null;
+    const studentKey = student?.name || 'Unknown';
+    if (!acc[studentKey]) {
+      acc[studentKey] = {
+        studentId: student?.localId || '',
+        submissions: []
+      };
+    }
+    acc[studentKey].submissions.push(submission);
+    return acc;
+  }, {} as Record<string, { studentId: string; submissions: typeof sortedSubmissions }>);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -200,8 +215,8 @@ export default function Dashboard() {
                   onClick={() => setViewMode('list')}
                   className={viewMode === 'list' ? 'bg-indigo-600' : ''}
                 >
-                  <List className="w-4 h-4 mr-2" />
-                  List View
+                  <User className="w-4 h-4 mr-2" />
+                  By Student
                 </Button>
                 <Button
                   variant={viewMode === 'grouped' ? 'default' : 'outline'}
@@ -235,179 +250,94 @@ export default function Dashboard() {
                 No submissions found. Create your first submission to get started.
               </div>
             ) : viewMode === 'list' ? (
-              <>
-                {/* List View - Header Table */}
-                <div 
-                  ref={headerScrollRef}
-                  onScroll={handleHeaderScroll}
-                  className="overflow-x-auto"
-                >
-                  <table className="w-full table-fixed">
-                    <thead>
-                      <tr className="border-b-2 bg-gradient-to-r from-slate-100 to-blue-100">
-                        <th 
-                          className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-indigo-100 select-none transition-colors w-[200px]"
-                          onClick={() => handleSort('student_name')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Student
-                            <div className="flex flex-col -space-y-1">
-                              <ChevronUp className={`w-4 h-4 ${sortField === 'student_name' && sortDirection === 'asc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                              <ChevronDown className={`w-4 h-4 ${sortField === 'student_name' && sortDirection === 'desc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
+              /* By Student View - Accordion by Student */
+              <Accordion type="multiple" className="w-full">
+                {Object.entries(groupedByStudent).map(([studentName, data]) => (
+                  <AccordionItem key={studentName} value={studentName} className="border-b">
+                    <AccordionTrigger className="hover:no-underline px-4 py-4 bg-gradient-to-r from-slate-50 to-blue-50 hover:from-slate-100 hover:to-blue-100">
+                      <div className="flex items-center justify-between gap-3 flex-1">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                            <User className="w-4 h-4 text-indigo-600" />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-lg text-gray-900">
+                              {studentName}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {data.submissions.length} submission{data.submissions.length !== 1 ? 's' : ''}
+                              {data.studentId && ` • ID: ${data.studentId}`}
                             </div>
                           </div>
-                        </th>
-                        <th 
-                          className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-indigo-100 select-none transition-colors w-[200px]"
-                          onClick={() => handleSort('assignment_title')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Assignment
-                            <div className="flex flex-col -space-y-1">
-                              <ChevronUp className={`w-4 h-4 ${sortField === 'assignment_title' && sortDirection === 'asc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                              <ChevronDown className={`w-4 h-4 ${sortField === 'assignment_title' && sortDirection === 'desc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                            </div>
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-indigo-100 select-none transition-colors w-[130px]"
-                          onClick={() => handleSort('ai_grade')}
-                        >
-                          <div className="flex items-center gap-2">
-                            AI Grade
-                            <div className="flex flex-col -space-y-1">
-                              <ChevronUp className={`w-4 h-4 ${sortField === 'ai_grade' && sortDirection === 'asc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                              <ChevronDown className={`w-4 h-4 ${sortField === 'ai_grade' && sortDirection === 'desc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                            </div>
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-indigo-100 select-none transition-colors w-[150px]"
-                          onClick={() => handleSort('teacher_grade')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Teacher Grade
-                            <div className="flex flex-col -space-y-1">
-                              <ChevronUp className={`w-4 h-4 ${sortField === 'teacher_grade' && sortDirection === 'asc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                              <ChevronDown className={`w-4 h-4 ${sortField === 'teacher_grade' && sortDirection === 'desc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                            </div>
-                          </div>
-                        </th>
-                        <th 
-                          className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-indigo-100 select-none transition-colors w-[130px]"
-                          onClick={() => handleSort('created_at')}
-                        >
-                          <div className="flex items-center gap-2">
-                            Date
-                            <div className="flex flex-col -space-y-1">
-                              <ChevronUp className={`w-4 h-4 ${sortField === 'created_at' && sortDirection === 'asc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                              <ChevronDown className={`w-4 h-4 ${sortField === 'created_at' && sortDirection === 'desc' ? 'text-indigo-600' : 'text-gray-400'}`} strokeWidth={3} />
-                            </div>
-                          </div>
-                        </th>
-                        <th className="text-left py-3 px-4 font-semibold w-[140px]">Actions</th>
-                      </tr>
-                    </thead>
-                  </table>
-                </div>
-
-                {/* List View - Body Table */}
-                <div 
-                  ref={bodyScrollRef}
-                  onScroll={handleBodyScroll}
-                  className="overflow-x-auto max-h-[500px] overflow-y-auto border-t"
-                >
-                  <table className="w-full table-fixed">
-                    <tbody>
-                      {sortedSubmissions.map((submission) => {
-                        const student = submission.student_id ? bridge.findByUuid(submission.student_id) : null;
-                        return (
-                        <tr key={submission.id} className="border-b hover:bg-muted/50">
-                          <td className="py-3 px-4 w-[200px]">
-                            <div>
-                              <div className="font-medium truncate">{student?.name || 'Unknown'}</div>
-                              {student?.localId && (
-                                <div className="text-sm text-muted-foreground truncate">
-                                  ID: {student.localId}
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 w-[200px] truncate">
-                            {submission.assignment_title || '-'}
-                          </td>
-                          <td className="py-3 px-4 w-[130px]">
-                            {submission.ai_grade !== null && submission.ai_grade !== undefined ? (
-                              <span className="font-medium">{submission.ai_grade}/100</span>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 w-[150px]">
-                            {submission.teacher_grade !== null && submission.teacher_grade !== undefined ? (
-                              <span className="font-medium text-primary">
-                                {submission.teacher_grade}/100
-                              </span>
-                            ) : (
-                              <span className="text-muted-foreground">-</span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-muted-foreground w-[130px]">
-                            {new Date(submission.created_at).toLocaleDateString()}
-                          </td>
-                          <td className="py-3 px-4 w-[140px]">
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => navigate(`/submission/${submission.id}`)}
-                              >
-                                View
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(submission.id)}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </td>
-                        </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                {data.pagination && data.pagination.total > pageSize && (
-                  <div className="flex items-center justify-between mt-4">
-                    <div className="text-sm text-muted-foreground">
-                      Showing {page * pageSize + 1} to {Math.min((page + 1) * pageSize, data.pagination.total)} of {data.pagination.total} submissions
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                      >
-                        Previous
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setPage(p => p + 1)}
-                        disabled={(page + 1) * pageSize >= data.pagination.total}
-                      >
-                        Next
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </>
+                        </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="overflow-x-auto">
+                        <table className="w-full">
+                          <thead className="bg-slate-100">
+                            <tr>
+                              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Assignment</th>
+                              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">AI Grade</th>
+                              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Teacher Grade</th>
+                              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Date</th>
+                              <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.submissions.map((submission) => (
+                              <tr key={submission.id} className="border-b hover:bg-slate-50">
+                                <td className="py-3 px-4">
+                                  <div className="font-medium text-gray-900">
+                                    {submission.assignment_title || '-'}
+                                  </div>
+                                </td>
+                                <td className="py-3 px-4">
+                                  <span className="font-semibold text-gray-900">
+                                    {submission.ai_grade ? `${submission.ai_grade}/100` : '-'}
+                                  </span>
+                                </td>
+                                <td className="py-3 px-4">
+                                  {submission.teacher_grade ? (
+                                    <span className="font-semibold text-blue-600">
+                                      {submission.teacher_grade}/100
+                                    </span>
+                                  ) : (
+                                    <span className="text-gray-400">-</span>
+                                  )}
+                                </td>
+                                <td className="py-3 px-4 text-gray-600 text-sm">
+                                  {new Date(submission.created_at).toLocaleDateString()}
+                                </td>
+                                <td className="py-3 px-4">
+                                  <div className="flex items-center gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => navigate(`/submission/${submission.id}`)}
+                                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                    >
+                                      View
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDelete(submission.id)}
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             ) : (
               /* Grouped View - Accordion by Assignment */
               <Accordion type="multiple" className="w-full">
