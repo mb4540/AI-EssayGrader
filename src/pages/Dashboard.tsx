@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Download, Search, FolderPlus, Trash2, User, FolderOpen } from 'lucide-react';
+import { Download, Search, Trash2, User, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -170,45 +170,28 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
-        {/* Action Buttons Toolbar */}
-        <div className="flex justify-end gap-2 mb-4">
-          <Button 
-            onClick={handleExport} 
-            variant="outline"
-            disabled={!data?.submissions?.length}
-            className="text-gray-700"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export CSV
-          </Button>
-          <Button 
-            onClick={() => setIsAssignmentModalOpen(true)} 
-            variant="outline"
-            className="text-gray-700"
-          >
-            <FolderPlus className="w-4 h-4 mr-2" />
-            New Assignment
-          </Button>
-          <Button 
-            onClick={() => navigate('/submission')}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Submission
-          </Button>
-        </div>
-
-        {/* Submissions Card */}
-        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white">
+        {/* Dashboard Header Card */}
+        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                   <span className="text-2xl">📚</span>
                 </div>
-                <CardTitle className="text-2xl text-gray-900">Submissions</CardTitle>
+                <CardTitle className="text-2xl text-gray-900">Dashboard</CardTitle>
               </div>
               <div className="flex gap-2">
+                <Button 
+                  onClick={handleExport} 
+                  variant="outline"
+                  size="sm"
+                  disabled={!data?.submissions?.length}
+                  className="text-gray-700"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export CSV
+                </Button>
+                <div className="w-px h-8 bg-gray-300 mx-2" />
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'outline'}
                   size="sm"
@@ -229,20 +212,28 @@ export default function Dashboard() {
                 </Button>
               </div>
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search by student name or ID..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(0);
-                }}
-                className="pl-10 border-2 focus:border-indigo-500"
-              />
-            </div>
           </CardHeader>
-          <CardContent>
+        </Card>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search by student name or ID..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(0);
+              }}
+              className="pl-10 border-2 focus:border-indigo-500 bg-white"
+            />
+          </div>
+        </div>
+
+        {/* Submissions Content Card */}
+        <Card className="shadow-xl bg-white">
+          <CardContent className="p-0">
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : !data?.submissions?.length ? (
