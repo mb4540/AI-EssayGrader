@@ -29,6 +29,7 @@ export default function Submission() {
   const [studentId, setStudentId] = useState('');
   const [assignmentId, setAssignmentId] = useState<string | undefined>();
   const [criteria, setCriteria] = useState('');
+  const [totalPoints, setTotalPoints] = useState(100);
   const [verbatimText, setVerbatimText] = useState('');
   const [roughDraftText, setRoughDraftText] = useState('');
   const [finalDraftText, setFinalDraftText] = useState('');
@@ -484,7 +485,12 @@ export default function Submission() {
 
           {/* Grading Criteria */}
           <div className="transform transition-all duration-300">
-            <CriteriaInput value={criteria} onChange={setCriteria} />
+            <CriteriaInput 
+              value={criteria} 
+              onChange={setCriteria}
+              totalPoints={totalPoints}
+              onTotalPointsChange={setTotalPoints}
+            />
           </div>
         </div>
 

@@ -17,6 +17,7 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [criteria, setCriteria] = useState('');
+  const [totalPoints, setTotalPoints] = useState(100);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -102,6 +103,8 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
             <CriteriaInput
               value={criteria}
               onChange={setCriteria}
+              totalPoints={totalPoints}
+              onTotalPointsChange={setTotalPoints}
               showCard={false}
               title="Grading Criteria"
               required={false}
