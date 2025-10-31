@@ -207,10 +207,12 @@ function extractLevels(lines: string[], startLine: number, _maxPoints: number, n
     const labelMatch = line.match(/[-*]\s*(\w+)\s*\((\d+)\s*(?:pts?|points?)\):\s*(.+)/i);
     
     if (rangeMatch) {
-      const midPoint = (parseInt(rangeMatch[1], 10) + parseInt(rangeMatch[2], 10)) / 2;
+      // Use the UPPER bound of the range as the points for this level
+      // Example: "25-30 pts" → use 30 as the points
+      const upperBound = parseInt(rangeMatch[2], 10);
       levels.push({
         label: `${rangeMatch[1]}-${rangeMatch[2]} pts`,
-        points: midPoint.toFixed(1),
+        points: upperBound.toString(),
         descriptor: rangeMatch[3].trim(),
       });
     } else if (labelMatch) {
