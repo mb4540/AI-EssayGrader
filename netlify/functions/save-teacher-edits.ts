@@ -51,10 +51,10 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     // Check if submission exists and belongs to tenant
     const existing = await sql`
-      SELECT s.id, s.ai_grade, s.ai_feedback 
+      SELECT s.submission_id, s.ai_grade, s.ai_feedback 
       FROM grader.submissions s
-      JOIN grader.students st ON s.student_ref = st.id
-      WHERE s.id = ${submission_id}
+      JOIN grader.students st ON s.student_id = st.student_id
+      WHERE s.submission_id = ${submission_id}
       AND st.tenant_id = ${tenant_id}
       LIMIT 1
     `;
@@ -73,14 +73,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       SET 
         teacher_grade = ${teacher_grade},
         teacher_feedback = ${teacher_feedback}
-      WHERE id = ${submission_id}
+      WHERE submission_id = ${submission_id}
       RETURNING updated_at
     `;
 
     // Create version snapshot
     await sql`
       INSERT INTO grader.submission_versions (
-        submission_ref,
+        submission_id,
         ai_grade,
         ai_feedback,
         teacher_grade,

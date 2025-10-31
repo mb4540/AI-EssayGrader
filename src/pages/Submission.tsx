@@ -15,12 +15,15 @@ import AnnotationViewer from '@/components/AnnotationViewer';
 import { ingestSubmission, gradeSubmission, saveTeacherEdits, getSubmission, listAssignments, uploadFile } from '@/lib/api';
 import { printSubmission, downloadSubmissionHTML } from '@/lib/print';
 import type { Feedback } from '@/lib/schema';
+import { useBridge } from '@/hooks/useBridge';
 
 export default function Submission() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const bridge = useBridge();
 
   const [draftMode, setDraftMode] = useState<'single' | 'comparison'>('single');
+  const [selectedStudentUuid, setSelectedStudentUuid] = useState('');
   const [studentName, setStudentName] = useState('');
   const [studentId, setStudentId] = useState('');
   const [assignmentId, setAssignmentId] = useState<string | undefined>();
@@ -65,9 +68,12 @@ export default function Submission() {
   });
 
   useEffect(() => {
-    if (existingSubmission) {
-      setStudentName(existingSubmission.student_name);
-      setStudentId(existingSubmission.student_id || '');
+    if (existingSubmission && existingSubmission.student_id) {
+      // Set the selected UUID and resolve student info from bridge
+      setSelectedStudentUuid(existingSubmission.student_id);
+      const student = bridge.findByUuid(existingSubmission.student_id);
+      setStudentName(student?.name || 'Unknown');
+      setStudentId(student?.localId || '');
       setAssignmentId(existingSubmission.assignment_id);
       setCriteria(existingSubmission.teacher_criteria);
       
@@ -185,22 +191,27 @@ export default function Submission() {
   const handleRunGrade = async () => {
     // First ingest if not already done
     if (!submissionId) {
-      // Validation based on mode
+      // Validation
+      if (!selectedStudentUuid) {
+        alert('Please select a student from the dropdown');
+        return;
+      }
+
       if (draftMode === 'single') {
-        if (!studentName || !criteria || !verbatimText) {
-          alert('Please provide student name, criteria, and essay text');
+        if (!criteria || !verbatimText) {
+          alert('Please provide grading criteria and essay text');
           return;
         }
       } else {
-        if (!studentName || !criteria || !roughDraftText || !finalDraftText) {
-          alert('Please provide student name, criteria, and both draft versions');
+        if (!criteria || !roughDraftText || !finalDraftText) {
+          alert('Please provide grading criteria and both draft versions');
           return;
         }
       }
-
+      
+      // FERPA COMPLIANT: Send only UUID to API (no PII)
       const result = await ingestMutation.mutateAsync({
-        student_name: studentName,
-        student_id: studentId || undefined,
+        student_id: selectedStudentUuid,  // Only UUID sent to cloud
         assignment_id: assignmentId || undefined,
         teacher_criteria: criteria,
         source_type: sourceType,
@@ -216,7 +227,7 @@ export default function Submission() {
       if (imageDataUrl && sourceType === 'image') {
         const imageUrl = await uploadImage(result.submission_id, imageDataUrl);
         if (imageUrl) {
-          console.log('Image uploaded successfully:', imageUrl);
+          // Image uploaded successfully
         }
       }
       
@@ -224,7 +235,6 @@ export default function Submission() {
       if (pendingFile) {
         try {
           const fileUrl = await uploadFile(result.submission_id, pendingFile.data, pendingFile.extension);
-          console.log('Original file uploaded successfully:', fileUrl);
           setOriginalFileUrl(fileUrl); // Update state so Annotate tab appears immediately
           setPendingFile(null); // Clear after successful upload
         } catch (error) {
@@ -407,34 +417,85 @@ export default function Submission() {
             </h2>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="student-name" className="text-gray-700 dark:text-gray-300 font-medium">
-                  Student Name <span className="text-red-500">*</span>
+                <Label htmlFor="student-select" className="text-gray-700 dark:text-gray-300 font-medium">
+                  Select Student <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="student-name"
-                  value={studentName}
-                  onChange={(e) => setStudentName(e.target.value)}
-                  placeholder="Enter student name"
-                  className="mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500"
-                />
+                {bridge.isLocked ? (
+                  <div className="mt-1 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 mb-2">
+                      🔒 Student roster is locked. Please unlock it first.
+                    </p>
+                    <Button
+                      onClick={() => navigate('/bridge')}
+                      variant="outline"
+                      size="sm"
+                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
+                    >
+                      Go to Students Page to Unlock
+                    </Button>
+                  </div>
+                ) : bridge.students.length === 0 ? (
+                  <div className="mt-1 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 mb-2">
+                      No students in roster. Please add students first.
+                    </p>
+                    <Button
+                      onClick={() => navigate('/bridge')}
+                      variant="outline"
+                      size="sm"
+                      className="text-blue-700 border-blue-300 hover:bg-blue-100"
+                    >
+                      Go to Students Page
+                    </Button>
+                  </div>
+                ) : (
+                  <>
+                    <Select
+                      value={selectedStudentUuid}
+                      onValueChange={(uuid) => {
+                        setSelectedStudentUuid(uuid);
+                        const student = bridge.findByUuid(uuid);
+                        if (student) {
+                          setStudentName(student.name);
+                          setStudentId(student.localId);
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
+                        <SelectValue placeholder="Choose a student from your roster" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {bridge.students.map((student) => (
+                          <SelectItem key={student.uuid} value={student.uuid}>
+                            {student.name} ({student.localId})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {selectedStudentUuid && (
+                      <p className="text-sm text-gray-500 mt-1">
+                        Selected: {studentName} (ID: {studentId})
+                      </p>
+                    )}
+                  </>
+                )}
               </div>
               <div>
-                <Label htmlFor="student-id" className="text-gray-700 dark:text-gray-300 font-medium">
-                  Student ID <span className="text-gray-400 text-xs">(optional)</span>
+                <Label className="text-gray-700 dark:text-gray-300 font-medium">
+                  Student UUID <span className="text-gray-400 text-xs">(auto-filled)</span>
                 </Label>
                 <Input
-                  id="student-id"
-                  value={studentId}
-                  onChange={(e) => setStudentId(e.target.value)}
-                  placeholder="Enter student ID"
-                  className="mt-1 border-gray-300"
+                  value={selectedStudentUuid}
+                  disabled
+                  placeholder="UUID will be auto-filled"
+                  className="mt-1 border-gray-300 bg-gray-50 text-gray-500"
                 />
               </div>
               <div>
                 <Label htmlFor="assignment" className="text-gray-700 dark:text-gray-300 font-medium">
                   Assignment <span className="text-gray-400 text-xs">(optional)</span>
                 </Label>
-                <Select value={assignmentId} onValueChange={setAssignmentId}>
+                <Select value={assignmentId || ''} onValueChange={(value) => setAssignmentId(value || undefined)}>
                   <SelectTrigger className="mt-1 border-gray-300">
                     <SelectValue placeholder="Select an assignment..." />
                   </SelectTrigger>

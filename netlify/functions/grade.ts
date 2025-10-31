@@ -131,12 +131,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     const { submission_id } = validation.data;
 
-    // Fetch submission (filtered by tenant via student_ref)
+    // Fetch submission (filtered by tenant via student_id)
     const submission = await sql`
-      SELECT s.id, s.verbatim_text, s.rough_draft_text, s.final_draft_text, s.draft_mode, s.teacher_criteria
+      SELECT s.submission_id, s.verbatim_text, s.rough_draft_text, s.final_draft_text, s.draft_mode, s.teacher_criteria
       FROM grader.submissions s
-      JOIN grader.students st ON s.student_ref = st.id
-      WHERE s.id = ${submission_id}
+      JOIN grader.students st ON s.student_id = st.student_id
+      WHERE s.submission_id = ${submission_id}
       AND st.tenant_id = ${tenant_id}
       LIMIT 1
     `;
@@ -212,13 +212,13 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       SET 
         ai_grade = ${feedback.overall_grade},
         ai_feedback = ${JSON.stringify(feedback)}
-      WHERE id = ${submission_id}
+      WHERE submission_id = ${submission_id}
     `;
 
     // Create version snapshot
     await sql`
       INSERT INTO grader.submission_versions (
-        submission_ref,
+        submission_id,
         ai_grade,
         ai_feedback,
         draft_mode,

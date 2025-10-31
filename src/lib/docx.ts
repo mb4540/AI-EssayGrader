@@ -65,12 +65,9 @@ export async function extractTextFromDocx(file: File): Promise<{ text: string; f
   const fileName = file.name.toLowerCase();
   const fileType = file.type.toLowerCase();
   
-  console.log('Extracting text from file:', { fileName, fileType, size: file.size });
-  
   try {
     // Handle PDF files
     if (fileType === 'application/pdf' || fileName.endsWith('.pdf')) {
-      console.log('Detected PDF file, using PDF extraction');
       const text = await extractTextFromPDF(file);
       return { text, fileType: 'pdf' };
     }
@@ -81,14 +78,12 @@ export async function extractTextFromDocx(file: File): Promise<{ text: string; f
       fileName.endsWith('.docx') ||
       fileType === 'application/vnd.google-apps.document'
     ) {
-      console.log('Detected DOCX file, using DOCX extraction');
       const text = await extractTextFromDOCX(file);
       return { text, fileType: 'docx' };
     }
     
     // Handle legacy DOC files
     if (fileType === 'application/msword' || fileName.endsWith('.doc')) {
-      console.log('Detected DOC file, using DOC extraction');
       const text = await extractTextFromDOC(file);
       return { text, fileType: 'doc' };
     }

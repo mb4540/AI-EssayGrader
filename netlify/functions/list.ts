@@ -66,13 +66,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       countResult = await sql`
         SELECT COUNT(*) as total
         FROM grader.submissions s
-        JOIN grader.students st ON s.student_ref = st.id
+        JOIN grader.students st ON s.student_id = st.student_id
         WHERE st.tenant_id = ${tenant_id}
       `;
 
       submissions = await sql`
         SELECT 
-          s.id,
+          s.submission_id as id,
+          s.student_id,
           s.source_type,
           s.verbatim_text,
           s.teacher_criteria,
@@ -81,13 +82,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           s.teacher_feedback,
           s.created_at,
           s.updated_at,
-          st.student_name,
-          st.student_id,
           a.title as assignment_title,
-          a.id as assignment_id
+          a.assignment_id as assignment_id
         FROM grader.submissions s
-        JOIN grader.students st ON s.student_ref = st.id
-        LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+        LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
+        JOIN grader.students st ON s.student_id = st.student_id
         WHERE st.tenant_id = ${tenant_id}
         ORDER BY s.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -100,25 +99,25 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
+            AND s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.verbatim_text ILIKE ${searchPattern}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-          WHERE s.assignment_ref = ${assignment_id}
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
+          WHERE s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.verbatim_text ILIKE ${searchPattern}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -126,23 +125,23 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
+            AND s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
+            AND s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
@@ -151,24 +150,24 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.assignment_id = ${assignment_id}
+            AND s.verbatim_text ILIKE ${searchPattern}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.assignment_id = ${assignment_id}
+            AND s.verbatim_text ILIKE ${searchPattern}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -176,24 +175,24 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.verbatim_text ILIKE ${searchPattern}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.verbatim_text ILIKE ${searchPattern}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -201,22 +200,22 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
+            AND s.assignment_id = ${assignment_id}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
-            AND s.assignment_ref = ${assignment_id}
+            AND s.assignment_id = ${assignment_id}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -224,20 +223,20 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
           ORDER BY s.created_at DESC
@@ -247,22 +246,22 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         countResult = await sql`
           SELECT COUNT(*) as total
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
+          JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.verbatim_text ILIKE ${searchPattern}
         `;
         submissions = await sql`
           SELECT 
-            s.id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
-            st.student_name, st.student_id,
-            a.title as assignment_title, a.id as assignment_id
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id
           FROM grader.submissions s
-          JOIN grader.students st ON s.student_ref = st.id
-          LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
-            AND (st.student_name ILIKE ${searchPattern} OR s.verbatim_text ILIKE ${searchPattern})
+            AND s.verbatim_text ILIKE ${searchPattern}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;

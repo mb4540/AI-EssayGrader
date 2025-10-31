@@ -20,10 +20,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       };
     }
 
-    // Fetch submission with student and assignment details
+    // Fetch submission (FERPA compliant - no PII)
     const result = await sql`
       SELECT 
-        s.id,
+        s.submission_id,
+        s.student_id,
         s.source_type,
         s.draft_mode,
         s.verbatim_text,
@@ -38,14 +39,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         s.original_file_url,
         s.created_at,
         s.updated_at,
-        st.student_name,
-        st.student_id,
         a.title as assignment_title,
-        a.id as assignment_id
+        a.assignment_id as assignment_id
       FROM grader.submissions s
-      JOIN grader.students st ON s.student_ref = st.id
-      LEFT JOIN grader.assignments a ON s.assignment_ref = a.id
-      WHERE s.id = ${submissionId}
+      LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
+      WHERE s.submission_id = ${submissionId}
       LIMIT 1
     `;
 

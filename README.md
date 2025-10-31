@@ -8,7 +8,8 @@ A privacy-conscious, production-ready web application that dramatically reduces 
 - 🤖 **AI-Powered Grading**: OpenAI integration with structured feedback (grammar, spelling, structure, evidence)
 - ✏️ **Teacher Override**: Edit AI suggestions with full version history
 - 📊 **Dashboard**: Search, filter, and export submissions to CSV
-- 🔒 **Privacy-First**: No file storage by default, only text and grades persisted
+- 🔒 **FERPA Compliant**: Student names encrypted locally, only UUIDs stored in cloud
+- 🛡️ **Student Identity Bridge**: Secure local storage of student information
 - ⚡ **Fast**: Sub-10s grading target with streaming UI status
 
 ## Tech Stack
@@ -198,7 +199,37 @@ Penalties:
 - Too short (< 200 words): -10
 ```
 
-## Privacy & Security
+## FERPA Compliance & Privacy
+
+### Student Identity Bridge
+FastAIGrader implements a **Student Identity Bridge** pattern to ensure FERPA compliance:
+
+- **Zero PII in Cloud**: Student names and district IDs are NEVER sent to the cloud database
+- **Local Encryption**: Student information is encrypted locally using AES-256-GCM
+- **UUID-Only Storage**: Only anonymous UUIDs are stored in the database
+- **Local Resolution**: Student names are resolved locally from the encrypted bridge file
+- **Secure Passphrase**: Bridge file protected by teacher-chosen passphrase
+
+### Setting Up the Student Bridge
+
+1. **First Time Setup**:
+   - Navigate to the "Students" page
+   - Click "Create New Bridge"
+   - Enter a secure passphrase (you'll need this every session)
+   - Add your students with names and local IDs
+
+2. **Daily Use**:
+   - Navigate to "Students" page
+   - Click "Unlock Bridge"
+   - Enter your passphrase
+   - Bridge remains unlocked for your session
+
+3. **Backup Your Bridge**:
+   - Click "Export" to download your encrypted bridge file
+   - Store securely (this file contains student names)
+   - Never commit to Git or share publicly
+
+### Additional Security
 
 - **No file storage**: By default, only text and grades are persisted
 - **Minimal metadata**: No third-party analytics

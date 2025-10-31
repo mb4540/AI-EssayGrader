@@ -31,3 +31,7 @@ yarn-error.log*
 # Old Plans and Archives (not tracked in Git)
 OldPlans/
 .archive/
+
+# Student Bridge Files (FERPA - Never commit!)
+students.bridge.json.enc.json
+*.bridge.json.enc.json

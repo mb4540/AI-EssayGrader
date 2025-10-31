@@ -1,41 +1,22 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { X, Plus, Loader2, Sparkles } from 'lucide-react';
+import { X, Plus, Loader2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { createAssignment } from '@/lib/api';
+import CriteriaInput from './CriteriaInput';
 
 interface CreateAssignmentModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-async function enhanceRubricWithAI(simpleRules: string): Promise<string> {
-  const customRubricPrompt = localStorage.getItem('ai_rubric_prompt');
-  const response = await fetch('/.netlify/functions/enhance-rubric', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ 
-      simple_rules: simpleRules,
-      rubric_prompt: customRubricPrompt || undefined
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error('Failed to enhance rubric');
-  }
-
-  const data = await response.json();
-  return data.enhanced_rubric;
-}
-
 export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignmentModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [criteria, setCriteria] = useState('');
-  const [isEnhancing, setIsEnhancing] = useState(false);
   const queryClient = useQueryClient();
 
   const createMutation = useMutation({
@@ -48,24 +29,6 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
       onClose();
     },
   });
-
-  const handleEnhance = async () => {
-    if (!criteria.trim()) {
-      alert('Please enter some basic grading rules first');
-      return;
-    }
-
-    setIsEnhancing(true);
-    try {
-      const enhanced = await enhanceRubricWithAI(criteria);
-      setCriteria(enhanced);
-    } catch (error) {
-      console.error('Enhancement failed:', error);
-      alert('Failed to enhance rubric. Please try again.');
-    } finally {
-      setIsEnhancing(false);
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,41 +99,14 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label htmlFor="assignment-criteria" className="text-gray-700 dark:text-gray-300 font-medium">
-                Grading Criteria <span className="text-gray-400 text-xs">(optional)</span>
-              </Label>
-              <Button
-                type="button"
-                onClick={handleEnhance}
-                disabled={isEnhancing || !criteria.trim() || createMutation.isPending}
-                size="sm"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-              >
-                {isEnhancing ? (
-                  <>
-                    <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                    Enhancing...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3 h-3 mr-1" />
-                    Enhance With AI
-                  </>
-                )}
-              </Button>
-            </div>
-            <Textarea
-              id="assignment-criteria"
+            <CriteriaInput
               value={criteria}
-              onChange={(e) => setCriteria(e.target.value)}
-              placeholder="Enter grading rubric or simple rules (e.g., 'Check grammar, organization, evidence. 100 points total.')"
-              className="mt-1 border-2 focus:border-amber-400 min-h-[120px] font-mono text-sm"
+              onChange={setCriteria}
+              showCard={false}
+              title="Grading Criteria"
+              required={false}
               disabled={createMutation.isPending}
             />
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 bg-gradient-to-r from-amber-50 to-purple-50 dark:from-amber-950/30 dark:to-purple-950/30 p-2 rounded border border-amber-200 dark:border-amber-800">
-              <span className="font-semibold">✨ Tip:</span> Add criteria here to auto-populate for all submissions of this assignment!
-            </p>
           </div>
 
           {/* Actions */}

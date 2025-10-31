@@ -49,8 +49,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     }
 
     const { 
-      student_name, 
-      student_id, 
+      student_id,  // UUID from bridge (FERPA compliant)
       assignment_id, 
       assignment_title,
       teacher_criteria, 
@@ -61,66 +60,56 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       source_type 
     } = validation.data;
 
-    // Start transaction
-    // 1. Find or create student (filtered by tenant)
+    // FERPA COMPLIANT: Only UUID, no PII
+    // 1. Verify student exists or create (UUID only, no name)
     let studentResult = await sql`
-      SELECT id FROM grader.students 
+      SELECT student_id FROM grader.students 
       WHERE tenant_id = ${tenant_id}
-      AND student_name = ${student_name} 
-      AND (student_id = ${student_id || null} OR student_id IS NULL)
+      AND student_id = ${student_id}
       LIMIT 1
     `;
 
-    let studentUuid: string;
+    // Create student record if doesn't exist (UUID only)
     if (studentResult.length === 0) {
-      const newStudent = await sql`
-        INSERT INTO grader.students (tenant_id, student_name, student_id)
-        VALUES (${tenant_id}, ${student_name}, ${student_id || null})
-        RETURNING id
+      await sql`
+        INSERT INTO grader.students (student_id, tenant_id, created_at)
+        VALUES (${student_id}, ${tenant_id}, NOW())
       `;
-      studentUuid = newStudent[0].id;
-    } else {
-      studentUuid = studentResult[0].id;
     }
 
     // 2. Handle assignment (find existing or create new, filtered by tenant)
     let assignmentUuid: string | null = null;
     if (assignment_id) {
-      // Verify assignment belongs to this tenant
-      const assignmentCheck = await sql`
-        SELECT id FROM grader.assignments
-        WHERE id = ${assignment_id} AND tenant_id = ${tenant_id}
-      `;
-      if (assignmentCheck.length > 0) {
-        assignmentUuid = assignment_id;
-      }
+      // Use the provided assignment_id directly
+      assignmentUuid = assignment_id;
     } else if (assignment_title) {
       // Try to find existing assignment by title (within tenant)
       const existingAssignment = await sql`
-        SELECT id FROM grader.assignments 
+        SELECT assignment_id FROM grader.assignments 
         WHERE tenant_id = ${tenant_id}
         AND title = ${assignment_title}
         LIMIT 1
       `;
       
       if (existingAssignment.length > 0) {
-        assignmentUuid = existingAssignment[0].id;
+        assignmentUuid = existingAssignment[0].assignment_id;
       } else {
         // Create new assignment (with tenant_id)
         const newAssignment = await sql`
           INSERT INTO grader.assignments (tenant_id, title)
           VALUES (${tenant_id}, ${assignment_title})
-          RETURNING id
+          RETURNING assignment_id
         `;
-        assignmentUuid = newAssignment[0].id;
+        assignmentUuid = newAssignment[0].assignment_id;
       }
     }
 
-    // 3. Create submission
+    // 3. Create submission (with UUID reference)
     const submission = await sql`
       INSERT INTO grader.submissions (
-        student_ref,
-        assignment_ref,
+        student_id,
+        assignment_id,
+        tenant_id,
         source_type,
         draft_mode,
         verbatim_text,
@@ -129,8 +118,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         teacher_criteria
       )
       VALUES (
-        ${studentUuid},
+        ${student_id},
         ${assignmentUuid},
+        ${tenant_id},
         ${source_type},
         ${draft_mode},
         ${verbatim_text || null},
@@ -138,7 +128,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         ${final_draft_text || null},
         ${teacher_criteria}
       )
-      RETURNING id, created_at
+      RETURNING submission_id, created_at
     `;
 
     return {
@@ -148,7 +138,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        submission_id: submission[0].id,
+        submission_id: submission[0].submission_id,
         created_at: submission[0].created_at,
       }),
     };

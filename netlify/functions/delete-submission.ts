@@ -22,7 +22,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Delete the submission
     await sql`
       DELETE FROM grader.submissions
-      WHERE id = ${submission_id}
+      WHERE submission_id = ${submission_id}
     `;
 
     return {

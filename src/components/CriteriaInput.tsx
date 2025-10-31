@@ -8,6 +8,11 @@ import { Sparkles, Loader2 } from 'lucide-react';
 interface CriteriaInputProps {
   value: string;
   onChange: (value: string) => void;
+  showCard?: boolean;
+  title?: string;
+  required?: boolean;
+  className?: string;
+  disabled?: boolean;
 }
 
 const EXAMPLE_CRITERIA = `Scoring (100 pts total):
@@ -40,7 +45,15 @@ async function enhanceRubricWithAI(simpleRules: string): Promise<string> {
   return data.enhanced_rubric;
 }
 
-export default function CriteriaInput({ value, onChange }: CriteriaInputProps) {
+export default function CriteriaInput({ 
+  value, 
+  onChange,
+  showCard = true,
+  title = 'Grading Criteria',
+  required = true,
+  className = '',
+  disabled = false
+}: CriteriaInputProps) {
   const [isEnhancing, setIsEnhancing] = useState(false);
 
   const handleEnhance = async () => {
@@ -61,52 +74,64 @@ export default function CriteriaInput({ value, onChange }: CriteriaInputProps) {
     }
   };
 
+  const content = (
+    <div className={showCard ? '' : className}>
+      <div className="flex items-center justify-between mb-2">
+        <Label htmlFor="criteria" className="text-gray-700 dark:text-gray-300 font-medium">
+          {title} {required && <span className="text-red-500">*</span>}
+        </Label>
+        <Button
+          type="button"
+          onClick={handleEnhance}
+          disabled={isEnhancing || !value.trim() || disabled}
+          size="sm"
+          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+        >
+          {isEnhancing ? (
+            <>
+              <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+              Enhancing...
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3 h-3 mr-1" />
+              Enhance With AI
+            </>
+          )}
+        </Button>
+      </div>
+      <Textarea
+        id="criteria"
+        placeholder={EXAMPLE_CRITERIA}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className="min-h-[200px] font-mono text-sm border-2 focus:border-amber-400"
+      />
+      <p className="text-xs text-gray-500 dark:text-gray-400 bg-gradient-to-r from-amber-50 to-purple-50 dark:from-amber-950/30 dark:to-purple-950/30 p-3 rounded border border-amber-200 dark:border-amber-800 mt-2">
+        <span className="font-semibold">✨ Tip:</span> Put in simple rules for grading, then let AI create a detailed rubric for you!
+        <br />
+        <span className="text-xs italic mt-1 block">Example: "Check grammar, organization, and evidence. Total 100 points."</span>
+      </p>
+    </div>
+  );
+
+  if (!showCard) {
+    return content;
+  }
+
   return (
-    <Card className="shadow-lg border-l-4 border-amber-500 bg-white dark:bg-slate-800">
+    <Card className={`shadow-lg border-l-4 border-amber-500 bg-white dark:bg-slate-800 ${className}`}>
       <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950">
-        <CardTitle className="text-lg flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
-              <span className="text-amber-600 dark:text-amber-300 text-sm">📋</span>
-            </div>
-            Grading Criteria
+        <CardTitle className="text-lg flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+            <span className="text-amber-600 dark:text-amber-300 text-sm">📋</span>
           </div>
-          <Button
-            onClick={handleEnhance}
-            disabled={isEnhancing || !value.trim()}
-            size="sm"
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-          >
-            {isEnhancing ? (
-              <>
-                <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Enhancing...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-3 h-3 mr-1" />
-                Enhance With AI
-              </>
-            )}
-          </Button>
+          {title}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 pt-4">
-        <Label htmlFor="criteria" className="text-gray-700 dark:text-gray-300 font-medium">
-          Teacher Rubric <span className="text-red-500">*</span>
-        </Label>
-        <Textarea
-          id="criteria"
-          placeholder={EXAMPLE_CRITERIA}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="min-h-[200px] font-mono text-sm border-2 focus:border-amber-400"
-        />
-        <p className="text-xs text-gray-500 dark:text-gray-400 bg-gradient-to-r from-amber-50 to-purple-50 dark:from-amber-950/30 dark:to-purple-950/30 p-3 rounded border border-amber-200 dark:border-amber-800">
-          <span className="font-semibold">✨ Tip:</span> Put in simple rules for grading, then let AI create a detailed rubric for you!
-          <br />
-          <span className="text-xs italic mt-1 block">Example: "Check grammar, organization, and evidence. Total 100 points."</span>
-        </p>
+        {content}
       </CardContent>
     </Card>
   );

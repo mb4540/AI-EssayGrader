@@ -57,13 +57,21 @@ export function useBridge(): UseBridgeReturn {
   const store = getBridgeStore();
   const supportsFileSystem = isFileSystemAccessSupported();
 
+  // Sync component state with store state on mount
+  useEffect(() => {
+    // Check if store is already unlocked (from previous page)
+    if (!store.isLocked()) {
+      setIsLocked(false);
+      setStudents(store.getAllStudents());
+    }
+  }, [store]);
+
   // Load bridge from IndexedDB on mount (fallback storage)
   useEffect(() => {
     if (!supportsFileSystem) {
       loadBridgeFromIndexedDB().then((data) => {
         if (data) {
           // Bridge file exists in IndexedDB, but still locked
-          console.log('Bridge file found in IndexedDB');
         }
       }).catch(console.error);
     }
