@@ -202,14 +202,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           final_draft_text, 
           submission_id,
           customGradingPrompt,  // ✅ Pass custom prompt
+          document_type  // ✅ Pass document type
         )
       : buildExtractorPrompt(
           rubric, 
           essayText, 
           submission_id,
           customGradingPrompt,  // ✅ Pass custom prompt
-        );
           document_type  // ✅ Pass document type
+        );
     const response = await openai.chat.completions.create({
       model,
       response_format: { type: 'json_object' },
