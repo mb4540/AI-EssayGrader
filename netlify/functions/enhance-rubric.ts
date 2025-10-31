@@ -56,6 +56,7 @@ const RUBRIC_SCHEMA = {
     },
     penalties: {
       type: 'array',
+      description: 'Optional penalties (can be empty array)',
       items: {
         type: 'object',
         properties: {
@@ -73,7 +74,7 @@ const RUBRIC_SCHEMA = {
       }
     }
   },
-  required: ['total_points', 'categories'],
+  required: ['total_points', 'categories', 'penalties'],
   additionalProperties: false
 } as const;
 
@@ -113,6 +114,7 @@ Transform the simple grading rules into a structured rubric with:
 - 4-8 categories that logically break down the assignment
 - 2-4 performance levels per category
 - Clear, specific descriptions for each level
+- Penalties array (use empty array [] if no penalties mentioned)
 
 CRITICAL MATH RULES:
 1. All category.points MUST sum to EXACTLY ${totalPoints}
@@ -125,6 +127,7 @@ Guidelines:
 - Use clear language
 - Make levels distinguishable
 - Keep descriptions concise (1-2 sentences per level)
+- If no penalties mentioned in rules, return penalties: []
 
 Return a structured JSON object that will be used for grading.`;
 }
