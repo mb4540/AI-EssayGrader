@@ -153,12 +153,14 @@ export async function listAssignments() {
       title: string;
       description?: string;
       grading_criteria?: string;
+      total_points?: number;
       created_at: string;
     }>;
   }>(response);
 }
 
-export async function createAssignment(data: { title: string; description?: string; grading_criteria?: string }) {
+export async function createAssignment(data: { title: string; description?: string; grading_criteria?: string;
+      total_points?: number; document_type?: string }) {
   const response = await fetch(`${API_BASE}/assignments`, {
     method: 'POST',
     headers: getAuthHeaders(),
@@ -171,6 +173,7 @@ export async function createAssignment(data: { title: string; description?: stri
       title: string;
       description?: string;
       grading_criteria?: string;
+      total_points?: number;
       created_at: string;
     };
   }>(response);

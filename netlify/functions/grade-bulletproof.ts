@@ -84,7 +84,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         a.scale_mode,
         a.total_points,
         a.rounding_mode,
-        a.rounding_decimals
+        a.rounding_decimals,
+        a.document_type
       FROM grader.submissions s
       LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
       JOIN grader.students st ON s.student_id = st.student_id
@@ -112,7 +113,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       scale_mode,
       total_points,
       rounding_mode,
-      rounding_decimals
+      rounding_decimals,
+      document_type
     } = submission[0];
 
     // Get or create rubric
@@ -199,15 +201,16 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           rough_draft_text, 
           final_draft_text, 
           submission_id,
-          customGradingPrompt  // ✅ Pass custom prompt
+          customGradingPrompt,  // ✅ Pass custom prompt
+          document_type  // ✅ Pass document type
         )
       : buildExtractorPrompt(
           rubric, 
           essayText, 
           submission_id,
-          customGradingPrompt  // ✅ Pass custom prompt
+          customGradingPrompt,  // ✅ Pass custom prompt
+          document_type  // ✅ Pass document type
         );
-
     const response = await openai.chat.completions.create({
       model,
       response_format: { type: 'json_object' },

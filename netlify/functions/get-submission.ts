@@ -39,6 +39,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         s.original_file_url,
         s.created_at,
         s.updated_at,
+        s.extracted_scores,
+        s.computed_scores,
+        s.calculator_version,
         a.title as assignment_title,
         a.assignment_id as assignment_id
       FROM grader.submissions s
@@ -54,12 +57,31 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       };
     }
 
+    const submission = result[0];
+    
+    // Reconstruct bulletproof structure if data exists
+    let aiFeedback = submission.ai_feedback;
+    if (submission.extracted_scores && submission.computed_scores) {
+      // Wrap bulletproof data in the expected structure
+      aiFeedback = {
+        ...aiFeedback,
+        bulletproof: {
+          extracted_scores: submission.extracted_scores,
+          computed_scores: submission.computed_scores,
+          calculator_version: submission.calculator_version,
+        },
+      };
+    }
+
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(result[0]),
+      body: JSON.stringify({
+        ...submission,
+        ai_feedback: aiFeedback,
+      }),
     };
   } catch (error) {
     console.error('Get submission error:', error);
