@@ -156,8 +156,9 @@ function extractCategories(lines: string[], _totalPoints: number): Category[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     
-    // Match: "**Category Name (XX pts):**" or "- **Category (XX pts):**"
-    const categoryMatch = line.match(/[-*]*\s*\*\*(.+?)\s*\((\d+)\s*(?:pts?|points?)\)\*\*:?/i);
+    // Match: "- **Category Name (XX pts)**:" or "**Category (XX pts)**:"
+    // Must have ** before and after the parentheses, and end with :
+    const categoryMatch = line.match(/^[-*]?\s*\*\*(.+?)\s*\((\d+)\s*(?:pts?|points?)\)\*\*\s*:?\s*$/i);
     
     if (categoryMatch) {
       const name = categoryMatch[1].trim();
@@ -177,14 +178,23 @@ function extractCategories(lines: string[], _totalPoints: number): Category[] {
   }
   
   // If no categories found, try simpler format: "Category (XX pts)"
+  // BUT: Only match lines at the START of the line (not indented level descriptions)
   if (categories.length === 0) {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      const simpleMatch = line.match(/^[-*]?\s*(.+?)\s*\((\d+)\s*(?:pts?|points?)\)/i);
+      // Only match if line starts with "- " or "**" (main category markers)
+      // NOT if line is indented with multiple spaces (level descriptions)
+      const simpleMatch = line.match(/^[-*]\s*([^(]+?)\s*\((\d+)\s*(?:pts?|points?)\)/i);
       
-      if (simpleMatch) {
+      if (simpleMatch && !line.match(/^\s{2,}/)) { // Reject indented lines
         const name = simpleMatch[1].trim().replace(/^\*\*|\*\*$/g, '');
         const points = parseInt(simpleMatch[2], 10);
+        
+        // Skip if this looks like a level description (lowercase start after dash/bullet)
+        if (line.match(/^\s*[-*]\s+[a-z]/)) {
+          continue; // This is a level, not a category
+        }
+        
         const id = name.toLowerCase()
           .replace(/[^a-z0-9\s]/g, '')
           .replace(/\s+/g, '_')
