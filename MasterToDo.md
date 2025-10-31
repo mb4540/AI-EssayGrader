@@ -314,15 +314,33 @@ We'll use a programmatic JSON structure to define:
 12. Summary
 13. Other
 
+**Additional Features Completed:**
+- [x] Document-type-specific rubric templates (each type has tailored criteria)
+- [x] Document-type-specific grading focus (guides AI evaluation)
+- [x] AI prompt adjustment based on document type (integrated into extractor)
+- [x] Settings UI - Document Types tab for customizing grading focus per type
+- [x] Backend passes document_type to AI grading functions
+- [x] Total points synchronization (loads from assignment, saves on create)
+
+**Critical Fixes Completed:**
+- [x] Fixed Create Assignment not saving total_points to database
+- [x] Fixed Grade Submission not loading total_points from selected assignment
+- [x] Fixed SQL syntax errors in grade-bulletproof function
+- [x] Fixed backend to return total_points in assignments API
+- [x] Created backfill migration for existing assignments
+
 **Not Implemented (Future Enhancement):**
 - [ ] Multi-subject support (History, Science, Math, CTE, Arts, Health/PE)
 - [ ] Subject area dropdown
 - [ ] Filtered document type lists by subject
-- [ ] Document-type-specific rubric templates
-- [ ] Aliases handling
-- [ ] AI prompt adjustment based on document type
+- [ ] Aliases handling (e.g., "essay" → "argumentative")
 
-**Completed:** October 31, 2025
+**Initial Implementation:** October 31, 2025 (morning)
+**Feature Enhancements:** October 31, 2025 (afternoon)
+- Added rubric templates and grading focus
+- Integrated document type into AI prompts
+- Added Settings UI customization
+- Fixed total_points handling throughout system
 
 **UI Flow:**
 ```
