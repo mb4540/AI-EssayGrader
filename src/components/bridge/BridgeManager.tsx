@@ -3,7 +3,9 @@
 
 import { useState } from 'react';
 import { useBridge } from '../../hooks/useBridge';
-import { Lock, Unlock, Plus, Upload, Download, FileText, Users, Edit } from 'lucide-react';
+import { Lock, Plus, Upload, Download, FileText, Users, Edit } from 'lucide-react';
+import { Card, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '../ui/button';
 import AddStudentModal from './AddStudentModal';
 import ImportCsvModal from './ImportCsvModal';
 import EditStudentModal from './EditStudentModal';
@@ -245,71 +247,78 @@ export default function BridgeManager() {
 
   // If unlocked, show roster management interface
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Unlock className="w-8 h-8 text-green-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Student Roster</h1>
-                <p className="text-sm text-gray-600">
-                  {bridge.students.length} student{bridge.students.length !== 1 ? 's' : ''} • 
-                  Bridge unlocked
-                </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="container mx-auto px-4 py-6">
+        {/* Student Roster Header Card */}
+        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
+          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-indigo-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-2xl text-gray-900">Student Roster</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    {bridge.students.length} student{bridge.students.length !== 1 ? 's' : ''} • Bridge unlocked
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={bridge.save}
+                  disabled={bridge.loading}
+                  variant="default"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Save
+                </Button>
+                <Button
+                  onClick={bridge.exportFile}
+                  variant="outline"
+                  size="sm"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                <div className="w-px h-8 bg-gray-300 mx-2" />
+                <Button
+                  onClick={() => setShowAddModal(true)}
+                  variant="default"
+                  size="sm"
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Student
+                </Button>
+                <Button
+                  onClick={() => setShowImportModal(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Import CSV
+                </Button>
+                <div className="w-px h-8 bg-gray-300 mx-2" />
+                <Button
+                  onClick={handleLock}
+                  variant="outline"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Lock
+                </Button>
               </div>
             </div>
+          </CardHeader>
+        </Card>
 
-            <div className="flex gap-2">
-              <button
-                onClick={bridge.save}
-                disabled={bridge.loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
-              >
-                <Download className="w-4 h-4" />
-                Save
-              </button>
-              <button
-                onClick={bridge.exportFile}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-2"
-              >
-                <FileText className="w-4 h-4" />
-                Export
-              </button>
-              <button
-                onClick={handleLock}
-                className="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 flex items-center gap-2"
-              >
-                <Lock className="w-4 h-4" />
-                Lock
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Toolbar */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Add Student
-            </button>
-            <button
-              onClick={() => setShowImportModal(true)}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Import CSV
-            </button>
-          </div>
-        </div>
-
-        {/* Roster Table */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        {/* Roster Table Card */}
+        <Card className="shadow-xl bg-white">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
@@ -365,7 +374,7 @@ export default function BridgeManager() {
               )}
             </tbody>
           </table>
-        </div>
+        </Card>
 
         {/* Modals */}
         <AddStudentModal

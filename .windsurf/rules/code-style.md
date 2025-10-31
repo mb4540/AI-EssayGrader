@@ -1,5 +1,5 @@
 ---
-trigger: model_decision
+trigger: always_on
 ---
 
 # Code Style Conventions
@@ -15,464 +15,247 @@ TypeScript and general coding standards for the FastAI Grader project.
 4. **Type Safety** - Leverage TypeScript's type system
 5. **Self-Documenting** - Code should explain itself
 
+## User-Centric Design Principles
+
+### Primary User: Teachers
+
+**Core Mission:** Enable teachers to grade student written assignments with quality, fidelity, speed, and minimal effort.
+
+### Design Philosophy
+
+1. **Speed First** - Every feature must optimize for teacher efficiency
+2. **Minimize Clicks** - Reduce the number of interactions required to complete tasks
+3. **Simplicity Over Features** - A simple, fast workflow beats a feature-rich, slow one
+4. **Quality & Fidelity** - Speed should never compromise grading accuracy
+5. **Student Learning** - Secondary goal: provide fair grades and constructive feedback to students
+
+### Implementation Guidelines
+
+#### Minimize User Actions
+\`\`\`typescript
+// ✅ Good - Single action
+<Button onClick={handleGradeAndSave}>Grade & Save</Button>
+// ❌ Bad - Multiple steps
+<Button onClick={handleGrade}>Grade</Button>
+<Button onClick={handleSave}>Save</Button>
+\`\`\`
+
+#### Default to Smart Behaviors
+\`\`\`typescript
+// ✅ Auto-save every 30 seconds
+useEffect(() => {
+  const interval = setInterval(() => saveDraft(), 30000);
+  return () => clearInterval(interval);
+}, []);
+\`\`\`
+
+#### Optimize Common Workflows
+\`\`\`typescript
+// ✅ Keyboard shortcuts for power users
+useEffect(() => {
+  const handleKeyPress = (e: KeyboardEvent) => {
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); handleSave(); }
+  };
+  window.addEventListener('keydown', handleKeyPress);
+  return () => window.removeEventListener('keydown', handleKeyPress);
+}, []);
+\`\`\`
+
+#### Progressive Disclosure
+Show essential options first, advanced options on demand.
+
+#### Provide Immediate Feedback
+\`\`\`typescript
+const [status, setStatus] = useState<'idle' | 'grading' | 'done'>('idle');
+<Button onClick={handleGrade} disabled={status === 'grading'}>
+  {status === 'grading' ? 'Grading...' : 'Grade Essay'}
+</Button>
+\`\`\`
+
+#### Reduce Cognitive Load
+Use clear, action-oriented labels: "Grade This Essay" not "Execute"
+
+### UI/UX Checklist
+
+- [ ] Can this be done in fewer clicks?
+- [ ] Can we auto-fill or pre-select common values?
+- [ ] Does this save the teacher time?
+- [ ] Is the most common action the most prominent?
+- [ ] Does it provide immediate visual feedback?
+- [ ] Can the teacher recover easily from mistakes?
+
+### Performance Targets
+
+- **Page Load:** < 2 seconds
+- **Grading Operation:** < 5 seconds
+- **Search/Filter:** < 500ms
+- **Form Submission:** < 1 second
+
+**Remember:** Teachers grade dozens/hundreds of essays. Every second saved multiplies across their workload.
+
 ## Naming Conventions
 
 ### Variables and Functions
-
 **Pattern:** camelCase
-
-```typescript
-// ✅ Good
-const studentName = 'John Doe';
-const submissionCount = 10;
-function calculateGrade() {}
-function getSubmissionById() {}
-
-// ❌ Bad
-const StudentName = 'John Doe';
-const submission_count = 10;
-function CalculateGrade() {}
-function get_submission_by_id() {}
-```
+\`\`\`typescript
+const studentName = 'John'; // ✅
+const StudentName = 'John'; // ❌
+\`\`\`
 
 ### Constants
-
-**Pattern:** UPPER_SNAKE_CASE for true constants
-
-```typescript
-// ✅ Good
-const MAX_GRADE = 100;
-const API_BASE_URL = 'https://api.example.com';
-const DEFAULT_PAGE_SIZE = 20;
-
-// ❌ Bad
-const maxGrade = 100;
-const apiBaseUrl = 'https://api.example.com';
-```
+**Pattern:** UPPER_SNAKE_CASE
+\`\`\`typescript
+const MAX_GRADE = 100; // ✅
+const maxGrade = 100; // ❌
+\`\`\`
 
 ### Types and Interfaces
-
 **Pattern:** PascalCase
-
-```typescript
-// ✅ Good
-interface Submission {
-  submission_id: string;
-  student_name: string;
-}
-
-type GradeResult = {
-  grade: number;
-  feedback: string;
-};
-
-// ❌ Bad
-interface submission {}
-type gradeResult = {};
-```
+\`\`\`typescript
+interface Submission { submission_id: string; } // ✅
+interface submission {} // ❌
+\`\`\`
 
 ### Enums
-
 **Pattern:** PascalCase for enum, UPPER_SNAKE_CASE for values
-
-```typescript
-// ✅ Good
-enum SourceType {
-  TEXT = 'text',
-  DOCX = 'docx',
-  IMAGE = 'image',
-  PDF = 'pdf',
-}
-
-// ❌ Bad
-enum sourceType {
-  text = 'text',
-  Docx = 'docx',
-}
-```
+\`\`\`typescript
+enum SourceType { TEXT = 'text', DOCX = 'docx' } // ✅
+\`\`\`
 
 ### Files and Folders
-
 **Pattern:** kebab-case for files, PascalCase for components
-
-```typescript
-// ✅ Good
-api-client.ts
-database-utils.ts
-GradePanel.tsx
-SubmissionForm.tsx
-
-// ❌ Bad
-apiClient.ts
-database_utils.ts
-gradePanel.tsx
-submission-form.tsx
-```
+\`\`\`
+api-client.ts, GradePanel.tsx // ✅
+apiClient.ts, gradePanel.tsx // ❌
+\`\`\`
 
 ## TypeScript Best Practices
 
 ### Type Annotations
-
-```typescript
-// ✅ Good - Explicit types for function parameters and return
-function calculateGrade(essay: string, criteria: string): number {
-  return 85;
-}
-
-// ✅ Good - Type inference for simple cases
-const count = 10;  // inferred as number
-const name = 'John';  // inferred as string
-
-// ❌ Bad - Using 'any'
-function processData(data: any): any {
-  return data;
-}
-```
+\`\`\`typescript
+// ✅ Explicit types for parameters/return
+function calculateGrade(essay: string): number { return 85; }
+// ❌ Using 'any'
+function processData(data: any): any { return data; }
+\`\`\`
 
 ### Interfaces vs Types
-
-```typescript
-// ✅ Use interfaces for object shapes
-interface Submission {
-  submission_id: string;
-  student_name: string;
-  ai_grade: number | null;
-}
-
-// ✅ Use types for unions, intersections, primitives
-type Status = 'pending' | 'graded' | 'reviewed';
-type ID = string | number;
-type SubmissionWithMeta = Submission & { metadata: Record<string, unknown> };
-```
+- Use **interfaces** for object shapes
+- Use **types** for unions, intersections, primitives
 
 ### Null and Undefined
-
-```typescript
-// ✅ Good - Explicit null/undefined handling
-function getGrade(submission: Submission): number | null {
-  return submission.ai_grade ?? null;
-}
-
-// ✅ Good - Optional chaining
-const grade = submission?.ai_grade;
-const name = student?.profile?.name;
-
-// ✅ Good - Nullish coalescing
-const displayGrade = submission.ai_grade ?? 'Not graded';
-const limit = params.limit ?? 20;
-```
+\`\`\`typescript
+// ✅ Optional chaining & nullish coalescing
+const grade = submission?.ai_grade ?? 'Not graded';
+\`\`\`
 
 ### Type Guards
-
-```typescript
-// ✅ Good - Type guards for runtime checks
+\`\`\`typescript
 function isSubmission(obj: unknown): obj is Submission {
-  return (
-    typeof obj === 'object' &&
-    obj !== null &&
-    'submission_id' in obj &&
-    'student_name' in obj
-  );
+  return typeof obj === 'object' && obj !== null && 'submission_id' in obj;
 }
-
-if (isSubmission(data)) {
-  // TypeScript knows data is Submission here
-  console.log(data.submission_id);
-}
-```
+\`\`\`
 
 ## Import Organization
 
-### Import Order
-
-```typescript
+\`\`\`typescript
 // 1. External libraries
-import { useState, useEffect } from 'react';
-import { z } from 'zod';
-
-// 2. Internal modules (absolute imports)
+import { useState } from 'react';
+// 2. Internal modules
 import { Button } from '@/components/ui/button';
-import { getSubmission } from '@/lib/api';
-
 // 3. Relative imports
 import { calculateGrade } from './utils';
-import type { Submission } from './types';
-
 // 4. CSS/Assets
 import './styles.css';
-```
+\`\`\`
 
-### Named vs Default Exports
-
-```typescript
-// ✅ Prefer named exports
-export function calculateGrade() {}
-export const MAX_GRADE = 100;
-
-// ✅ Use default export for main component
-export default function Dashboard() {}
-
-// ❌ Avoid mixing in same file
-export function helper() {}
-export default function Component() {}  // Confusing
-```
+**Prefer named exports** over default exports (except main component).
 
 ## Function Style
 
-### Arrow Functions vs Function Declarations
-
-```typescript
-// ✅ Use arrow functions for callbacks and short functions
-const double = (n: number) => n * 2;
-const handleClick = () => console.log('clicked');
-
-// ✅ Use function declarations for named functions
-function calculateGrade(essay: string): number {
-  // Complex logic here
-  return grade;
-}
-
-// ✅ Use arrow functions for React components
-export const GradePanel = ({ grade }: { grade: number }) => {
-  return <div>{grade}</div>;
-};
-```
+### Arrow Functions vs Declarations
+- Arrow functions for callbacks and short functions
+- Function declarations for named functions
+- Arrow functions for React components
 
 ### Function Length
-
-```typescript
-// ✅ Good - Short, focused functions
-function validateSubmission(data: unknown): boolean {
-  return isValidFormat(data) && hasRequiredFields(data);
-}
-
-// ❌ Bad - Too long, does too much
-function processSubmission(data: unknown) {
-  // 100+ lines of code
-  // Multiple responsibilities
-}
-```
+Keep functions short and focused (< 50 lines).
 
 ### Parameters
-
-```typescript
-// ✅ Good - Use object for multiple parameters
-function createSubmission({
-  studentName,
-  essayText,
-  criteria,
-}: {
-  studentName: string;
-  essayText: string;
-  criteria: string;
-}) {
-  // ...
-}
-
-// ❌ Bad - Too many positional parameters
-function createSubmission(
-  studentName: string,
-  essayText: string,
-  criteria: string,
-  sourceType: string,
-  assignmentId: string
-) {}
-```
+Use object for multiple parameters (> 3).
 
 ## Async/Await
 
 ### Error Handling
-
-```typescript
-// ✅ Good - Try/catch with async/await
+\`\`\`typescript
 async function fetchSubmission(id: string): Promise<Submission | null> {
   try {
-    const response = await fetch(`/api/get-submission?id=${id}`);
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}`);
-    }
+    const response = await fetch(\`/api/get-submission?id=\${id}\`);
+    if (!response.ok) throw new Error(\`HTTP \${response.status}\`);
     return await response.json();
   } catch (error) {
     console.error('Fetch error:', error);
     return null;
   }
 }
-
-// ❌ Bad - Unhandled promise rejection
-async function fetchSubmission(id: string) {
-  const response = await fetch(`/api/get-submission?id=${id}`);
-  return await response.json();  // May throw
-}
-```
+\`\`\`
 
 ### Promise Patterns
-
-```typescript
-// ✅ Good - Parallel execution
-const [submissions, students] = await Promise.all([
-  fetchSubmissions(),
-  fetchStudents(),
-]);
-
-// ❌ Bad - Sequential when parallel is possible
-const submissions = await fetchSubmissions();
-const students = await fetchStudents();
-```
+Use `Promise.all()` for parallel execution when possible.
 
 ## Comments
 
 ### When to Comment
+- Explain WHY, not WHAT
+- Document complex algorithms
+- Use JSDoc for public APIs
 
-```typescript
-// ✅ Good - Explain WHY, not WHAT
+\`\`\`typescript
+// ✅ Good
 // Use exponential backoff to avoid rate limiting
 await retryWithBackoff(apiCall);
 
-// ✅ Good - Document complex algorithms
-/**
- * Calculates grade using weighted rubric.
- * Grammar: 25%, Content: 50%, Structure: 25%
- */
-function calculateGrade(essay: Essay): number {
-  // ...
-}
-
-// ❌ Bad - Obvious comments
-// Set count to 0
-const count = 0;
-
-// ❌ Bad - Commented-out code
-// const oldFunction = () => {};
-// return oldValue;
-```
-
-### JSDoc for Public APIs
-
-```typescript
-/**
- * Fetches a submission by ID
- * @param id - The submission UUID
- * @returns The submission or null if not found
- * @throws {Error} If the API request fails
- */
-export async function getSubmission(id: string): Promise<Submission | null> {
-  // ...
-}
-```
+// ❌ Bad - Obvious
+const count = 0; // Set count to 0
+\`\`\`
 
 ## Error Handling
 
 ### Custom Errors
-
-```typescript
-// ✅ Good - Custom error classes
+\`\`\`typescript
 class ValidationError extends Error {
   constructor(message: string, public details: unknown) {
     super(message);
     this.name = 'ValidationError';
   }
 }
-
-throw new ValidationError('Invalid input', { field: 'email' });
-```
+\`\`\`
 
 ### Error Messages
-
-```typescript
-// ✅ Good - Descriptive error messages
-throw new Error(`Failed to fetch submission ${id}: ${error.message}`);
-
-// ❌ Bad - Vague error messages
-throw new Error('Error');
-throw new Error('Something went wrong');
-```
+Be descriptive: `Failed to fetch submission ${id}: ${error.message}`
 
 ## Code Organization
 
 ### File Structure
-
-```typescript
-// 1. Imports
-import { useState } from 'react';
-
-// 2. Types/Interfaces
-interface Props {
-  title: string;
-}
-
-// 3. Constants
-const MAX_LENGTH = 100;
-
-// 4. Helper functions
-function helper() {}
-
-// 5. Main component/function
-export function Component({ title }: Props) {
-  // ...
-}
-
-// 6. Exports
-export { helper };
-```
+1. Imports
+2. Types/Interfaces
+3. Constants
+4. Helper functions
+5. Main component/function
+6. Exports
 
 ### Avoid Magic Numbers
-
-```typescript
-// ✅ Good - Named constants
-const MAX_GRADE = 100;
-const MIN_GRADE = 0;
-const DEFAULT_PAGE_SIZE = 20;
-
-if (grade > MAX_GRADE) {
-  // ...
-}
-
-// ❌ Bad - Magic numbers
-if (grade > 100) {
-  // ...
-}
-```
+Use named constants: `const MAX_GRADE = 100;`
 
 ## Formatting
 
-### Line Length
-
-- Max 100 characters per line
+- **Line Length:** Max 100 characters
+- **Spacing:** Consistent spacing around operators and braces
 - Break long lines logically
-
-```typescript
-// ✅ Good
-const result = await fetchSubmissions({
-  assignmentId,
-  studentId,
-  page,
-  limit,
-});
-
-// ❌ Bad
-const result = await fetchSubmissions({ assignmentId, studentId, page, limit, sortBy, sortOrder });
-```
-
-### Spacing
-
-```typescript
-// ✅ Good - Consistent spacing
-function calculate(a: number, b: number): number {
-  const result = a + b;
-  return result;
-}
-
-// ❌ Bad - Inconsistent spacing
-function calculate(a:number,b:number):number{
-  const result=a+b;
-  return result;
-}
-```
 
 ## Checklist
 
-Before committing code:
-
+Before committing:
 - [ ] Follows naming conventions
 - [ ] TypeScript types are explicit where needed
 - [ ] No 'any' types (unless absolutely necessary)
@@ -483,43 +266,27 @@ Before committing code:
 - [ ] Comments explain WHY, not WHAT
 - [ ] No console.logs (except in error handlers)
 - [ ] Code is formatted consistently
-- [ ] No unused imports or variables
 
 ## Tools
 
-### ESLint Configuration
-
-```json
+### ESLint
+\`\`\`json
 {
-  "extends": [
-    "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "plugin:react/recommended"
-  ],
+  "extends": ["eslint:recommended", "plugin:@typescript-eslint/recommended"],
   "rules": {
     "no-console": ["warn", { "allow": ["error"] }],
-    "@typescript-eslint/no-explicit-any": "error",
-    "@typescript-eslint/explicit-function-return-type": "warn"
+    "@typescript-eslint/no-explicit-any": "error"
   }
 }
-```
+\`\`\`
 
-### Prettier Configuration
-
-```json
-{
-  "semi": true,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "es5",
-  "printWidth": 100
-}
-```
+### Prettier
+\`\`\`json
+{ "semi": true, "singleQuote": true, "tabWidth": 2, "printWidth": 100 }
+\`\`\`
 
 ## Resources
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)
 - [Airbnb JavaScript Style Guide](https://github.com/airbnb/javascript)
-- [Google TypeScript Style Guide](https://google.github.io/styleguide/tsguide.html)
-- Related: `.windsurf/rules/frontend-components.md`
-- Related: `.windsurf/rules/api-design.md`
+- Related: `.windsurf/rules/frontend-components.md`, `.windsurf/rules/api-design.md`

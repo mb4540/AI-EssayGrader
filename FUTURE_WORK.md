@@ -128,6 +128,29 @@ const store = getStore({
 - [ ] Add bulk operations (delete multiple, export selected)
 - [ ] Add statistics dashboard (average grade, completion rate)
 
+### Student Management
+- [ ] **Add "class" field to students table** - Allow teachers to organize students by class period
+  - **Problem:** Teachers typically have 100+ students across multiple class periods
+  - **Solution:** Add `class_period` or `class_name` column to `grader.students` table
+  - **Benefits:**
+    - Sort students by class (e.g., "Period 1", "Period 2", "AP English")
+    - Group submissions by class on Dashboard
+    - Filter by class in Student Bridge
+    - Export grades by class
+  - **Database Change Required:**
+    ```sql
+    ALTER TABLE grader.students 
+    ADD COLUMN class_period text;
+    
+    CREATE INDEX idx_students_class 
+    ON grader.students(class_period);
+    ```
+  - **Files to Update:**
+    - `src/components/bridge/BridgeManager.tsx` - Add class field to student form
+    - `src/hooks/useBridge.ts` - Update bridge data structure
+    - `src/pages/Dashboard.tsx` - Add class filter/grouping
+    - `db_ref.md` - Update schema documentation
+
 ### Submission Form
 - [ ] Add rich text editor for criteria
 - [ ] Add template library for common assignments
