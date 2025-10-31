@@ -106,11 +106,11 @@ Load Rubric → LLM Extractor (JSON only) → Python Calculator (Decimal math) �
 4. **Audit Trail** - Store rubric JSON, extracted scores, computed scores, calculator version
 
 **Tasks:**
-- [ ] Create Python calculator module with Decimal math
-- [ ] Implement percent mode: `(raw / max) * 100`
-- [ ] Implement points mode: `(raw / max) * total_points`
-- [ ] Add rounding modes: HALF_UP, HALF_EVEN, HALF_DOWN
-- [ ] Create unit tests for calculator (all edge cases)
+- [x] Create Python calculator module with Decimal math
+- [x] Implement percent mode: `(raw / max) * 100`
+- [x] Implement points mode: `(raw / max) * total_points`
+- [x] Add rounding modes: HALF_UP, HALF_EVEN, HALF_DOWN
+- [x] Create unit tests for calculator (all edge cases) - 17/17 passing
 - [ ] Design LLM extractor prompt (strict JSON output)
 - [ ] Implement Pydantic validation with retry logic
 - [ ] Update grade.ts to call Python calculator
