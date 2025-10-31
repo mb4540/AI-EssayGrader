@@ -23,11 +23,17 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
   const createMutation = useMutation({
     mutationFn: createAssignment,
     onSuccess: () => {
+      console.log('✅ Assignment created successfully');
       queryClient.invalidateQueries({ queryKey: ['assignments'] });
       setTitle('');
       setDescription('');
       setCriteria('');
+      setTotalPoints(100); // Reset total points
       onClose();
+    },
+    onError: (error) => {
+      console.error('❌ Error creating assignment:', error);
+      alert(`Failed to create assignment: ${error instanceof Error ? error.message : 'Unknown error'}`);
     },
   });
 
@@ -37,11 +43,23 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
       alert('Please enter an assignment title');
       return;
     }
+    console.log('📝 Creating assignment:', { title: title.trim(), has_criteria: !!criteria.trim() });
     createMutation.mutate({ 
       title: title.trim(), 
       description: description.trim() || undefined,
       grading_criteria: criteria.trim() || undefined,
     });
+  };
+
+  const handleClose = () => {
+    if (createMutation.isPending) {
+      return; // Don't close while creating
+    }
+    setTitle('');
+    setDescription('');
+    setCriteria('');
+    setTotalPoints(100);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -59,7 +77,7 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
               <h2 className="text-2xl font-bold text-white">New Assignment</h2>
             </div>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="text-white hover:bg-white/20 rounded-full p-2 transition-colors"
               disabled={createMutation.isPending}
             >
@@ -117,7 +135,7 @@ export default function CreateAssignmentModal({ isOpen, onClose }: CreateAssignm
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
+              onClick={handleClose}
               disabled={createMutation.isPending}
               className="flex-1"
             >
