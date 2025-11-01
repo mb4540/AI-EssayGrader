@@ -48,6 +48,7 @@ export default function Submission() {
   const [pendingFile, setPendingFile] = useState<{ data: string; extension: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'grade' | 'annotate'>('grade');
   const [originalFileUrl, setOriginalFileUrl] = useState<string | undefined>();
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
   // Load assignments list
   const { data: assignmentsData } = useQuery({
@@ -123,8 +124,19 @@ export default function Submission() {
 
   const gradeMutation = useMutation({
     mutationFn: gradeSubmission,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       setAiFeedback(data);
+      
+      // Fetch annotations from database after grading
+      if (submissionId) {
+        try {
+          const annotationsData = await getInlineAnnotations(submissionId);
+          setAnnotations(annotationsData.annotations || []);
+        } catch (error) {
+          console.error('Failed to fetch annotations after grading:', error);
+          setAnnotations([]);
+        }
+      }
     },
   });
 
@@ -642,6 +654,7 @@ export default function Submission() {
                   onSaveEdits={handleSaveEdits}
                   canGrade={canGrade}
                   isSaving={saveMutation.isPending}
+                  annotations={annotations}
                 />
               </TabsContent>
               
@@ -665,6 +678,7 @@ export default function Submission() {
               onSaveEdits={handleSaveEdits}
               canGrade={canGrade}
               isSaving={saveMutation.isPending}
+              annotations={annotations}
             />
           )}
         </div>
