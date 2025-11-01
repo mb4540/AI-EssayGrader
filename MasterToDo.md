@@ -99,16 +99,29 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 ### Test Suite Implementation
 **Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
 
-**Status:** 🟡 **IN PROGRESS** - 1/40 test files complete  
-**Coverage:** ~5% current → 75%+ target  
+**Status:** 🟡 **IN PROGRESS** - 3/40 test files complete (7.5%)  
+**Coverage:** ~10% current → 75%+ target  
+**Tests:** 128 passing, 4 skipped  
 **Test Plan:** See `TEST_PLAN.md` for full specifications
 
-#### ✅ Completed Tests (1/40)
+#### ✅ Completed Tests (3/40)
 - [x] **Auth Utils** (25 tests) - `netlify/functions/lib/auth-utils.test.ts`
   - Password hashing (bcrypt, 12 rounds)
   - JWT token generation/verification
   - Integration flows
   - **Status:** ✅ 25/25 passing (100%)
+
+- [x] **BridgeManager** (18 tests) - `src/components/bridge/BridgeManager.test.tsx`
+  - Lock/unlock workflows
+  - Student roster management
+  - Privacy notices
+  - **Status:** ✅ 18/18 passing (100%) - Fixed 3 failing tests
+
+- [x] **Annotation Normalizer** (19 tests) - `src/lib/annotations/normalizer.test.ts`
+  - Text location matching
+  - Category/severity validation
+  - Unresolved annotation handling
+  - **Status:** ✅ 19/19 passing (100%)
 
 #### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
 
@@ -117,8 +130,8 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [ ] PII Guard validation - `src/lib/api/piiGuard.test.ts`
 
 **Core Utilities:**
-- [ ] ✅ BulletProof Calculator - `src/lib/calculator/calculator.test.ts` (17/17 passing)
-- [ ] Annotation Normalizer - `src/lib/annotations/normalizer.test.ts`
+- [x] ✅ BulletProof Calculator - `src/lib/calculator/calculator.test.ts` (17/17 passing)
+- [x] ✅ Annotation Normalizer - `src/lib/annotations/normalizer.test.ts` (19/19 passing)
 - [ ] Line Number Utilities - `src/lib/annotations/lineNumbers.test.ts`
 - [ ] CSV Parser - `src/lib/csv.test.ts`
 - [ ] DOCX Parser - `src/lib/docx.test.ts`
