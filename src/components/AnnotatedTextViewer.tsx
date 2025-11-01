@@ -30,10 +30,10 @@ interface AnnotatedTextViewerProps {
 
 export default function AnnotatedTextViewer({
   text,
-  submissionId,
+  submissionId: _submissionId,
   annotations,
   onAnnotationUpdate,
-  onAnnotationAdd,
+  onAnnotationAdd: _onAnnotationAdd,
 }: AnnotatedTextViewerProps) {
   const [selectedAnnotation, setSelectedAnnotation] = useState<string | null>(null);
   const [editingAnnotation, setEditingAnnotation] = useState<string | null>(null);
