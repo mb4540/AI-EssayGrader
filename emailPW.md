@@ -87,6 +87,7 @@ We will adapt these patterns for AI-EssayGrader.
 5. **Login Page CTA**
    - Link to forgot password page.
    - Remove existing placeholder alert.
+   - **Remove "Test Credentials" section** from bottom of login card (production cleanup).
 6. **UX Copy**
    - Mirror reference messaging: "If an account with that email exists..."
    - Provide safe fallback messages on errors.
