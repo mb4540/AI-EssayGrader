@@ -35,9 +35,9 @@ When a new user (Shana Busby) registers in the same tenant, she immediately sees
 **Root Cause:**
 The Student Bridge uses localStorage with a tenant-scoped key, but localStorage is browser-specific, not user-specific. When different users log in from the same browser, they share the same localStorage data.
 
-**Solution Options:**
+**Solution:**
 
-**Option 1: Add user_id to localStorage keys (Quick Fix)**
+**User-Scoped Bridge Files with Separate Passphrases**
 ```typescript
 // Current (WRONG):
 const BRIDGE_KEY = `student-bridge-${tenant_id}`;
@@ -46,38 +46,33 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}`;
 const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 ```
 
-**Option 2: Move Student Bridge to Database (Proper Fix)**
-- Create `grader.teacher_students` table
-- Store student mappings per user_id in database
-- Fetch only current user's students
-- Better data isolation and persistence
+**Key Requirements:**
+- ✅ Each teacher has their own bridge file (scoped to user_id)
+- ✅ Each teacher has their own passphrase for encryption
+- ✅ Bridge remains LOCAL ONLY (localStorage, never cloud/database)
+- ✅ FERPA Compliance: PII stays separated from cloud database
+- ✅ Different teachers on shared computer have isolated bridges
 
-**Recommended Approach:** 
-1. **Immediate:** Implement Option 1 (user-scoped localStorage keys)
-2. **Long-term:** Plan Option 2 (database-backed bridge) for next release
+**Why NOT Database Storage:**
+❌ **CRITICAL:** Cannot store bridge in cloud database - this would violate FERPA compliance. The entire purpose of the Student Bridge is to keep student PII (names, local IDs) separated from cloud storage. Bridge MUST remain local-only.
+
+**Implementation:**
+1. Update bridge storage key to include user_id
+2. Clear bridge localStorage when user logs out
+3. Load correct bridge when user logs in
+4. Each user maintains their own encrypted bridge file
+5. Passphrases are user-specific (not shared across teachers)
 
 **Files to Update:**
 - `src/bridge/bridgeCore.ts` - Update storage key to include user_id
-- `src/contexts/AuthContext.tsx` - Pass user_id to bridge functions
-- `src/components/bridge/BridgeManager.tsx` - Clear bridge on user switch
+- `src/contexts/AuthContext.tsx` - Pass user_id to bridge functions  
+- `src/components/bridge/BridgeManager.tsx` - Clear bridge on user switch/logout
 - Add test: `src/bridge/bridgeCore.test.ts` - Verify user isolation
 
-**Database Migration (Long-term):**
-```sql
-CREATE TABLE grader.teacher_students (
-  mapping_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES grader.users(user_id) ON DELETE CASCADE,
-  student_id uuid NOT NULL REFERENCES grader.students(student_id) ON DELETE CASCADE,
-  local_id text NOT NULL,
-  display_name text NOT NULL,
-  created_at timestamptz NOT NULL DEFAULT now(),
-  UNIQUE(user_id, student_id),
-  UNIQUE(user_id, local_id)
-);
-
-CREATE INDEX idx_teacher_students_user ON grader.teacher_students(user_id);
-CREATE INDEX idx_teacher_students_student ON grader.teacher_students(student_id);
-```
+**Import/Export Changes:**
+- Bridge export filename: `student-bridge-${user.email}-${date}.json`
+- Bridge import: Validates user_id in imported file
+- Each teacher's bridge export contains their user_id metadata
 
 **Testing Checklist:**
 - [ ] User A creates students → logs out
@@ -89,9 +84,11 @@ CREATE INDEX idx_teacher_students_student ON grader.teacher_students(student_id)
 - [ ] Test logout/login cycles
 
 **Time Estimate:**
-- Quick Fix (Option 1): 1-2 hours
-- Proper Fix (Option 2): 4-6 hours
+- Bridge file scoping (user_id): 1-2 hours
+- Logout/login bridge clearing: 30 minutes
+- Import/export user validation: 30 minutes
 - Testing: 1 hour
+- **Total: 2-3 hours**
 
 **Impact:** 🔴 **CRITICAL** - Affects all multi-teacher deployments
 
