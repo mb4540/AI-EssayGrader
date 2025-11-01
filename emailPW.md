@@ -58,15 +58,36 @@ We will adapt these patterns for AI-EssayGrader.
    - Use existing `hashPassword()` utility from `netlify/functions/lib/auth.ts`.
    - Update user record, mark token `used_at = now()`.
    - Optionally email confirmation of password change.
+   - **Note:** Session invalidation NOT implemented in Phase 1 (future enhancement).
 5. **Security logging**
-   - Log reset requests and completions (without sensitive data).
+   - Log reset requests and completions to audit table (without sensitive data).
+   - Store: user_id, action type, timestamp, IP address (optional).
    - Consider rate limiting (future improvement).
 
 ### 2. Database Migration
 1. Migration file: `migrations/add_password_reset_tokens.sql`.
-2. Ensure `db_ref.md` updated with new table and relationships.
-3. Add index on `(token_hash)` and `(user_id)` for quick lookup/cleanup.
-4. Optional cleanup job: expire tokens older than 24h.
+2. **Create two tables:**
+   - `password_reset_tokens` (token storage)
+   - `password_reset_audit` (audit logs for tracking reset activity)
+3. Ensure `db_ref.md` updated with new tables and relationships.
+4. Add index on `(token_hash)` and `(user_id)` for quick lookup/cleanup.
+5. Optional cleanup job: expire tokens older than 24h.
+
+**Audit Table Schema:**
+```sql
+CREATE TABLE grader.password_reset_audit (
+  audit_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES grader.users(user_id),
+  action text NOT NULL, -- 'reset_requested', 'reset_completed', 'reset_failed'
+  email text NOT NULL,
+  ip_address text,
+  user_agent text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_password_reset_audit_user ON grader.password_reset_audit(user_id);
+CREATE INDEX idx_password_reset_audit_created ON grader.password_reset_audit(created_at);
+```
 
 ### 3. Frontend (React)
 1. **Forgot Password Page** (`src/pages/ForgotPassword.tsx`)
@@ -105,10 +126,10 @@ We will adapt these patterns for AI-EssayGrader.
 4. Configure `APP_BASE_URL` or `PUBLIC_BASE_URL` env var for link base.
 
 ### 5. Environment Variables (Production & Dev)
-- `MAILGUN_API_KEY`
-- `MAILGUN_DOMAIN`
-- `FROM_EMAIL`
-- `APP_BASE_URL` (e.g., https://ai-essaygrader.netlify.app)
+- `MAILGUN_API_KEY` - API key from Mailgun dashboard
+- `MAILGUN_DOMAIN` = `giftoftime.ai`
+- `FROM_EMAIL` = `mb4540@gmail.com`
+- `APP_BASE_URL` = `https://ai-essaygrader.netlify.app` (production)
 - Ensure `NEON_DATABASE_URL` accessible to Netlify functions.
 
 ### 6. Testing Strategy
@@ -170,11 +191,16 @@ We will adapt these patterns for AI-EssayGrader.
 ## Resolved Decisions
 1. ✅ **Password Hashing:** Use bcrypt (12 rounds) via existing `hashPassword()` utility from `netlify/functions/lib/auth.ts` - consistent with current implementation.
 2. ✅ **Support Contact:** Mike Berry - mb4540@gmail.com
+3. ✅ **Audit Logs:** YES - Create `password_reset_audit` table to track all reset activity
+4. ✅ **Session Invalidation:** NO - Not implemented in Phase 1 (add as future enhancement)
+5. ✅ **Mailgun Configuration:** 
+   - Domain: `giftoftime.ai` (production, verified)
+   - From Email: `mb4540@gmail.com`
 
-## Open Questions / Follow-ups
-1. Decide if we need audit logs table for tracking resets.
-2. Clarify whether to invalidate active sessions post-reset in phase 1.
-3. Verify Mailgun domain configuration (sandbox vs production) to avoid delivery issues.
+## Future Enhancements (Not Phase 1)
+1. **Session Invalidation:** Log out all active sessions when password is reset (requires session tracking table or JWT blacklist)
+2. **Rate Limiting:** Prevent abuse by limiting reset requests per IP/email
+3. **Admin Dashboard:** View password reset audit logs for security monitoring
 
 ---
 
