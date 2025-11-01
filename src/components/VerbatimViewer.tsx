@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
-import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles } from 'lucide-react';
+import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare } from 'lucide-react';
 import { extractTextFromImage, extractTextFromPDF } from '@/lib/ocr';
 import { extractTextFromDocx } from '@/lib/docx';
+import AnnotatedTextViewer from './AnnotatedTextViewer';
+import { getInlineAnnotations, updateInlineAnnotation } from '@/lib/api';
+import type { Annotation } from '@/lib/annotations/types';
 
 interface VerbatimViewerProps {
   text: string;
@@ -13,6 +16,9 @@ interface VerbatimViewerProps {
   onTextExtracted?: (text: string, sourceType: 'text' | 'docx' | 'pdf' | 'doc' | 'image', imageDataUrl?: string) => void;
   onTextEnhanced?: (text: string) => void;
   imageUrl?: string;
+  // Annotation props
+  submissionId?: string;
+  showAnnotations?: boolean;
   // Customization props for reuse in Draft Comparison
   title?: string;
   titleIcon?: string;
@@ -32,6 +38,8 @@ export default function VerbatimViewer({
   onTextExtracted, 
   onTextEnhanced, 
   imageUrl,
+  submissionId,
+  showAnnotations = false,
   title = "Student Essay (Verbatim)",
   titleIcon = "📝",
   borderColor = "border-emerald-500",
@@ -50,6 +58,47 @@ export default function VerbatimViewer({
   const [isEnhancing, setIsEnhancing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  
+  // Annotation state
+  const [viewTab, setViewTab] = useState<'original' | 'annotations'>('original');
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [annotationsLoading, setAnnotationsLoading] = useState(false);
+
+  // Fetch annotations when submission ID is available
+  useEffect(() => {
+    if (submissionId && showAnnotations) {
+      setAnnotationsLoading(true);
+      getInlineAnnotations(submissionId)
+        .then(data => {
+          setAnnotations(data.annotations);
+        })
+        .catch(error => {
+          console.error('Failed to load annotations:', error);
+        })
+        .finally(() => {
+          setAnnotationsLoading(false);
+        });
+    }
+  }, [submissionId, showAnnotations]);
+
+  const handleAnnotationUpdate = async (annotationId: string, updates: Partial<Annotation>) => {
+    try {
+      await updateInlineAnnotation(annotationId, updates);
+      // Refresh annotations
+      if (submissionId) {
+        const data = await getInlineAnnotations(submissionId);
+        setAnnotations(data.annotations);
+      }
+    } catch (error) {
+      console.error('Failed to update annotation:', error);
+      alert('Failed to update annotation. Please try again.');
+    }
+  };
+
+  const handleAnnotationAdd = async (_annotation: Omit<Annotation, 'annotation_id'>) => {
+    // TODO: Implement add annotation
+    console.log('Add annotation not yet implemented');
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -288,34 +337,102 @@ export default function VerbatimViewer({
               <span className="text-gray-400">Scroll to read full essay</span>
             </div>
             
-            {/* Side-by-side view for image sources */}
-            {sourceType === 'image' && (uploadedImage || imageUrl) ? (
-              <div className="grid grid-cols-2 gap-4">
-                {/* Image Preview */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">📷 Original Image:</p>
-                  <img 
-                    src={uploadedImage || imageUrl} 
-                    alt="Student's handwritten essay" 
-                    className="w-full rounded border border-gray-300 dark:border-gray-600"
-                  />
-                </div>
-                
-                {/* Extracted Text */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
-                  <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">📝 Extracted Text:</p>
-                  <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-                    {text}
-                  </pre>
-                </div>
-              </div>
+            {/* Show annotations tab if available */}
+            {showAnnotations && submissionId ? (
+              <Tabs value={viewTab} onValueChange={(v) => setViewTab(v as 'original' | 'annotations')}>
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="original" className="flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Original
+                  </TabsTrigger>
+                  <TabsTrigger value="annotations" className="flex items-center gap-2">
+                    <MessageSquare className="w-4 h-4" />
+                    Annotations {annotations.length > 0 && `(${annotations.length})`}
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="original">
+                  {/* Side-by-side view for image sources */}
+                  {sourceType === 'image' && (uploadedImage || imageUrl) ? (
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Image Preview */}
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">📷 Original Image:</p>
+                        <img 
+                          src={uploadedImage || imageUrl} 
+                          alt="Student's handwritten essay" 
+                          className="w-full rounded border border-gray-300 dark:border-gray-600"
+                        />
+                      </div>
+                      
+                      {/* Extracted Text */}
+                      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
+                        <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">📝 Extracted Text:</p>
+                        <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                          {text}
+                        </pre>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Regular text display for non-image sources */
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-6 rounded-lg max-h-[600px] overflow-y-auto border-2 border-gray-200 dark:border-gray-700">
+                      <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                        {text}
+                      </pre>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="annotations">
+                  {annotationsLoading ? (
+                    <div className="flex items-center justify-center p-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+                      <span className="ml-2 text-gray-600">Loading annotations...</span>
+                    </div>
+                  ) : (
+                    <AnnotatedTextViewer
+                      text={text}
+                      submissionId={submissionId}
+                      annotations={annotations}
+                      onAnnotationUpdate={handleAnnotationUpdate}
+                      onAnnotationAdd={handleAnnotationAdd}
+                    />
+                  )}
+                </TabsContent>
+              </Tabs>
             ) : (
-              /* Regular text display for non-image sources */
-              <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-6 rounded-lg max-h-[600px] overflow-y-auto border-2 border-gray-200 dark:border-gray-700">
-                <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-200">
-                  {text}
-                </pre>
-              </div>
+              /* No annotations - show original view only */
+              <>
+                {/* Side-by-side view for image sources */}
+                {sourceType === 'image' && (uploadedImage || imageUrl) ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Image Preview */}
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">📷 Original Image:</p>
+                      <img 
+                        src={uploadedImage || imageUrl} 
+                        alt="Student's handwritten essay" 
+                        className="w-full rounded border border-gray-300 dark:border-gray-600"
+                      />
+                    </div>
+                    
+                    {/* Extracted Text */}
+                    <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 max-h-[600px] overflow-y-auto">
+                      <p className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">📝 Extracted Text:</p>
+                      <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                        {text}
+                      </pre>
+                    </div>
+                  </div>
+                ) : (
+                  /* Regular text display for non-image sources */
+                  <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 p-6 rounded-lg max-h-[600px] overflow-y-auto border-2 border-gray-200 dark:border-gray-700">
+                    <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-800 dark:text-gray-200">
+                      {text}
+                    </pre>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
