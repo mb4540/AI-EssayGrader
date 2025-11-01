@@ -1,6 +1,6 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** October 31, 2025 - 4:25 PM UTC-05:00  
+**Last Updated:** November 1, 2025 - 6:25 AM UTC-05:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
@@ -8,6 +8,14 @@
 > Always reference this file before making database changes.
 
 ## 📝 Recent Migrations
+
+### November 1, 2025 - Inline Annotations Feature
+**Migration:** `migrations/add_inline_annotations.sql`
+- Added `grader.annotations` table for inline text annotations
+- Added `grader.annotation_events` table for audit trail
+- Added 7 indexes for annotation queries
+- Supports AI-suggested and teacher-created annotations with workflow states
+- Line-based text anchoring with character offsets
 
 ### October 31, 2025 - Document Type Column
 **Migration:** `migrations/add_document_type.sql`
@@ -26,8 +34,8 @@
 
 ## 📊 Database Statistics
 
-- **Total Tables:** 6
-- **Total Records:** 25 rows
+- **Total Tables:** 8
+- **Total Records:** 25+ rows
 - **Total Size:** ~544 KB
 - **Schema:** `grader`
 
@@ -276,6 +284,81 @@
 
 ---
 
+### 7. annotations
+
+**Purpose:** Store inline text annotations (AI-suggested and teacher-created) with line-based anchoring
+
+| Column | Type | Nullable | Default | Key |
+|--------|------|----------|---------|-----|
+| annotation_id | uuid | NO | gen_random_uuid() | PRIMARY KEY |
+| submission_id | uuid | NO | null | FK → submissions |
+| line_number | integer | NO | null | CHECK (> 0) |
+| start_offset | integer | NO | null | CHECK (>= 0) |
+| end_offset | integer | NO | null | CHECK (>= start_offset) |
+| quote | text | NO | null | |
+| category | text | NO | null | |
+| suggestion | text | NO | null | |
+| severity | text | YES | null | CHECK |
+| status | text | NO | 'ai_suggested' | CHECK |
+| created_by | uuid | YES | null | FK → users |
+| created_at | timestamptz | NO | now() | |
+| updated_at | timestamptz | NO | now() | |
+| ai_payload | jsonb | YES | null | |
+
+**Row Count:** 0 (new table)  
+**Size:** ~8 KB
+
+**Indexes:**
+- `annotations_pkey` - PRIMARY KEY (annotation_id)
+- `idx_annotations_submission` - (submission_id)
+- `idx_annotations_status` - (status)
+- `idx_annotations_line` - (submission_id, line_number)
+- `idx_annotations_created_by` - (created_by) WHERE created_by IS NOT NULL
+
+**Foreign Keys:**
+- `submission_id` → `submissions.submission_id` (ON DELETE CASCADE)
+- `created_by` → `users.user_id` (ON DELETE SET NULL)
+
+**Constraints:**
+- `line_number` must be > 0
+- `start_offset` must be >= 0
+- `end_offset` must be >= start_offset
+- `severity` must be one of: 'info', 'warning', 'error'
+- `status` must be one of: 'ai_suggested', 'teacher_edited', 'teacher_rejected', 'teacher_approved', 'teacher_created'
+
+---
+
+### 8. annotation_events
+
+**Purpose:** Audit trail for all annotation lifecycle events
+
+| Column | Type | Nullable | Default | Key |
+|--------|------|----------|---------|-----|
+| event_id | uuid | NO | gen_random_uuid() | PRIMARY KEY |
+| annotation_id | uuid | NO | null | FK → annotations |
+| event_type | text | NO | null | CHECK |
+| payload | jsonb | NO | null | |
+| created_by | uuid | YES | null | FK → users |
+| created_at | timestamptz | NO | now() | |
+
+**Row Count:** 0 (new table)  
+**Size:** ~8 KB
+
+**Indexes:**
+- `annotation_events_pkey` - PRIMARY KEY (event_id)
+- `idx_annotation_events_annotation` - (annotation_id, created_at DESC)
+- `idx_annotation_events_type` - (event_type)
+- `idx_annotation_events_created_by` - (created_by) WHERE created_by IS NOT NULL
+
+**Foreign Keys:**
+- `annotation_id` → `annotations.annotation_id` (ON DELETE CASCADE)
+- `created_by` → `users.user_id` (ON DELETE SET NULL)
+
+**Constraints:**
+- `event_type` must be one of: 'ai_created', 'teacher_edit', 'teacher_reject', 'teacher_approve', 'teacher_create', 'teacher_delete'
+
+---
+
 ## 🔗 Relationship Diagram
 
 ```
@@ -283,9 +366,13 @@ tenants (3 rows)
   ├─→ students (5 rows) [RESTRICT]
   │     └─→ submissions (6 rows) [RESTRICT]
   │           ├─→ submission_versions (8 rows) [CASCADE]
+  │           ├─→ annotations (0 rows) [CASCADE]
+  │           │     └─→ annotation_events (0 rows) [CASCADE]
   │           └─→ assignments (1 row) [SET NULL]
   ├─→ assignments (1 row) [RESTRICT]
   └─→ users (2 rows) [RESTRICT]
+        ├─→ annotations.created_by [SET NULL]
+        └─→ annotation_events.created_by [SET NULL]
 ```
 
 **Foreign Key Rules:**
@@ -297,14 +384,17 @@ tenants (3 rows)
 
 ## 🔍 Indexes Summary
 
-**Total Indexes:** 20
+**Total Indexes:** 27
 
 **Performance Optimizations:**
 - ✅ All primary keys indexed
 - ✅ All foreign keys indexed (improves JOIN performance)
 - ✅ Tenant filtering indexed on all tables
 - ✅ Composite index on submission_versions (submission_id, snapshot_at DESC)
+- ✅ Composite index on annotations (submission_id, line_number)
+- ✅ Composite index on annotation_events (annotation_id, created_at DESC)
 - ✅ Partial indexes on active records (users, tenants)
+- ✅ Partial indexes on annotation creators (created_by IS NOT NULL)
 - ✅ No duplicate indexes - database optimized
 
 ---
