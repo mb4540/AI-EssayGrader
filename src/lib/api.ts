@@ -302,3 +302,42 @@ export async function convertDocxToPdf(
 
   return handleResponse<{ pdf_url: string; page_count: number }>(response);
 }
+
+// ============================================================================
+// Inline Annotations API
+// ============================================================================
+
+/**
+ * Get inline text annotations for a submission
+ */
+export async function getInlineAnnotations(submissionId: string) {
+  const response = await fetch(
+    `${API_BASE}/annotations-inline-get?submission_id=${submissionId}`,
+    {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    }
+  );
+
+  return handleResponse<{
+    submission_id: string;
+    annotations: any[];
+    count: number;
+  }>(response);
+}
+
+/**
+ * Update an inline annotation
+ */
+export async function updateInlineAnnotation(
+  annotationId: string,
+  updates: Record<string, any>
+) {
+  const response = await fetch(`${API_BASE}/annotations-inline-update`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ annotation_id: annotationId, updates }),
+  });
+
+  return handleResponse<{ success: boolean }>(response);
+}
