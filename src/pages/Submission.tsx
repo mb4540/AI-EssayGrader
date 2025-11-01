@@ -42,6 +42,7 @@ export default function Submission() {
   const [aiFeedback, setAiFeedback] = useState<Feedback | null>(null);
   const [teacherGrade, setTeacherGrade] = useState<number | undefined>();
   const [teacherFeedback, setTeacherFeedback] = useState('');
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
   const [imageDataUrl, setImageDataUrl] = useState<string | undefined>();
   const [storedImageUrl, setStoredImageUrl] = useState<string | undefined>();
   const [pendingFile, setPendingFile] = useState<{ data: string; extension: string } | null>(null);
@@ -130,8 +131,10 @@ export default function Submission() {
   const saveMutation = useMutation({
     mutationFn: saveTeacherEdits,
     onSuccess: () => {
-      alert('Grade saved successfully!');
-      navigate('/');
+      // Show temporary success message
+      setSaveMessage('Grade saved successfully!');
+      setTimeout(() => setSaveMessage(null), 3000);
+      // Stay on the page - don't navigate away
     },
   });
 
@@ -279,6 +282,30 @@ export default function Submission() {
     draftMode === 'single' ? !!verbatimText : (!!roughDraftText && !!finalDraftText)
   );
 
+  const handleNewSubmission = () => {
+    // Reset student selection but keep assignment
+    setSelectedStudentUuid('');
+    setStudentName('');
+    setStudentId('');
+    // Reset essay content
+    setVerbatimText('');
+    setRoughDraftText('');
+    setFinalDraftText('');
+    setSourceType('text');
+    setRoughDraftSourceType('text');
+    setFinalDraftSourceType('text');
+    // Reset grading
+    setSubmissionId(undefined);
+    setAiFeedback(null);
+    setTeacherGrade(undefined);
+    setTeacherFeedback('');
+    setImageDataUrl(undefined);
+    setStoredImageUrl(undefined);
+    setPendingFile(null);
+    setOriginalFileUrl(undefined);
+    // Keep assignment and criteria for quick grading
+  };
+
   const handlePrint = async () => {
     if (!existingSubmission) {
       alert('Please save the submission first');
@@ -365,6 +392,14 @@ export default function Submission() {
       <div className="container mx-auto px-4 py-6">
         <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
+            {/* Save Success Message */}
+            {saveMessage && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 animate-in fade-in slide-in-from-top-2">
+                <span className="text-lg">✓</span>
+                <span className="font-medium">{saveMessage}</span>
+              </div>
+            )}
+            
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
@@ -373,8 +408,18 @@ export default function Submission() {
                 <CardTitle className="text-2xl text-gray-900">Grade Submission</CardTitle>
               </div>
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleNewSubmission}
+                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+                >
+                  <PenTool className="w-4 h-4 mr-2" />
+                  New Submission
+                </Button>
                 {submissionId && aiFeedback && (
                   <>
+                    <div className="w-px h-8 bg-gray-300 mx-2" />
                     <Button
                       variant="outline"
                       size="sm"
