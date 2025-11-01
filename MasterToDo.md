@@ -2,8 +2,8 @@
 ## FastAI Grader - Consolidated Action Items
 
 **Created:** October 31, 2025 - 8:59 AM  
-**Last Updated:** October 31, 2025 - 4:00 PM  
-**Branch:** `feature/next-enhancements`  
+**Last Updated:** November 1, 2025 - 7:55 AM  
+**Branch:** `feature/inline-annotations`  
 **Status:** Active Development
 
 ---
@@ -122,111 +122,6 @@ ADD COLUMN anchor_chart_file_url text;
 - [ ] Review page 50 of student edition book
 - [ ] Determine format and usage pattern
 - [ ] Spec out exact implementation
-
----
-
-### 7. PDF Annotation with Inline Feedback ⭐⭐⭐ HIGH PRIORITY - COMPLEX
-**Goal:** Overlay feedback directly on student work using traditional teacher markup symbols
-
-**Background:** Teachers want to "circle spelling and punctuation" and mark up student work like traditional grading. Feedback should be attached to specific portions of the original text.
-
-**Teacher Quote:** "Circle spelling and punctuation"
-
-**Requirements:**
-- Identify specific locations in original text where issues occur
-- Attach comments to specific portions of text
-- Overlay feedback on PDF (if PDF submission)
-- Use traditional teacher markup symbols
-- Provide "markup key" for students to understand shorthand
-
-**Traditional Teacher Markup Symbols (to research):**
-- sp (spelling error)
-- ^ (insert word/punctuation)
-- ¶ (new paragraph needed)
-- cap (capitalization)
-- frag (sentence fragment)
-- ro (run-on sentence)
-- awk (awkward phrasing)
-- ? (unclear meaning)
-- ✓ (good point)
-- Others to be determined
-
-**Questions to Answer Before Implementation:**
-1. Should this work for all submission types or just PDFs?
-2. How should LLM identify text locations? (character positions, line numbers, text matching?)
-3. What PDF annotation library should we use? (pdf-lib, PDFKit, other?)
-4. Should markup be interactive or static?
-5. How detailed should the markup key be?
-6. Should students see markup key automatically or on request?
-7. Should teachers be able to customize markup symbols?
-8. How to handle handwritten submissions (images)?
-
-**Research Needed:**
-- [ ] Ask LLM for comprehensive list of traditional teacher markup symbols
-- [ ] Research PDF annotation libraries (pdf-lib, PDFKit, pdf.js)
-- [ ] Determine how to map feedback to text locations
-- [ ] Design markup key format (legend, guide, reference sheet)
-- [ ] Test with various PDF formats and layouts
-
-**Potential Implementation:**
-- [ ] Modify AI prompt to return feedback with text locations
-- [ ] Return feedback with character positions or line numbers
-- [ ] Implement PDF annotation library
-- [ ] Overlay markup symbols and comments on PDF
-- [ ] Generate annotated PDF for download
-- [ ] Create student-facing "markup key" component
-- [ ] Add markup key to Help page or as modal
-- [ ] Support both inline symbols and margin comments
-
-**Technical Challenges:**
-- Text location identification (especially for handwritten/OCR text)
-- PDF layout preservation during annotation
-- Symbol placement accuracy
-- Multi-page document handling
-- File size management for annotated PDFs
-
-**Database Changes:**
-```sql
--- Store markup data with submission
-ALTER TABLE grader.submissions
-ADD COLUMN markup_data jsonb,
-ADD COLUMN annotated_pdf_url text;
-
--- Markup data structure:
--- {
---   "markups": [
---     {
---       "type": "spelling",
---       "symbol": "sp",
---       "location": { "page": 1, "x": 100, "y": 200 },
---       "text": "teh",
---       "comment": "Check spelling"
---     }
---   ]
--- }
-```
-
-**Files:** 
-- `netlify/functions/grade.ts` (AI prompt modification for location data)
-- `src/pages/Submission.tsx` (display annotated PDF)
-- New: `src/lib/pdfAnnotation.ts` (PDF annotation logic)
-- New: `src/components/MarkupKey.tsx` (student reference guide)
-- New: `netlify/functions/annotate-pdf.ts` (generate annotated PDF)
-
-**Time:** 8-12 hours (complex feature)
-
-**Implementation Phases:**
-1. **Phase 1:** LLM returns feedback with text locations (2-3 hours)
-2. **Phase 2:** PDF annotation library integration (3-4 hours)
-3. **Phase 3:** Markup symbol system and key (2-3 hours)
-4. **Phase 4:** Testing and refinement (1-2 hours)
-
-**Next Steps:**
-- [ ] Research and select PDF annotation library
-- [ ] Create comprehensive markup symbol list
-- [ ] Design markup key format
-- [ ] Prototype text location identification
-- [ ] Test with sample PDFs
 
 ---
 
@@ -480,6 +375,79 @@ These are documented but NOT for current branch:
 ## ═══════════════════════════════════════════════════════
 ## ✅ COMPLETED ITEMS
 ## ═══════════════════════════════════════════════════════
+
+---
+
+## ✅ Recently Completed (November 1, 2025)
+
+### 7. Inline Annotations with Teacher Review ⭐⭐⭐ ✅ COMPLETE
+**Goal:** Provide line-by-line feedback with teacher approval workflow
+
+**Status:** ✅ **100% COMPLETE** - Fully Implemented
+
+**Implementation Summary:**
+Teachers can now see AI-generated inline annotations on student essays with full control over which corrections appear in the final output.
+
+**Completed Features:**
+- [x] **LLM Integration** - AI generates inline annotations with line numbers, quotes, categories, and suggestions
+- [x] **Database Storage** - Annotations table with full CRUD operations
+- [x] **Normalization System** - Matches AI suggestions to actual text with fuzzy matching
+- [x] **Interactive UI** - AnnotatedTextViewer with approve/edit/reject buttons per annotation
+- [x] **Status Tracking** - AI Suggested → Teacher Approved/Edited/Rejected workflow
+- [x] **Approve All Button** - Bulk approve all suggestions with one click
+- [x] **Line Number Display** - Fixed-width column prevents text wrapping under numbers
+- [x] **Feedback Sync** - Both Annotations tab and Feedback panel show same data from database
+- [x] **Print Integration** - Annotated PDF with yellow highlights and inline corrections
+- [x] **Comprehensive Feedback** - Print includes strengths, improvements, suggestions, and teacher comments
+- [x] **Color Preservation** - Yellow highlights stay visible in printed/saved PDFs
+- [x] **Quick Grading Workflow** - "New Submission" button for rapid cycling through students
+- [x] **Auto-save** - Temporary toast messages, stay on page after saving
+
+**Database Schema:**
+```sql
+CREATE TABLE grader.annotations (
+  annotation_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  submission_id uuid NOT NULL REFERENCES grader.submissions(submission_id) ON DELETE CASCADE,
+  line_number integer NOT NULL,
+  start_offset integer NOT NULL,
+  end_offset integer NOT NULL,
+  quote text NOT NULL,
+  category text NOT NULL,
+  suggestion text NOT NULL,
+  severity text,
+  status text NOT NULL DEFAULT 'ai_suggested',
+  ai_payload jsonb,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+```
+
+**Key Components:**
+- `src/components/AnnotatedTextViewer.tsx` - Main annotation viewer with interactive controls
+- `src/components/GradePanel.tsx` - Displays annotations in feedback panel
+- `src/lib/annotations/` - Normalization, matching, and line number utilities
+- `src/lib/printAnnotated.ts` - Annotated PDF generation with highlights
+- `netlify/functions/grade-bulletproof.ts` - Saves annotations to database
+- `netlify/functions/annotations.ts` - CRUD operations for annotations
+
+**Teacher Workflow:**
+1. Grade essay → AI generates inline annotations
+2. Review annotations in Annotations tab (7 AI Suggested)
+3. Approve/Edit/Reject each annotation individually OR click "Approve All"
+4. Annotations appear in Feedback & Suggestions panel
+5. Click Print → Annotated PDF with yellow highlights and feedback
+6. Click "New Submission" → Cycle to next student quickly
+
+**Technical Achievements:**
+- ✅ Fuzzy text matching handles OCR errors and variations
+- ✅ Database as single source of truth (eliminates mismatches)
+- ✅ Print color adjustment preserves highlighting in PDFs
+- ✅ Flexible annotation system supports any category
+- ✅ Teacher has full control over final output
+
+**Completed:** November 1, 2025  
+**Branch:** `feature/inline-annotations`  
+**Commits:** 15+ | **Files Changed:** 10+ | **Build:** ✅ Passing
 
 ---
 
