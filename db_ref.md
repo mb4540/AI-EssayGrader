@@ -1,6 +1,6 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** November 1, 2025 - 6:25 AM UTC-05:00  
+**Last Updated:** November 1, 2025 - 8:30 AM UTC-05:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
@@ -8,6 +8,14 @@
 > Always reference this file before making database changes.
 
 ## 📝 Recent Migrations
+
+### November 1, 2025 - Password Reset Tables
+**Migration:** `migrations/add_password_reset_tables.sql`
+- Added `grader.password_reset_tokens` table for secure token storage
+- Added `grader.password_reset_audit` table for security audit logging
+- SHA-256 token hashing with 15-minute expiration
+- Single-use token enforcement
+- Comprehensive audit trail for all reset activity
 
 ### November 1, 2025 - Inline Annotations Feature
 **Migration:** `migrations/add_inline_annotations.sql`
@@ -34,7 +42,7 @@
 
 ## 📊 Database Statistics
 
-- **Total Tables:** 8
+- **Total Tables:** 10
 - **Total Records:** 25+ rows
 - **Total Size:** ~544 KB
 - **Schema:** `grader`
@@ -359,6 +367,78 @@
 
 ---
 
+### 9. password_reset_tokens
+
+**Purpose:** Secure storage of password reset tokens with SHA-256 hashing and expiration
+
+| Column | Type | Nullable | Default | Key |
+|--------|------|----------|---------|-----|
+| reset_token_id | uuid | NO | gen_random_uuid() | PRIMARY KEY |
+| user_id | uuid | NO | null | FK → users |
+| token_hash | text | NO | null | UNIQUE |
+| expires_at | timestamptz | NO | null | |
+| used_at | timestamptz | YES | null | |
+| created_at | timestamptz | NO | now() | |
+
+**Row Count:** 0 (new table)  
+**Size:** ~8 KB
+
+**Indexes:**
+- `password_reset_tokens_pkey` - PRIMARY KEY (reset_token_id)
+- `password_reset_tokens_token_hash_key` - UNIQUE (token_hash)
+- `idx_password_reset_tokens_user` - (user_id)
+- `idx_password_reset_tokens_hash` - (token_hash)
+- `idx_password_reset_tokens_expires` - (expires_at) WHERE used_at IS NULL
+
+**Foreign Keys:**
+- `user_id` → `users.user_id` (ON DELETE CASCADE)
+
+**Security Features:**
+- Raw tokens never stored (SHA-256 hash only)
+- 15-minute expiration window
+- Single-use enforcement via `used_at` timestamp
+- Automatic cleanup of expired tokens
+
+---
+
+### 10. password_reset_audit
+
+**Purpose:** Comprehensive audit log for all password reset activity
+
+| Column | Type | Nullable | Default | Key |
+|--------|------|----------|---------|-----|
+| audit_id | uuid | NO | gen_random_uuid() | PRIMARY KEY |
+| user_id | uuid | YES | null | FK → users |
+| action | text | NO | null | CHECK |
+| email | text | NO | null | |
+| ip_address | text | YES | null | |
+| user_agent | text | YES | null | |
+| error_message | text | YES | null | |
+| created_at | timestamptz | NO | now() | |
+
+**Row Count:** 0 (new table)  
+**Size:** ~8 KB
+
+**Indexes:**
+- `password_reset_audit_pkey` - PRIMARY KEY (audit_id)
+- `idx_password_reset_audit_user` - (user_id)
+- `idx_password_reset_audit_created` - (created_at DESC)
+- `idx_password_reset_audit_email` - (email)
+
+**Foreign Keys:**
+- `user_id` → `users.user_id` (ON DELETE SET NULL)
+
+**Constraints:**
+- `action` must be one of: 'reset_requested', 'reset_completed', 'reset_failed', 'token_expired'
+
+**Audit Events:**
+- **reset_requested**: User requested password reset email
+- **reset_completed**: Password successfully changed
+- **reset_failed**: Reset attempt failed (invalid token, already used, etc.)
+- **token_expired**: User attempted to use expired token
+
+---
+
 ## 🔗 Relationship Diagram
 
 ```
@@ -372,7 +452,9 @@ tenants (3 rows)
   ├─→ assignments (1 row) [RESTRICT]
   └─→ users (2 rows) [RESTRICT]
         ├─→ annotations.created_by [SET NULL]
-        └─→ annotation_events.created_by [SET NULL]
+        ├─→ annotation_events.created_by [SET NULL]
+        ├─→ password_reset_tokens (0 rows) [CASCADE]
+        └─→ password_reset_audit (0 rows) [SET NULL]
 ```
 
 **Foreign Key Rules:**
@@ -384,7 +466,7 @@ tenants (3 rows)
 
 ## 🔍 Indexes Summary
 
-**Total Indexes:** 27
+**Total Indexes:** 36
 
 **Performance Optimizations:**
 - ✅ All primary keys indexed
@@ -395,6 +477,8 @@ tenants (3 rows)
 - ✅ Composite index on annotation_events (annotation_id, created_at DESC)
 - ✅ Partial indexes on active records (users, tenants)
 - ✅ Partial indexes on annotation creators (created_by IS NOT NULL)
+- ✅ Partial index on unused password reset tokens (used_at IS NULL)
+- ✅ Token hash indexed for fast password reset lookups
 - ✅ No duplicate indexes - database optimized
 
 ---
