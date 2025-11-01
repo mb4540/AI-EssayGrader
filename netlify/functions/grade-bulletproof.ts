@@ -20,6 +20,8 @@ import {
   buildComparisonExtractorPrompt 
 } from '../../src/lib/prompts/extractor';
 import type { RubricJSON, ExtractedScoresJSON } from '../../src/lib/calculator/types';
+import { normalizeAnnotations } from '../../src/lib/annotations/normalizer';
+import type { RawAnnotation } from '../../src/lib/annotations/types';
 
 const CALCULATOR_VERSION = 'v1.0.0-ts';
 
@@ -236,6 +238,55 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Validate extracted scores structure
     if (!extractedJSON.scores || !Array.isArray(extractedJSON.scores)) {
       throw new Error('Invalid extracted scores format: missing scores array');
+    }
+
+    // Process inline annotations if present
+    let annotationStats = { saved: 0, unresolved: 0 };
+    if (extractedJSON.feedback?.inline_annotations && Array.isArray(extractedJSON.feedback.inline_annotations)) {
+      const rawAnnotations = extractedJSON.feedback.inline_annotations as RawAnnotation[];
+      const originalText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
+      
+      const normalizationResult = normalizeAnnotations(rawAnnotations, originalText, submission_id);
+      
+      // Save normalized annotations
+      for (const annotation of normalizationResult.normalized) {
+        try {
+          await sql`
+            INSERT INTO grader.annotations (
+              submission_id,
+              line_number,
+              start_offset,
+              end_offset,
+              quote,
+              category,
+              suggestion,
+              severity,
+              status,
+              ai_payload
+            ) VALUES (
+              ${submission_id},
+              ${annotation.line_number},
+              ${annotation.start_offset},
+              ${annotation.end_offset},
+              ${annotation.quote},
+              ${annotation.category},
+              ${annotation.suggestion},
+              ${annotation.severity || null},
+              ${annotation.status},
+              ${JSON.stringify(annotation.ai_payload || null)}
+            )
+          `;
+          annotationStats.saved++;
+        } catch (error) {
+          console.error('Failed to save annotation:', error);
+        }
+      }
+      
+      annotationStats.unresolved = normalizationResult.unresolved.length;
+      
+      if (normalizationResult.unresolved.length > 0) {
+        console.log('Unresolved annotations:', normalizationResult.unresolved);
+      }
     }
 
     // Convert to Decimal objects

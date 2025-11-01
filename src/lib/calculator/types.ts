@@ -101,6 +101,13 @@ export interface ExtractedScoresJSON {
     strengths: string[];
     areas_for_improvement: string[];
     top_3_suggestions: string[];
+    inline_annotations?: Array<{
+      line: number;
+      quote: string;
+      category: string;
+      suggestion: string;
+      severity?: string;
+    }>;
   };
   notes?: string | null;
 }

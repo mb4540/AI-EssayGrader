@@ -178,7 +178,8 @@ export function buildComparisonExtractorPrompt(
   roughDraft: string,
   finalDraft: string,
   submissionId: string,
-  customGradingPrompt?: string
+  customGradingPrompt?: string,
+  documentType?: string
 ): string {
   const criteriaDescriptions = rubric.criteria
     .map((c) => {
@@ -196,6 +197,12 @@ ${levelsDesc}`;
   // Use custom grading prompt or default
   const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
   
+  // Get document type specific guidance
+  const docType = documentType ? getDocumentType(documentType) : null;
+  const documentTypeGuidance = docType?.gradingFocus 
+    ? `\nDOCUMENT TYPE: ${docType.label}\nGRADING FOCUS: ${docType.gradingFocus}\n`
+    : "";
+  
   // Check if grammar/spelling/punctuation are in rubric
   const rubricIds = rubric.criteria.map(c => c.id.toLowerCase());
   const hasGrammar = rubricIds.some(id => 
@@ -208,6 +215,7 @@ ${levelsDesc}`;
   return `${gradingPhilosophy}
 
 RUBRIC: "${rubric.title}"
+${documentTypeGuidance}
 
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
