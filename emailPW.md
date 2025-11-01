@@ -54,7 +54,8 @@ We will adapt these patterns for AI-EssayGrader.
    - Graceful handling when env vars missing (log, but respond success).
 4. **Token verification + password update**
    - Validate token hash exists, not used, not expired.
-   - Hash new password using Argon2id (preferred) or bcrypt if consistent with current stack.
+   - Hash new password using **bcrypt** (12 rounds) - consistent with existing auth system.
+   - Use existing `hashPassword()` utility from `netlify/functions/lib/auth.ts`.
    - Update user record, mark token `used_at = now()`.
    - Optionally email confirmation of password change.
 5. **Security logging**
@@ -166,12 +167,14 @@ We will adapt these patterns for AI-EssayGrader.
 
 ---
 
+## Resolved Decisions
+1. ✅ **Password Hashing:** Use bcrypt (12 rounds) via existing `hashPassword()` utility from `netlify/functions/lib/auth.ts` - consistent with current implementation.
+
 ## Open Questions / Follow-ups
-1. Confirm current password hashing algorithm (bcrypt vs argon2) – align with existing user records.
-2. Determine support contact info to include in email template.
-3. Decide if we need audit logs table for tracking resets.
-4. Clarify whether to invalidate active sessions post-reset in phase 1.
-5. Verify Mailgun domain configuration (sandbox vs production) to avoid delivery issues.
+1. Determine support contact info to include in email template.
+2. Decide if we need audit logs table for tracking resets.
+3. Clarify whether to invalidate active sessions post-reset in phase 1.
+4. Verify Mailgun domain configuration (sandbox vs production) to avoid delivery issues.
 
 ---
 
