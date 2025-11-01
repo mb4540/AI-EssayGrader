@@ -2,13 +2,148 @@
 ## FastAI Grader - Consolidated Action Items
 
 **Created:** October 31, 2025 - 8:59 AM  
-**Last Updated:** November 1, 2025 - 7:55 AM  
-**Branch:** `feature/inline-annotations`  
-**Status:** Active Development
+**Last Updated:** November 1, 2025 - 9:18 AM  
+**Branch:** `feature/cleanup-refactor`  
+**Status:** Active Development - Testing Phase
 
 ---
 
 ## 📋 OPEN TODO ITEMS
+
+---
+
+## 🧪 TESTING & QUALITY ASSURANCE ⭐⭐⭐ HIGHEST PRIORITY
+
+### Test Suite Implementation
+**Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
+
+**Status:** 🟡 **IN PROGRESS** - 1/40 test files complete  
+**Coverage:** ~5% current → 75%+ target  
+**Test Plan:** See `TEST_PLAN.md` for full specifications
+
+#### ✅ Completed Tests (1/40)
+- [x] **Auth Utils** (25 tests) - `netlify/functions/lib/auth-utils.test.ts`
+  - Password hashing (bcrypt, 12 rounds)
+  - JWT token generation/verification
+  - Integration flows
+  - **Status:** ✅ 25/25 passing (100%)
+
+#### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
+
+**Authentication & Security:**
+- [ ] Password reset token generation - `netlify/functions/lib/password-reset.test.ts`
+- [ ] PII Guard validation - `src/lib/api/piiGuard.test.ts`
+
+**Core Utilities:**
+- [ ] ✅ BulletProof Calculator - `src/lib/calculator/calculator.test.ts` (17/17 passing)
+- [ ] Annotation Normalizer - `src/lib/annotations/normalizer.test.ts`
+- [ ] Line Number Utilities - `src/lib/annotations/lineNumbers.test.ts`
+- [ ] CSV Parser - `src/lib/csv.test.ts`
+- [ ] DOCX Parser - `src/lib/docx.test.ts`
+- [ ] OCR Handler - `src/lib/ocr.test.ts`
+- [ ] Document Types - `src/lib/documentTypes.test.ts`
+- [ ] Print Utilities - `src/lib/print.test.ts`
+- [ ] Rubric Parser - `src/lib/calculator/rubricParser.test.ts`
+- [ ] Rubric Builder - `src/lib/calculator/rubricBuilder.test.ts`
+
+**React Components (70%+ coverage goal):**
+- [ ] GradePanel - `src/components/GradePanel.test.tsx`
+- [ ] AnnotatedTextViewer - `src/components/AnnotatedTextViewer.test.tsx`
+- [ ] AnnotationViewer - `src/components/AnnotationViewer.test.tsx`
+- [ ] FileDrop - `src/components/FileDrop.test.tsx`
+- [ ] StudentSelector - `src/components/StudentSelector.test.tsx`
+- [ ] CreateAssignmentModal - `src/components/CreateAssignmentModal.test.tsx`
+- [ ] SettingsModal - `src/components/SettingsModal.test.tsx`
+- [ ] VerbatimViewer - `src/components/VerbatimViewer.test.tsx`
+
+**Pages:**
+- [ ] Login - `src/pages/Login.test.tsx`
+- [ ] Register - `src/pages/Register.test.tsx`
+- [ ] ForgotPassword - `src/pages/ForgotPassword.test.tsx`
+- [ ] ResetPassword - `src/pages/ResetPassword.test.tsx`
+- [ ] Dashboard - `src/pages/Dashboard.test.tsx`
+- [ ] Submission - `src/pages/Submission.test.tsx`
+- [ ] Help - `src/pages/Help.test.tsx`
+
+#### 🟡 Priority 2: Integration Tests (15% of codebase)
+
+**API + Database Tests:**
+- [ ] Submission Flow - `tests/integration/submission.test.ts`
+  - Create submission (text)
+  - Create submission (DOCX upload)
+  - Create submission (image OCR)
+  - Grade submission
+  - Save teacher edits
+  - List submissions
+  - Delete submission
+
+- [ ] Authentication Flow - `tests/integration/auth.test.ts`
+  - Register new user
+  - Login with valid credentials
+  - Login with invalid credentials
+  - Protected route access
+  - JWT token validation
+  - Token expiration
+
+- [ ] Password Reset Flow - `tests/integration/password-reset.test.ts`
+  - Request password reset
+  - Verify token creation in database
+  - Complete password reset
+  - Reject expired token
+  - Reject already-used token
+  - Verify audit logging
+
+- [ ] Annotations Workflow - `tests/integration/annotations.test.ts`
+  - Create AI annotations
+  - Fetch annotations
+  - Update annotation status
+  - Edit annotation content
+  - Delete annotation
+  - Track annotation events
+
+#### 🟢 Priority 3: E2E Tests (Critical User Flows)
+
+**Playwright Tests:**
+- [ ] Complete Grading Flow - `tests/e2e/grading-flow.spec.ts`
+  - Login → Create submission → Grade → Review → Edit → Print
+  
+- [ ] Password Reset Flow - `tests/e2e/password-reset.spec.ts`
+  - Forgot password → Email → Reset → Login
+
+- [ ] File Upload Flow - `tests/e2e/file-upload.spec.ts`
+  - DOCX upload → Grade → Review
+  - Image upload → OCR → Grade
+
+#### 📊 Test Infrastructure
+
+**Setup & Configuration:**
+- [x] Vitest configuration - `vitest.config.ts`
+- [x] Test setup file - `src/test/setup.ts`
+- [x] Test fixtures - `src/test/fixtures.ts`
+- [x] Test helpers - `src/test/helpers.tsx`
+
+**CI/CD:**
+- [ ] GitHub Actions workflow - `.github/workflows/test.yml`
+- [ ] Coverage reporting
+- [ ] PR test gates
+- [ ] Automated test runs
+
+#### 📈 Success Metrics
+
+**Coverage Targets:**
+- Critical Functions: 90%+
+- API Endpoints: 80%+
+- Components: 70%+
+- Utilities: 80%+
+- Overall: 75%+
+
+**Quality Metrics:**
+- Zero flaky tests
+- All tests run in < 5 minutes
+- Clear failure messages
+- No skipped tests without documentation
+
+**Timeline:** 4 weeks (see TEST_PLAN.md for phased implementation)
 
 ---
 
