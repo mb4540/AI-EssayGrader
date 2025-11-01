@@ -9,6 +9,7 @@
 
 import type { RubricJSON } from '../calculator/types';
 import { getDocumentType } from '../documentTypes';
+import { addLineNumbers } from '../annotations/lineNumbers';
 
 export const EXTRACTOR_SYSTEM_MESSAGE = `You are a rubric scorer. Your job is to evaluate student work against specific criteria and choose appropriate performance levels.
 
@@ -72,10 +73,13 @@ ${documentTypeGuidance}
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
 
-STUDENT ESSAY:
+STUDENT ESSAY (with line numbers for reference):
 <<<
-${essayText}
+${addLineNumbers(essayText)}
 >>>
+
+NOTE: Line numbers (e.g., "001|") are for YOUR REFERENCE ONLY. They are NOT part of the student's text.
+When quoting text, do NOT include the line numbers in your quotes.
 
 TASK:
 Evaluate the essay against EACH criterion above. For each criterion:
@@ -96,7 +100,9 @@ FEEDBACK GUIDELINES:
      ? '- These ARE in the rubric - include in scoring'
      : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
    }
-   - Be specific: "Line 3: 'their' should be 'there'"
+   - Use inline_annotations array to mark specific issues with line numbers
+   - Include the exact text being corrected (quote)
+   - Provide clear suggestion for improvement
    - Keep it constructive and encouraging
    ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
 
@@ -139,10 +145,27 @@ OUTPUT ONLY THIS JSON STRUCTURE:
     "punctuation_findings": ["string"],
     "strengths": ["string"],
     "areas_for_improvement": ["string"],
-    "top_3_suggestions": ["string"]
+    "top_3_suggestions": ["string"],
+    "inline_annotations": [
+      {
+        "line": 5,
+        "quote": "the exact text with the issue",
+        "category": "Spelling|Grammar|Punctuation|Organization|Clarity|Evidence|Style",
+        "suggestion": "Specific correction or improvement",
+        "severity": "info|warning|error"
+      }
+    ]
   },
   "notes": "string or null"
 }
+
+INLINE ANNOTATIONS RULES:
+- Use line numbers from the numbered essay (e.g., line 5 means "005| ...")
+- Quote ONLY the problematic text, WITHOUT line numbers
+- Keep quotes short and precise (5-15 words max)
+- Category must be one of: Spelling, Grammar, Punctuation, Organization, Clarity, Evidence, Style
+- Severity: error (must fix), warning (should fix), info (suggestion)
+- Provide actionable suggestions, not just identification
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }
@@ -194,10 +217,13 @@ ROUGH DRAFT (First Version):
 ${roughDraft}
 >>>
 
-FINAL DRAFT (Revised Version):
+FINAL DRAFT (Revised Version - with line numbers for reference):
 <<<
-${finalDraft}
+${addLineNumbers(finalDraft)}
 >>>
+
+NOTE: Line numbers (e.g., "001|") are for YOUR REFERENCE ONLY. They are NOT part of the student's text.
+When quoting text, do NOT include the line numbers in your quotes.
 
 TASK:
 1. Evaluate the FINAL DRAFT against EACH criterion above
@@ -219,6 +245,9 @@ FEEDBACK GUIDELINES:
      ? '- These ARE in the rubric - include in scoring'
      : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
    }
+   - Use inline_annotations array to mark specific issues with line numbers
+   - Include the exact text being corrected (quote)
+   - Provide clear suggestion for improvement
    - Note any errors in the FINAL draft
    - Be specific and constructive
    ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
@@ -263,10 +292,27 @@ OUTPUT ONLY THIS JSON STRUCTURE:
     "punctuation_findings": ["string"],
     "strengths": ["string"],
     "areas_for_improvement": ["string"],
-    "top_3_suggestions": ["string"]
+    "top_3_suggestions": ["string"],
+    "inline_annotations": [
+      {
+        "line": 5,
+        "quote": "the exact text with the issue",
+        "category": "Spelling|Grammar|Punctuation|Organization|Clarity|Evidence|Style",
+        "suggestion": "Specific correction or improvement",
+        "severity": "info|warning|error"
+      }
+    ]
   },
   "notes": "string or null"
 }
+
+INLINE ANNOTATIONS RULES:
+- Use line numbers from the numbered FINAL DRAFT (e.g., line 5 means "005| ...")
+- Quote ONLY the problematic text, WITHOUT line numbers
+- Keep quotes short and precise (5-15 words max)
+- Category must be one of: Spelling, Grammar, Punctuation, Organization, Clarity, Evidence, Style
+- Severity: error (must fix), warning (should fix), info (suggestion)
+- Provide actionable suggestions, not just identification
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }
