@@ -1,5 +1,11 @@
 # REFACTOR.md — Code Refactoring, Testing, and Quality Following .windsurf Rules
 
+**⚠️ THIS IS A REFERENCE TEMPLATE - DO NOT MODIFY FOR SPECIFIC EXECUTIONS**
+
+For specific refactoring tasks, create a new file like `REFACTOR_EXECUTION_YYYY-MM-DD.md` based on this template.
+
+---
+
 **Goal:** Improve code quality, maintainability, and test coverage without breaking shipping software. All refactors are backed up first.
 
 **Last Updated:** November 1, 2025  
