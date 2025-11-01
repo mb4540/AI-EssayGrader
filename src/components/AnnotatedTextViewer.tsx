@@ -16,7 +16,8 @@ import {
   AlertCircle, 
   AlertTriangle, 
   Info,
-  Printer 
+  Printer,
+  CheckCheck 
 } from 'lucide-react';
 import type { Annotation, AnnotationStatus } from '@/lib/annotations/types';
 import { addLineNumbers } from '@/lib/annotations/lineNumbers';
@@ -74,6 +75,20 @@ export default function AnnotatedTextViewer({
   const handleExportPDF = () => {
     // Open print dialog with annotated view
     window.print();
+  };
+
+  const handleApproveAll = async () => {
+    // Get all annotations that are not already approved
+    const toApprove = annotations.filter(
+      a => a.status === 'ai_suggested' || a.status === 'teacher_edited'
+    );
+    
+    // Approve all in parallel
+    await Promise.all(
+      toApprove.map(annotation => 
+        onAnnotationUpdate(annotation.annotation_id!, { status: 'teacher_approved' })
+      )
+    );
   };
 
   const getSeverityIcon = (severity?: string) => {
@@ -261,8 +276,17 @@ export default function AnnotatedTextViewer({
           <Button
             size="sm"
             variant="outline"
+            onClick={handleApproveAll}
+            className="ml-4 bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+            disabled={groupedAnnotations.ai_suggested.length === 0 && groupedAnnotations.teacher_edited.length === 0}
+          >
+            <CheckCheck className="w-4 h-4 mr-2" />
+            Approve All
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={handleExportPDF}
-            className="ml-4"
           >
             <Printer className="w-4 h-4 mr-2" />
             Export PDF
