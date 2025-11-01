@@ -506,6 +506,8 @@ export default function Submission() {
               onTextExtracted={handleTextExtracted}
               onTextEnhanced={handleTextEnhanced}
               imageUrl={storedImageUrl}
+              submissionId={submissionId}
+              showAnnotations={!!submissionId && !!aiFeedback}
             />
           ) : (
             <DraftComparison
