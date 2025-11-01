@@ -99,12 +99,12 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 ### Test Suite Implementation
 **Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
 
-**Status:** 🟡 **IN PROGRESS** - 3/40 test files complete (7.5%)  
-**Coverage:** ~10% current → 75%+ target  
-**Tests:** 128 passing, 4 skipped  
+**Status:** 🟡 **IN PROGRESS** - 5/40 test files complete (12.5%)  
+**Coverage:** ~20% current → 75%+ target  
+**Tests:** 197 passing, 4 skipped  
 **Test Plan:** See `TEST_PLAN.md` for full specifications
 
-#### ✅ Completed Tests (3/40)
+#### ✅ Completed Tests (5/40)
 - [x] **Auth Utils** (25 tests) - `netlify/functions/lib/auth-utils.test.ts`
   - Password hashing (bcrypt, 12 rounds)
   - JWT token generation/verification
@@ -123,16 +123,28 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
   - Unresolved annotation handling
   - **Status:** ✅ 19/19 passing (100%)
 
+- [x] **PII Guard** (32 tests) - `src/lib/api/piiGuard.test.ts`
+  - FERPA compliance validation
+  - PII detection in nested objects
+  - Development/production modes
+  - **Status:** ✅ 32/32 passing (100%)
+
+- [x] **Line Number Utilities** (37 tests) - `src/lib/annotations/lineNumbers.test.ts`
+  - Add/remove line numbers
+  - Text location finding
+  - Fuzzy matching
+  - **Status:** ✅ 37/37 passing (100%)
+
 #### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
 
 **Authentication & Security:**
 - [ ] Password reset token generation - `netlify/functions/lib/password-reset.test.ts`
-- [ ] PII Guard validation - `src/lib/api/piiGuard.test.ts`
+- [x] ✅ PII Guard validation - `src/lib/api/piiGuard.test.ts` (32/32 passing)
 
 **Core Utilities:**
 - [x] ✅ BulletProof Calculator - `src/lib/calculator/calculator.test.ts` (17/17 passing)
 - [x] ✅ Annotation Normalizer - `src/lib/annotations/normalizer.test.ts` (19/19 passing)
-- [ ] Line Number Utilities - `src/lib/annotations/lineNumbers.test.ts`
+- [x] ✅ Line Number Utilities - `src/lib/annotations/lineNumbers.test.ts` (37/37 passing)
 - [ ] CSV Parser - `src/lib/csv.test.ts`
 - [ ] DOCX Parser - `src/lib/docx.test.ts`
 - [ ] OCR Handler - `src/lib/ocr.test.ts`
