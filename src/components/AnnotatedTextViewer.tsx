@@ -16,7 +16,6 @@ import {
   AlertCircle, 
   AlertTriangle, 
   Info,
-  Printer,
   CheckCheck 
 } from 'lucide-react';
 import type { Annotation, AnnotationStatus } from '@/lib/annotations/types';
@@ -70,11 +69,6 @@ export default function AnnotatedTextViewer({
       status: 'teacher_edited' 
     });
     setEditingAnnotation(null);
-  };
-
-  const handleExportPDF = () => {
-    // Open print dialog with annotated view
-    window.print();
   };
 
   const handleApproveAll = async () => {
@@ -282,14 +276,6 @@ export default function AnnotatedTextViewer({
           >
             <CheckCheck className="w-4 h-4 mr-2" />
             Approve All
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleExportPDF}
-          >
-            <Printer className="w-4 h-4 mr-2" />
-            Export PDF
           </Button>
         </div>
 

@@ -13,9 +13,11 @@ import CriteriaInput from '@/components/CriteriaInput';
 import GradePanel from '@/components/GradePanel';
 import DraftComparison from '@/components/DraftComparison';
 import AnnotationViewer from '@/components/AnnotationViewer';
-import { ingestSubmission, gradeSubmission, saveTeacherEdits, getSubmission, listAssignments, uploadFile } from '@/lib/api';
+import { ingestSubmission, gradeSubmission, saveTeacherEdits, getSubmission, listAssignments, uploadFile, getInlineAnnotations } from '@/lib/api';
 import { printSubmission, downloadSubmissionHTML } from '@/lib/print';
+import { generateAnnotatedPrintHTML } from '@/lib/printAnnotated';
 import type { Feedback } from '@/lib/schema';
+import type { Annotation } from '@/lib/annotations/types';
 import { useBridge } from '@/hooks/useBridge';
 
 export default function Submission() {
@@ -277,27 +279,62 @@ export default function Submission() {
     draftMode === 'single' ? !!verbatimText : (!!roughDraftText && !!finalDraftText)
   );
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     if (!existingSubmission) {
       alert('Please save the submission first');
       return;
     }
     
-    printSubmission({
-      student_name: studentName,
-      student_id: studentId || undefined,
-      assignment_title: existingSubmission.assignment_title,
-      draft_mode: draftMode,
-      verbatim_text: verbatimText || undefined,
-      rough_draft_text: roughDraftText || undefined,
-      final_draft_text: finalDraftText || undefined,
-      teacher_criteria: criteria,
-      ai_grade: existingSubmission.ai_grade,
-      ai_feedback: aiFeedback || undefined,
-      teacher_grade: teacherGrade,
-      teacher_feedback: teacherFeedback,
-      created_at: existingSubmission.created_at,
-    });
+    // Check if annotations exist
+    let annotations: Annotation[] = [];
+    if (submissionId) {
+      try {
+        const annotationsData = await getInlineAnnotations(submissionId);
+        annotations = annotationsData.annotations || [];
+      } catch (error) {
+        console.error('Failed to fetch annotations:', error);
+      }
+    }
+    
+    // Use annotated print if annotations exist, otherwise use regular print
+    if (annotations.length > 0 && (verbatimText || finalDraftText)) {
+      const html = generateAnnotatedPrintHTML({
+        student_name: studentName,
+        student_id: studentId || undefined,
+        assignment_title: existingSubmission.assignment_title,
+        verbatim_text: (draftMode === 'single' ? verbatimText : finalDraftText) || '',
+        teacher_criteria: criteria,
+        ai_grade: existingSubmission.ai_grade,
+        ai_feedback: aiFeedback || undefined,
+        teacher_grade: teacherGrade,
+        teacher_feedback: teacherFeedback,
+        created_at: existingSubmission.created_at,
+        annotations: annotations,
+      });
+      
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+      }
+    } else {
+      // Regular print without annotations
+      printSubmission({
+        student_name: studentName,
+        student_id: studentId || undefined,
+        assignment_title: existingSubmission.assignment_title,
+        draft_mode: draftMode,
+        verbatim_text: verbatimText || undefined,
+        rough_draft_text: roughDraftText || undefined,
+        final_draft_text: finalDraftText || undefined,
+        teacher_criteria: criteria,
+        ai_grade: existingSubmission.ai_grade,
+        ai_feedback: aiFeedback || undefined,
+        teacher_grade: teacherGrade,
+        teacher_feedback: teacherFeedback,
+        created_at: existingSubmission.created_at,
+      });
+    }
   };
 
   const handleDownload = () => {
