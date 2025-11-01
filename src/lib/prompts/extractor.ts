@@ -100,9 +100,9 @@ FEEDBACK GUIDELINES:
      ? '- These ARE in the rubric - include in scoring'
      : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
    }
-   - Use inline_annotations array to mark specific issues with line numbers
-   - Include the exact text being corrected (quote)
-   - Provide clear suggestion for improvement
+   - Put ALL grammar/spelling/punctuation issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
+   - Include line number and exact quoted text for each issue
+   - Provide clear, specific correction for each issue
    - Keep it constructive and encouraging
    ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
 
@@ -140,9 +140,9 @@ OUTPUT ONLY THIS JSON STRUCTURE:
     }
   ],
   "feedback": {
-    "grammar_findings": ["string"],
-    "spelling_findings": ["string"],
-    "punctuation_findings": ["string"],
+    "grammar_findings": [],
+    "spelling_findings": [],
+    "punctuation_findings": [],
     "strengths": ["string"],
     "areas_for_improvement": ["string"],
     "top_3_suggestions": ["string"],
@@ -159,13 +159,16 @@ OUTPUT ONLY THIS JSON STRUCTURE:
   "notes": "string or null"
 }
 
-INLINE ANNOTATIONS RULES:
+CRITICAL INLINE ANNOTATIONS RULES:
+- Put EVERY grammar, spelling, and punctuation issue in inline_annotations array
+- Leave grammar_findings, spelling_findings, and punctuation_findings as EMPTY arrays []
 - Use line numbers from the numbered essay (e.g., line 5 means "005| ...")
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
 - Category must be one of: Spelling, Grammar, Punctuation, Organization, Clarity, Evidence, Style
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
+- Include ALL issues you find - do not limit the number of annotations
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }
@@ -253,9 +256,9 @@ FEEDBACK GUIDELINES:
      ? '- These ARE in the rubric - include in scoring'
      : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
    }
-   - Use inline_annotations array to mark specific issues with line numbers
-   - Include the exact text being corrected (quote)
-   - Provide clear suggestion for improvement
+   - Put ALL grammar/spelling/punctuation issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
+   - Include line number and exact quoted text for each issue
+   - Provide clear, specific correction for each issue
    - Note any errors in the FINAL draft
    - Be specific and constructive
    ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
@@ -295,9 +298,9 @@ OUTPUT ONLY THIS JSON STRUCTURE:
     }
   ],
   "feedback": {
-    "grammar_findings": ["string"],
-    "spelling_findings": ["string"],
-    "punctuation_findings": ["string"],
+    "grammar_findings": [],
+    "spelling_findings": [],
+    "punctuation_findings": [],
     "strengths": ["string"],
     "areas_for_improvement": ["string"],
     "top_3_suggestions": ["string"],
@@ -314,13 +317,16 @@ OUTPUT ONLY THIS JSON STRUCTURE:
   "notes": "string or null"
 }
 
-INLINE ANNOTATIONS RULES:
+CRITICAL INLINE ANNOTATIONS RULES:
+- Put EVERY grammar, spelling, and punctuation issue in inline_annotations array
+- Leave grammar_findings, spelling_findings, and punctuation_findings as EMPTY arrays []
 - Use line numbers from the numbered FINAL DRAFT (e.g., line 5 means "005| ...")
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
 - Category must be one of: Spelling, Grammar, Punctuation, Organization, Clarity, Evidence, Style
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
+- Include ALL issues you find - do not limit the number of annotations
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }
