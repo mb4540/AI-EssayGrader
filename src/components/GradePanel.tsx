@@ -247,6 +247,42 @@ export default function GradePanel({
                     </div>
                   )}
 
+                  {/* Inline Annotations - Specific Corrections */}
+                  {(aiFeedback as any).bulletproof.extracted_scores.feedback.inline_annotations?.length > 0 && (
+                    <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border-2 border-purple-200 dark:border-purple-800">
+                      <p className="text-sm font-medium mb-2 flex items-center gap-2 text-purple-700 dark:text-purple-300">
+                        <span>📌</span>
+                        Specific Corrections
+                        <span className="text-xs bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300 px-2 py-0.5 rounded">
+                          Line-by-Line
+                        </span>
+                      </p>
+                      <p className="text-xs text-purple-700 dark:text-purple-300 mb-2 italic">
+                        View these in the Annotations tab for interactive editing
+                      </p>
+                      <ul className="space-y-2">
+                        {(aiFeedback as any).bulletproof.extracted_scores.feedback.inline_annotations.map((annotation: any, idx: number) => (
+                          <li key={idx} className="text-sm text-purple-900 dark:text-purple-100 pl-3 border-l-2 border-purple-300 dark:border-purple-700 pl-3">
+                            <div className="flex items-start gap-2">
+                              <span className="text-xs font-mono text-purple-600 dark:text-purple-400 flex-shrink-0">
+                                Line {annotation.line}:
+                              </span>
+                              <div className="flex-1">
+                                <span className="font-medium text-purple-800 dark:text-purple-200">
+                                  {annotation.category}
+                                </span>
+                                {' - '}
+                                <span className="italic">"{annotation.quote}"</span>
+                                {' → '}
+                                <span className="text-purple-700 dark:text-purple-300">{annotation.suggestion}</span>
+                              </div>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Top 3 Suggestions */}
                   {(aiFeedback as any).bulletproof.extracted_scores.feedback.top_3_suggestions?.length > 0 && (
                     <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 p-3 rounded-lg border-2 border-yellow-200 dark:border-yellow-800">
