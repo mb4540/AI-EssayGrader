@@ -12,6 +12,91 @@
 
 ---
 
+## 🚨 CRITICAL BUG: Student Bridge Data Isolation ⭐⭐⭐⭐ URGENT
+
+### 1. Fix Student Bridge to be User-Specific (Not Tenant-Wide)
+**Priority:** 🔴 **CRITICAL** - FERPA Violation Risk  
+**Status:** 🐛 **BUG** - Discovered November 1, 2025
+
+**Problem:**
+When a new user (Shana Busby) registers in the same tenant, she immediately sees another teacher's Student Roster. This is a **critical data isolation issue** violating FERPA principles.
+
+**Current Behavior:**
+- Student Bridge stores student mappings in localStorage
+- All users in the same tenant share the same student data
+- User A can see User B's students if they're in the same tenant
+- **Security Risk:** Cross-teacher data exposure
+
+**Expected Behavior:**
+- Each teacher should ONLY see their own students
+- Student Bridge should be scoped to `user_id`, not just `tenant_id`
+- No cross-contamination of student data between teachers
+
+**Root Cause:**
+The Student Bridge uses localStorage with a tenant-scoped key, but localStorage is browser-specific, not user-specific. When different users log in from the same browser, they share the same localStorage data.
+
+**Solution Options:**
+
+**Option 1: Add user_id to localStorage keys (Quick Fix)**
+```typescript
+// Current (WRONG):
+const BRIDGE_KEY = `student-bridge-${tenant_id}`;
+
+// Fixed (CORRECT):
+const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
+```
+
+**Option 2: Move Student Bridge to Database (Proper Fix)**
+- Create `grader.teacher_students` table
+- Store student mappings per user_id in database
+- Fetch only current user's students
+- Better data isolation and persistence
+
+**Recommended Approach:** 
+1. **Immediate:** Implement Option 1 (user-scoped localStorage keys)
+2. **Long-term:** Plan Option 2 (database-backed bridge) for next release
+
+**Files to Update:**
+- `src/bridge/bridgeCore.ts` - Update storage key to include user_id
+- `src/contexts/AuthContext.tsx` - Pass user_id to bridge functions
+- `src/components/bridge/BridgeManager.tsx` - Clear bridge on user switch
+- Add test: `src/bridge/bridgeCore.test.ts` - Verify user isolation
+
+**Database Migration (Long-term):**
+```sql
+CREATE TABLE grader.teacher_students (
+  mapping_id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES grader.users(user_id) ON DELETE CASCADE,
+  student_id uuid NOT NULL REFERENCES grader.students(student_id) ON DELETE CASCADE,
+  local_id text NOT NULL,
+  display_name text NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE(user_id, student_id),
+  UNIQUE(user_id, local_id)
+);
+
+CREATE INDEX idx_teacher_students_user ON grader.teacher_students(user_id);
+CREATE INDEX idx_teacher_students_student ON grader.teacher_students(student_id);
+```
+
+**Testing Checklist:**
+- [ ] User A creates students → logs out
+- [ ] User B logs in → should see ZERO students
+- [ ] User B creates different students
+- [ ] User A logs back in → should see ONLY their original students
+- [ ] Verify no cross-contamination in localStorage
+- [ ] Test with multiple browsers/incognito mode
+- [ ] Test logout/login cycles
+
+**Time Estimate:**
+- Quick Fix (Option 1): 1-2 hours
+- Proper Fix (Option 2): 4-6 hours
+- Testing: 1 hour
+
+**Impact:** 🔴 **CRITICAL** - Affects all multi-teacher deployments
+
+---
+
 ## 🧪 TESTING & QUALITY ASSURANCE ⭐⭐⭐ HIGHEST PRIORITY
 
 ### Test Suite Implementation
