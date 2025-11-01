@@ -103,25 +103,14 @@ export default function Login() {
             >
               Create an account
             </Link>
-            <a
-              href="#"
+            <Link
+              to="/forgot-password"
               className="font-medium text-gray-600 hover:text-gray-500"
-              onClick={(e) => {
-                e.preventDefault();
-                alert('Password reset coming in Phase 2!');
-              }}
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
         </form>
-
-        {/* Test Credentials */}
-        <div className="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-          <p className="text-xs font-semibold text-gray-700 mb-2">Test Credentials:</p>
-          <p className="text-xs text-gray-600">Email: test@example.com</p>
-          <p className="text-xs text-gray-600">Password: testpass123</p>
-        </div>
       </div>
     </div>
   );
