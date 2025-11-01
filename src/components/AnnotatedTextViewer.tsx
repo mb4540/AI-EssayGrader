@@ -15,7 +15,8 @@ import {
   Edit2, 
   AlertCircle, 
   AlertTriangle, 
-  Info 
+  Info,
+  Printer 
 } from 'lucide-react';
 import type { Annotation, AnnotationStatus } from '@/lib/annotations/types';
 import { addLineNumbers } from '@/lib/annotations/lineNumbers';
@@ -68,6 +69,11 @@ export default function AnnotatedTextViewer({
       status: 'teacher_edited' 
     });
     setEditingAnnotation(null);
+  };
+
+  const handleExportPDF = () => {
+    // Open print dialog with annotated view
+    window.print();
   };
 
   const getSeverityIcon = (severity?: string) => {
@@ -248,6 +254,15 @@ export default function AnnotatedTextViewer({
             onClick={() => setViewMode('original')}
           >
             Original
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExportPDF}
+            className="ml-4"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Export PDF
           </Button>
         </div>
 
