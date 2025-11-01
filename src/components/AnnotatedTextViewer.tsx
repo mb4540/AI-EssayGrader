@@ -119,21 +119,24 @@ export default function AnnotatedTextViewer({
       .sort((a, b) => a.start_offset - b.start_offset);
 
     const lines = text.split('\n');
-    const numberedLines = lines.map((line, idx) => {
-      const lineNum = (idx + 1).toString().padStart(3, '0');
-      return `${lineNum}| ${line}`;
-    });
 
     return (
       <div className="font-mono text-sm leading-loose">
-        {numberedLines.map((line, lineIdx) => {
+        {lines.map((line, lineIdx) => {
           const lineNumber = lineIdx + 1;
           const lineAnnotations = sortedAnnotations.filter(a => a.line_number === lineNumber);
+          const lineNum = lineNumber.toString().padStart(3, '0');
 
           return (
             <div key={lineIdx} className="mb-4">
-              <div className="text-gray-800 dark:text-gray-200">
-                {line}
+              {/* Line with number in fixed column */}
+              <div className="flex">
+                <div className="flex-shrink-0 w-12 text-gray-400 select-none">
+                  {lineNum}|
+                </div>
+                <div className="flex-1 text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+                  {line}
+                </div>
               </div>
               {lineAnnotations.map(annotation => (
                 <div
