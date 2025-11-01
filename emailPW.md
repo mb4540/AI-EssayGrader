@@ -100,7 +100,7 @@ We will adapt these patterns for AI-EssayGrader.
    - Greeting (try to include teacher first name if available)
    - CTA button + fallback link
    - Expiration reminder
-   - Support contact info (placeholder for now)
+   - Support contact: Mike Berry (mb4540@gmail.com)
 3. Use `render()` to convert to HTML in function.
 4. Configure `APP_BASE_URL` or `PUBLIC_BASE_URL` env var for link base.
 
@@ -169,12 +169,12 @@ We will adapt these patterns for AI-EssayGrader.
 
 ## Resolved Decisions
 1. ✅ **Password Hashing:** Use bcrypt (12 rounds) via existing `hashPassword()` utility from `netlify/functions/lib/auth.ts` - consistent with current implementation.
+2. ✅ **Support Contact:** Mike Berry - mb4540@gmail.com
 
 ## Open Questions / Follow-ups
-1. Determine support contact info to include in email template.
-2. Decide if we need audit logs table for tracking resets.
-3. Clarify whether to invalidate active sessions post-reset in phase 1.
-4. Verify Mailgun domain configuration (sandbox vs production) to avoid delivery issues.
+1. Decide if we need audit logs table for tracking resets.
+2. Clarify whether to invalidate active sessions post-reset in phase 1.
+3. Verify Mailgun domain configuration (sandbox vs production) to avoid delivery issues.
 
 ---
 
