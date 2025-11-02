@@ -4,11 +4,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare } from 'lucide-react';
-import { extractTextFromImage, extractTextFromPDF } from '@/lib/ocr';
-import { extractTextFromDocx } from '@/lib/docx';
 import AnnotatedTextViewer from './AnnotatedTextViewer';
 import { getInlineAnnotations, updateInlineAnnotation } from '@/lib/api';
 import type { Annotation } from '@/lib/annotations/types';
+import { useFileUpload } from '@/hooks/useFileUpload';
+import { useTextEnhancement } from '@/hooks/useTextEnhancement';
 
 interface VerbatimViewerProps {
   text: string;
@@ -54,10 +54,10 @@ export default function VerbatimViewer({
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
   const [activeTab, setActiveTab] = useState('text');
   const [tempText, setTempText] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [isEnhancing, setIsEnhancing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  
+  // Use custom hooks for file upload and text enhancement
+  const { isProcessing, progress, uploadedImage, handleImageUpload, handleDocxUpload, setUploadedImage } = useFileUpload();
+  const { isEnhancing, enhanceText } = useTextEnhancement();
   
   // Annotation state
   const [viewTab, setViewTab] = useState<'original' | 'annotations'>('original');
@@ -100,71 +100,25 @@ export default function VerbatimViewer({
     console.log('Add annotation not yet implemented');
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUploadWrapper = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !onTextExtracted) return;
 
-    setIsProcessing(true);
-    setProgress(0);
-
     try {
-      // Create object URL for image preview
-      let imageDataUrl: string | undefined;
-      if (file.type.startsWith('image/')) {
-        const objectUrl = URL.createObjectURL(file);
-        setUploadedImage(objectUrl);
-        
-        // Also convert to base64 for storage
-        const reader = new FileReader();
-        imageDataUrl = await new Promise<string>((resolve) => {
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(file);
-        });
-      }
-
-      const extractedText = file.type === 'application/pdf' 
-        ? await extractTextFromPDF(file, setProgress)
-        : await extractTextFromImage(file, setProgress);
-      
-      onTextExtracted(extractedText, 'image', imageDataUrl);
+      await handleImageUpload(file, onTextExtracted);
     } catch (error) {
-      console.error('OCR failed:', error);
-      alert('Failed to extract text from image. Please try again.');
-    } finally {
-      setIsProcessing(false);
-      setProgress(0);
+      alert(error instanceof Error ? error.message : 'Failed to extract text from image');
     }
   };
 
-  const handleDocxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleDocxUploadWrapper = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !onTextExtracted) return;
 
-    setIsProcessing(true);
-
     try {
-      // Extract text from document
-      const { text: extractedText, fileType } = await extractTextFromDocx(file);
-      
-      // Read file as base64 for storage (if ALLOW_BLOB_STORAGE is enabled)
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64Data = reader.result as string;
-        // Pass both extracted text and file data
-        onTextExtracted(extractedText, fileType, base64Data);
-      };
-      reader.onerror = () => {
-        // If file reading fails, still pass the extracted text
-        onTextExtracted(extractedText, fileType);
-      };
-      reader.readAsDataURL(file);
-      
+      await handleDocxUpload(file, onTextExtracted);
     } catch (error) {
-      console.error('Document extraction failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      alert(`Failed to extract text from document: ${errorMessage}\n\nPlease ensure the file is a valid DOCX, PDF, or DOC file.`);
-    } finally {
-      setIsProcessing(false);
+      alert(error instanceof Error ? error.message : 'Failed to extract text from document');
     }
   };
 
@@ -175,32 +129,14 @@ export default function VerbatimViewer({
     }
   };
 
-  const handleEnhanceText = async () => {
+  const handleEnhanceTextWrapper = async () => {
     if (!text || !onTextEnhanced) return;
 
-    setIsEnhancing(true);
     try {
-      const customOcrPrompt = localStorage.getItem('ai_ocr_prompt');
-      const response = await fetch('/.netlify/functions/enhance-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          text,
-          ocr_prompt: customOcrPrompt || undefined
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to enhance text');
-      }
-
-      const data = await response.json();
-      onTextEnhanced(data.enhanced_text);
+      const enhancedText = await enhanceText(text);
+      onTextEnhanced(enhancedText);
     } catch (error) {
-      console.error('Text enhancement failed:', error);
-      alert('Failed to enhance text. Please try again.');
-    } finally {
-      setIsEnhancing(false);
+      alert(error instanceof Error ? error.message : 'Failed to enhance text');
     }
   };
   
@@ -222,7 +158,7 @@ export default function VerbatimViewer({
           <div className="flex items-center gap-2">
             {text && onTextEnhanced && sourceType === 'image' && showEnhanceButton && (
               <Button
-                onClick={handleEnhanceText}
+                onClick={handleEnhanceTextWrapper}
                 disabled={isEnhancing}
                 size="sm"
                 className="bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600"
@@ -288,7 +224,7 @@ export default function VerbatimViewer({
                 <input
                   type="file"
                   accept="image/*,.pdf"
-                  onChange={handleImageUpload}
+                  onChange={handleImageUploadWrapper}
                   className="hidden"
                   id="image-upload"
                   disabled={isProcessing}
@@ -309,7 +245,7 @@ export default function VerbatimViewer({
                 <input
                   type="file"
                   accept=".docx,.pdf,.doc,application/vnd.google-apps.document"
-                  onChange={handleDocxUpload}
+                  onChange={handleDocxUploadWrapper}
                   className="hidden"
                   id="docx-upload"
                   disabled={isProcessing}
