@@ -197,7 +197,7 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ StudentSelector - `src/components/StudentSelector.test.tsx` (22/22 passing)
 - [ ] CreateAssignmentModal - `src/components/CreateAssignmentModal.test.tsx`
 - [ ] SettingsModal - `src/components/SettingsModal.test.tsx`
-- [ ] VerbatimViewer - `src/components/VerbatimViewer.test.tsx`
+- [x] ✅ VerbatimViewer - `src/components/VerbatimViewer.test.tsx` (34/34 passing)
 
 **Pages:**
 - [ ] Login - `src/pages/Login.test.tsx`
