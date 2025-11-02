@@ -56,7 +56,7 @@ export default function VerbatimViewer({
   const [tempText, setTempText] = useState('');
   
   // Use custom hooks for file upload and text enhancement
-  const { isProcessing, progress, uploadedImage, handleImageUpload, handleDocxUpload, setUploadedImage } = useFileUpload();
+  const { isProcessing, progress, uploadedImage, handleImageUpload, handleDocxUpload } = useFileUpload();
   const { isEnhancing, enhanceText } = useTextEnhancement();
   
   // Annotation state
