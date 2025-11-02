@@ -1,26 +1,18 @@
 import { BookOpen, Upload, Sparkles, FileText, Printer, Settings, Image, PenTool } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageHeader from '@/components/PageHeader';
 
 export default function Help() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
-        {/* Help Guide Header Card */}
-        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <BookOpen className="w-5 h-5 text-indigo-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-2xl text-gray-900">Help Guide</CardTitle>
-                  <p className="text-sm text-gray-600">Simple guide for teachers</p>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        <PageHeader
+          icon={<BookOpen className="w-6 h-6 text-indigo-600" />}
+          title="Help Guide"
+          subtitle="Simple guide for teachers"
+          showAddAssignment={true}
+          showBridgeLock={true}
+        />
         {/* Introduction */}
         <Card className="mb-6 shadow-xl border-t-4 border-t-indigo-500">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700">
