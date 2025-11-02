@@ -99,12 +99,12 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 ### Test Suite Implementation
 **Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
 
-**Status:** 🟡 **IN PROGRESS** - 9/40 test files complete (22.5%)  
-**Coverage:** ~30% current → 75%+ target  
-**Tests:** 269 passing, 4 skipped  
+**Status:** 🟡 **IN PROGRESS** - 12/40 test files complete (30%)  
+**Coverage:** ~38% current → 75%+ target  
+**Tests:** 346 passing, 4 skipped  
 **Test Plan:** See `TEST_PLAN.md` for full specifications
 
-#### ✅ Completed Tests (9/40)
+#### ✅ Completed Tests (12/40)
 - [x] **Auth Utils** (25 tests) - `netlify/functions/lib/auth-utils.test.ts`
   - Password hashing (bcrypt, 12 rounds)
   - JWT token generation/verification
@@ -153,6 +153,24 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
   - Rubric validation
   - **Status:** ✅ 36/36 passing (100%)
 
+- [x] **DOCX Parser** (16 tests) - `src/lib/docx.test.ts`
+  - File type detection (DOCX, PDF, DOC)
+  - Text extraction
+  - Error handling
+  - **Status:** ✅ 16/16 passing (100%)
+
+- [x] **Document Types** (27 tests) - `src/lib/documentTypes.test.ts`
+  - ELA document type definitions
+  - Type lookup utilities
+  - Rubric templates
+  - **Status:** ✅ 27/27 passing (100%)
+
+- [x] **Print Utilities** (34 tests) - `src/lib/print.test.ts`
+  - Generate printable HTML
+  - Print and download functionality
+  - Feedback rendering
+  - **Status:** ✅ 34/34 passing (100%)
+
 #### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
 
 **Authentication & Security:**
@@ -166,10 +184,10 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ CSV Parser - `src/lib/csv.test.ts` (17/17 passing)
 - [x] ✅ Rubric Parser - `src/lib/calculator/rubricParser.test.ts` (19/19 passing)
 - [x] ✅ Rubric Builder - `src/lib/calculator/rubricBuilder.test.ts` (36/36 passing)
-- [ ] DOCX Parser - `src/lib/docx.test.ts`
+- [x] ✅ DOCX Parser - `src/lib/docx.test.ts` (16/16 passing)
+- [x] ✅ Document Types - `src/lib/documentTypes.test.ts` (27/27 passing)
+- [x] ✅ Print Utilities - `src/lib/print.test.ts` (34/34 passing)
 - [ ] OCR Handler - `src/lib/ocr.test.ts`
-- [ ] Document Types - `src/lib/documentTypes.test.ts`
-- [ ] Print Utilities - `src/lib/print.test.ts`
 
 **React Components (70%+ coverage goal):**
 - [ ] GradePanel - `src/components/GradePanel.test.tsx`
