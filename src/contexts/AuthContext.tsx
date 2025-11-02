@@ -1,7 +1,9 @@
 // Authentication Context
 // Manages user authentication state and provides auth functions to the app
+// CRITICAL: Locks Student Bridge on logout for FERPA compliance
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { getBridgeStore } from '../bridge/bridgeStore';
 
 // ============================================================================
 // Types
@@ -176,6 +178,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Logout function
   const logout = () => {
+    // CRITICAL: Lock the bridge to prevent cross-user data exposure (FERPA compliance)
+    try {
+      const bridgeStore = getBridgeStore();
+      bridgeStore.lock();
+      console.log('Bridge locked on logout for FERPA compliance');
+    } catch (err) {
+      console.error('Error locking bridge on logout:', err);
+    }
+    
     setToken(null);
     setUser(null);
     localStorage.removeItem('auth_token');
