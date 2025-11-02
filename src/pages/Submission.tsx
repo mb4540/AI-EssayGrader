@@ -425,6 +425,7 @@ export default function Submission() {
         <PageHeader
           icon={<span className="text-2xl">📝</span>}
           title="Grade Submission"
+          subtitle="Grade essays with AI assistance"
           showAddAssignment={true}
           showBridgeLock={true}
           actions={

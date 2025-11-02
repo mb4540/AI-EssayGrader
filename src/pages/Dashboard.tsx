@@ -182,6 +182,7 @@ export default function Dashboard() {
         <PageHeader
           icon={<span className="text-2xl">📚</span>}
           title="Dashboard"
+          subtitle="View and manage all submissions"
           showAddAssignment={true}
           showBridgeLock={true}
           actions={
