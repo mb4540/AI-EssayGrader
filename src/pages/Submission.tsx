@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, GitCompare, Printer, Download, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -19,6 +19,7 @@ import { generateAnnotatedPrintHTML } from '@/lib/printAnnotated';
 import type { Feedback } from '@/lib/schema';
 import type { Annotation } from '@/lib/annotations/types';
 import { useBridge } from '@/hooks/useBridge';
+import PageHeader from '@/components/PageHeader';
 
 export default function Submission() {
   const { id } = useParams();
@@ -414,77 +415,73 @@ export default function Submission() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
-        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
-            {/* Save Success Message */}
-            {saveMessage && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 animate-in fade-in slide-in-from-top-2">
-                <span className="text-lg">✓</span>
-                <span className="font-medium">{saveMessage}</span>
-              </div>
-            )}
-            
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="text-2xl">📝</span>
-                </div>
-                <CardTitle className="text-2xl text-gray-900">Grade Submission</CardTitle>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNewSubmission}
-                  className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
-                >
-                  <PenTool className="w-4 h-4 mr-2" />
-                  New Submission
-                </Button>
-                {submissionId && aiFeedback && (
-                  <>
-                    <div className="w-px h-8 bg-gray-300 mx-2" />
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handlePrint}
-                    >
-                      <Printer className="w-4 h-4 mr-2" />
-                      Print
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleDownload}
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <div className="w-px h-8 bg-gray-300 mx-2" />
-                  </>
-                )}
-                <Button
-                  variant={draftMode === 'single' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setDraftMode('single')}
-                  className={draftMode === 'single' ? 'bg-indigo-600' : ''}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Single Essay
-                </Button>
-                <Button
-                  variant={draftMode === 'comparison' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setDraftMode('comparison')}
-                  className={draftMode === 'comparison' ? 'bg-indigo-600' : ''}
-                >
-                  <GitCompare className="w-4 h-4 mr-2" />
-                  Draft Comparison
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        {/* Save Success Message */}
+        {saveMessage && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 animate-in fade-in slide-in-from-top-2">
+            <span className="text-lg">✓</span>
+            <span className="font-medium">{saveMessage}</span>
+          </div>
+        )}
+        
+        <PageHeader
+          icon={<span className="text-2xl">📝</span>}
+          title="Grade Submission"
+          showAddAssignment={true}
+          showBridgeLock={true}
+          actions={
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleNewSubmission}
+                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
+              >
+                <PenTool className="w-4 h-4 mr-2" />
+                New Submission
+              </Button>
+              {submissionId && aiFeedback && (
+                <>
+                  <div className="w-px h-8 bg-gray-300 mx-2" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrint}
+                  >
+                    <Printer className="w-4 h-4 mr-2" />
+                    Print
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDownload}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                  <div className="w-px h-8 bg-gray-300 mx-2" />
+                </>
+              )}
+              <Button
+                variant={draftMode === 'single' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDraftMode('single')}
+                className={draftMode === 'single' ? 'bg-indigo-600' : ''}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Single Essay
+              </Button>
+              <Button
+                variant={draftMode === 'comparison' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDraftMode('comparison')}
+                className={draftMode === 'comparison' ? 'bg-indigo-600' : ''}
+              >
+                <GitCompare className="w-4 h-4 mr-2" />
+                Draft Comparison
+              </Button>
+            </>
+          }
+        />
 
         {/* Top Row: Student Info and Grading Criteria side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">

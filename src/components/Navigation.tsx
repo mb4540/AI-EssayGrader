@@ -54,16 +54,6 @@ export default function Navigation() {
 
             {/* Navigation Links */}
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => {
-                  // Trigger modal on current page (modal is in Layout component)
-                  const event = new CustomEvent('openAssignmentModal');
-                  window.dispatchEvent(event);
-                }}
-                className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Add Assignment
-              </button>
               <Link
                 to="/"
                 className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
