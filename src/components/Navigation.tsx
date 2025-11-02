@@ -2,7 +2,7 @@
 // Top navigation bar with user menu and logout
 
 import { Link } from 'react-router-dom';
-import { LogOut, User, BookOpen, Settings } from 'lucide-react';
+import { LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState, useRef, useEffect } from 'react';
 import SettingsModal from './SettingsModal';
@@ -37,9 +37,18 @@ export default function Navigation() {
           <div className="flex justify-between h-16">
             {/* Logo and Title */}
             <div className="flex items-center">
-              <BookOpen className="w-8 h-8 text-blue-600" />
-              <Link to="/" className="ml-2 text-xl font-bold text-gray-900">
-                FastAI Grader
+              <img 
+                src="/GoTIcon.png" 
+                alt="Gift of Time" 
+                className="w-10 h-10"
+              />
+              <Link to="/" className="ml-3">
+                <h1 className="text-xl font-bold text-gray-900 leading-tight">
+                  EssayEase by Gift of Time
+                </h1>
+                <h2 className="text-xs text-gray-600 leading-tight">
+                  Take the pain out of essay grading.
+                </h2>
               </Link>
             </div>
 
