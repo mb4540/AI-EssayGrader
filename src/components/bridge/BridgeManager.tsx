@@ -251,8 +251,8 @@ export default function BridgeManager() {
       <div className="container mx-auto px-4 py-6">
         {/* Student Roster Header Card */}
         <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
-            <div className="flex items-center justify-between mb-4">
+          <CardHeader className="py-5">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
                   <Users className="w-5 h-5 text-indigo-600" />

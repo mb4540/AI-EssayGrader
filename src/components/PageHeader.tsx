@@ -36,7 +36,7 @@ export default function PageHeader({
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm mb-6 border-t-4 border-t-indigo-500">
+    <div className="bg-white border-b border-gray-200 shadow-sm mb-6 border-t-4 border-t-indigo-500 rounded-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
         <div className="flex items-center justify-between">
           {/* Left: Icon + Title */}
