@@ -229,7 +229,7 @@ describe('Print Utilities', () => {
     it('should include footer with generation info', () => {
       const html = generatePrintHTML(baseData);
 
-      expect(html).toContain('FastAI Grader');
+      expect(html).toContain('EssayEase');
       expect(html).toContain('Generated');
     });
 

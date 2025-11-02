@@ -24,11 +24,11 @@ export default function Help() {
         {/* Introduction */}
         <Card className="mb-6 shadow-xl border-t-4 border-t-indigo-500">
           <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-700">
-            <CardTitle className="text-2xl">Welcome to FastAI Grader! 👋</CardTitle>
+            <CardTitle className="text-2xl">Welcome to EssayEase! 👋</CardTitle>
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              FastAI Grader is your helpful assistant for grading 6th grade essays. Think of it as a smart helper that reads student essays and gives you suggestions for grades and feedback. You're always in control and can change anything the AI suggests!
+              EssayEase is your helpful assistant for grading 6th grade essays. Think of it as a smart helper that reads student essays and gives you suggestions for grades and feedback. You're always in control and can change anything the AI suggests!
             </p>
           </CardContent>
         </Card>
