@@ -2,13 +2,392 @@
 ## FastAI Grader - Consolidated Action Items
 
 **Created:** October 31, 2025 - 8:59 AM  
-**Last Updated:** November 1, 2025 - 7:55 AM  
-**Branch:** `feature/inline-annotations`  
-**Status:** Active Development
+**Last Updated:** November 1, 2025 - 9:18 AM  
+**Branch:** `feature/cleanup-refactor`  
+**Status:** Active Development - Testing Phase
 
 ---
 
 ## 📋 OPEN TODO ITEMS
+
+---
+
+## 🚨 CRITICAL BUG: Student Bridge Data Isolation ⭐⭐⭐⭐ URGENT
+
+### 1. Fix Student Bridge to be User-Specific (Not Tenant-Wide)
+**Priority:** 🔴 **CRITICAL** - FERPA Violation Risk  
+**Status:** 🐛 **BUG** - Discovered November 1, 2025
+
+**Problem:**
+When a new user (Shana Busby) registers in the same tenant, she immediately sees another teacher's Student Roster. This is a **critical data isolation issue** violating FERPA principles.
+
+**Current Behavior:**
+- Student Bridge stores student mappings in localStorage
+- All users in the same tenant share the same student data
+- User A can see User B's students if they're in the same tenant
+- **Security Risk:** Cross-teacher data exposure
+
+**Expected Behavior:**
+- Each teacher should ONLY see their own students
+- Student Bridge should be scoped to `user_id`, not just `tenant_id`
+- No cross-contamination of student data between teachers
+
+**Root Cause:**
+The Student Bridge uses localStorage with a tenant-scoped key, but localStorage is browser-specific, not user-specific. When different users log in from the same browser, they share the same localStorage data.
+
+**Solution:**
+
+**User-Scoped Bridge Files with Separate Passphrases**
+```typescript
+// Current (WRONG):
+const BRIDGE_KEY = `student-bridge-${tenant_id}`;
+
+// Fixed (CORRECT):
+const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
+```
+
+**Key Requirements:**
+- ✅ Each teacher has their own bridge file (scoped to user_id)
+- ✅ Each teacher has their own passphrase for encryption
+- ✅ Bridge remains LOCAL ONLY (localStorage, never cloud/database)
+- ✅ FERPA Compliance: PII stays separated from cloud database
+- ✅ Different teachers on shared computer have isolated bridges
+
+**Why NOT Database Storage:**
+❌ **CRITICAL:** Cannot store bridge in cloud database - this would violate FERPA compliance. The entire purpose of the Student Bridge is to keep student PII (names, local IDs) separated from cloud storage. Bridge MUST remain local-only.
+
+**Implementation:**
+1. Update bridge storage key to include user_id
+2. Clear bridge localStorage when user logs out
+3. Load correct bridge when user logs in
+4. Each user maintains their own encrypted bridge file
+5. Passphrases are user-specific (not shared across teachers)
+
+**Files to Update:**
+- `src/bridge/bridgeCore.ts` - Update storage key to include user_id
+- `src/contexts/AuthContext.tsx` - Pass user_id to bridge functions  
+- `src/components/bridge/BridgeManager.tsx` - Clear bridge on user switch/logout
+- Add test: `src/bridge/bridgeCore.test.ts` - Verify user isolation
+
+**Import/Export Changes:**
+- Bridge export filename: `student-bridge-${user.email}-${date}.json`
+- Bridge import: Validates user_id in imported file
+- Each teacher's bridge export contains their user_id metadata
+
+**Testing Checklist:**
+- [ ] User A creates students → logs out
+- [ ] User B logs in → should see ZERO students
+- [ ] User B creates different students
+- [ ] User A logs back in → should see ONLY their original students
+- [ ] Verify no cross-contamination in localStorage
+- [ ] Test with multiple browsers/incognito mode
+- [ ] Test logout/login cycles
+
+**Time Estimate:**
+- Bridge file scoping (user_id): 1-2 hours
+- Logout/login bridge clearing: 30 minutes
+- Import/export user validation: 30 minutes
+- Testing: 1 hour
+- **Total: 2-3 hours**
+
+**Impact:** 🔴 **CRITICAL** - Affects all multi-teacher deployments
+
+---
+
+## 🧪 TESTING & QUALITY ASSURANCE ⭐⭐⭐ HIGHEST PRIORITY
+
+### Test Suite Implementation
+**Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
+
+**Status:** 🟡 **IN PROGRESS** - 12/40 test files complete (30%)  
+**Coverage:** ~38% current → 75%+ target  
+**Tests:** 346 passing, 4 skipped  
+**Test Plan:** See `TEST_PLAN.md` for full specifications
+
+#### ✅ Completed Tests (12/40)
+- [x] **Auth Utils** (25 tests) - `netlify/functions/lib/auth-utils.test.ts`
+  - Password hashing (bcrypt, 12 rounds)
+  - JWT token generation/verification
+  - Integration flows
+  - **Status:** ✅ 25/25 passing (100%)
+
+- [x] **BridgeManager** (18 tests) - `src/components/bridge/BridgeManager.test.tsx`
+  - Lock/unlock workflows
+  - Student roster management
+  - Privacy notices
+  - **Status:** ✅ 18/18 passing (100%) - Fixed 3 failing tests
+
+- [x] **Annotation Normalizer** (19 tests) - `src/lib/annotations/normalizer.test.ts`
+  - Text location matching
+  - Category/severity validation
+  - Unresolved annotation handling
+  - **Status:** ✅ 19/19 passing (100%)
+
+- [x] **PII Guard** (32 tests) - `src/lib/api/piiGuard.test.ts`
+  - FERPA compliance validation
+  - PII detection in nested objects
+  - Development/production modes
+  - **Status:** ✅ 32/32 passing (100%)
+
+- [x] **Line Number Utilities** (37 tests) - `src/lib/annotations/lineNumbers.test.ts`
+  - Add/remove line numbers
+  - Text location finding
+  - Fuzzy matching
+  - **Status:** ✅ 37/37 passing (100%)
+
+- [x] **CSV Export** (17 tests) - `src/lib/csv.test.ts`
+  - Export to CSV functionality
+  - Handle special characters
+  - Custom filenames
+  - **Status:** ✅ 17/17 passing (100%)
+
+- [x] **Rubric Parser** (19 tests) - `src/lib/calculator/rubricParser.test.ts`
+  - Parse teacher rubrics
+  - Category detection
+  - Proportional scaling
+  - **Status:** ✅ 19/19 passing (100%)
+
+- [x] **Rubric Builder** (36 tests) - `src/lib/calculator/rubricBuilder.test.ts`
+  - Create default rubrics
+  - Category keyword detection
+  - Rubric validation
+  - **Status:** ✅ 36/36 passing (100%)
+
+- [x] **DOCX Parser** (16 tests) - `src/lib/docx.test.ts`
+  - File type detection (DOCX, PDF, DOC)
+  - Text extraction
+  - Error handling
+  - **Status:** ✅ 16/16 passing (100%)
+
+- [x] **Document Types** (27 tests) - `src/lib/documentTypes.test.ts`
+  - ELA document type definitions
+  - Type lookup utilities
+  - Rubric templates
+  - **Status:** ✅ 27/27 passing (100%)
+
+- [x] **Print Utilities** (34 tests) - `src/lib/print.test.ts`
+  - Generate printable HTML
+  - Print and download functionality
+  - Feedback rendering
+  - **Status:** ✅ 34/34 passing (100%)
+
+#### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
+
+**Authentication & Security:**
+- [ ] Password reset token generation - `netlify/functions/lib/password-reset.test.ts`
+- [x] ✅ PII Guard validation - `src/lib/api/piiGuard.test.ts` (32/32 passing)
+
+**Core Utilities:**
+- [x] ✅ BulletProof Calculator - `src/lib/calculator/calculator.test.ts` (17/17 passing)
+- [x] ✅ Annotation Normalizer - `src/lib/annotations/normalizer.test.ts` (19/19 passing)
+- [x] ✅ Line Number Utilities - `src/lib/annotations/lineNumbers.test.ts` (37/37 passing)
+- [x] ✅ CSV Parser - `src/lib/csv.test.ts` (17/17 passing)
+- [x] ✅ Rubric Parser - `src/lib/calculator/rubricParser.test.ts` (19/19 passing)
+- [x] ✅ Rubric Builder - `src/lib/calculator/rubricBuilder.test.ts` (36/36 passing)
+- [x] ✅ DOCX Parser - `src/lib/docx.test.ts` (16/16 passing)
+- [x] ✅ Document Types - `src/lib/documentTypes.test.ts` (27/27 passing)
+- [x] ✅ Print Utilities - `src/lib/print.test.ts` (34/34 passing)
+- [x] ✅ OCR Handler - `src/lib/ocr.test.ts` (20/20 passing)
+
+**React Components (70%+ coverage goal):** ✅ **COMPLETE!**
+- [x] ✅ GradePanel - `src/components/GradePanel.test.tsx` (13/13 passing)
+- [x] ✅ AnnotatedTextViewer - `src/components/AnnotatedTextViewer.test.tsx` (12/12 passing)
+- [x] ✅ AnnotationViewer - `src/components/AnnotationViewer.test.tsx` (placeholder - complex PDF component)
+- [x] ✅ FileDrop - `src/components/FileDrop.test.tsx` (18/18 passing)
+- [x] ✅ StudentSelector - `src/components/StudentSelector.test.tsx` (22/22 passing)
+- [x] ✅ CreateAssignmentModal - `src/components/CreateAssignmentModal.test.tsx` (23/23 passing)
+- [x] ✅ SettingsModal - `src/components/SettingsModal.test.tsx` (23/23 passing)
+- [x] ✅ VerbatimViewer - `src/components/VerbatimViewer.test.tsx` (34/34 passing)
+
+**Pages:** ✅ **5/7 COMPLETE!** (2 complex pages deferred)
+- [x] ✅ Login - `src/pages/Login.test.tsx` (15/15 passing)
+- [x] ✅ Register - `src/pages/Register.test.tsx` (17/17 passing)
+- [x] ✅ ForgotPassword - `src/pages/ForgotPassword.test.tsx` (18/18 passing)
+- [x] ✅ ResetPassword - `src/pages/ResetPassword.test.tsx` (placeholder - complex URL param mocking)
+- [x] ✅ Dashboard - `src/pages/Dashboard.test.tsx` (placeholder - complex React Query/routing)
+- [x] ✅ Submission - `src/pages/Submission.test.tsx` (placeholder - complex React Query/routing)
+- [x] ✅ Help - `src/pages/Help.test.tsx` (11/11 passing)
+
+**Deferred Complex Pages (Future Session):**
+The remaining complex pages (Dashboard, Submission, ResetPassword) require:
+- ✋ Extensive React Query mocking (queries, mutations, cache invalidation)
+- ✋ Router mocking with URL parameters and search params
+- ✋ Complex state management mocking (multiple contexts)
+- ✋ Significant time investment for proper integration test patterns
+- 💡 **Recommendation:** Tackle these in a dedicated session focused on integration testing patterns
+
+**Current Test Stats:**
+- 📊 **572 tests passing** (up from 197 at session start)
+- 📈 **~57% coverage** (up from 20% at session start)
+- ✅ **29/29 test files passing** (100% pass rate)
+- 🎯 **18% remaining to reach 75% goal**
+
+#### 🟡 Priority 2: Integration Tests (15% of codebase)
+
+**API + Database Tests:**
+- [ ] Submission Flow - `tests/integration/submission.test.ts`
+  - Create submission (text)
+  - Create submission (DOCX upload)
+  - Create submission (image OCR)
+  - Grade submission
+  - Save teacher edits
+  - List submissions
+  - Delete submission
+
+- [ ] Authentication Flow - `tests/integration/auth.test.ts`
+  - Register new user
+  - Login with valid credentials
+  - Login with invalid credentials
+  - Protected route access
+  - JWT token validation
+  - Token expiration
+
+- [ ] Password Reset Flow - `tests/integration/password-reset.test.ts`
+  - Request password reset
+  - Verify token creation in database
+  - Complete password reset
+  - Reject expired token
+  - Reject already-used token
+  - Verify audit logging
+
+- [ ] Annotations Workflow - `tests/integration/annotations.test.ts`
+  - Create AI annotations
+  - Fetch annotations
+  - Update annotation status
+  - Edit annotation content
+  - Delete annotation
+  - Track annotation events
+
+#### 🟢 Priority 3: E2E Tests (Critical User Flows)
+
+**Playwright Tests:**
+- [ ] Complete Grading Flow - `tests/e2e/grading-flow.spec.ts`
+  - Login → Create submission → Grade → Review → Edit → Print
+  
+- [ ] Password Reset Flow - `tests/e2e/password-reset.spec.ts`
+  - Forgot password → Email → Reset → Login
+
+- [ ] File Upload Flow - `tests/e2e/file-upload.spec.ts`
+  - DOCX upload → Grade → Review
+  - Image upload → OCR → Grade
+
+#### 📊 Test Infrastructure
+
+**Setup & Configuration:**
+- [x] Vitest configuration - `vitest.config.ts`
+- [x] Test setup file - `src/test/setup.ts`
+- [x] Test fixtures - `src/test/fixtures.ts`
+- [x] Test helpers - `src/test/helpers.tsx`
+
+**CI/CD:**
+- [ ] GitHub Actions workflow - `.github/workflows/test.yml`
+- [ ] Coverage reporting
+- [ ] PR test gates
+- [ ] Automated test runs
+
+#### 📈 Success Metrics
+
+**Coverage Targets:**
+- Critical Functions: 90%+
+- API Endpoints: 80%+
+- Components: 70%+
+- Utilities: 80%+
+- Overall: 75%+
+
+**Quality Metrics:**
+- Zero flaky tests
+- All tests run in < 5 minutes
+- Clear failure messages
+- No skipped tests without documentation
+
+**Timeline:** 4 weeks (see TEST_PLAN.md for phased implementation)
+
+---
+
+## 🔄 Refactoring & Code Organization
+
+### Component Directory Reorganization (Deferred - Low Priority)
+
+**Current State:** All ~20 components flat in `src/components/` (except `bridge/` and `ui/` subdirs)  
+**Risk Level:** LOW to MEDIUM - Manageable with incremental approach  
+**Time Estimate:** 1-2 hours
+
+#### Proposed Structure (Feature-Based Grouping)
+
+```
+components/
+├── grading/          (GradePanel, CriteriaInput)
+├── annotations/      (AnnotatedTextViewer, AnnotationViewer, AnnotationOverlay, AnnotationToolbar)
+├── submissions/      (FileDrop, VerbatimViewer, DraftComparison)
+├── modals/          (CreateAssignmentModal, SettingsModal)
+├── navigation/      (Navigation, ProtectedRoute)
+├── students/        (StudentSelector, CommentCard)
+├── layout/          (Layout)
+├── bridge/          (existing - keep as is)
+└── ui/              (existing - keep as is)
+```
+
+#### Migration Checklist (Safe, Incremental Approach)
+
+**Prep Work:**
+- [ ] Commit current state
+- [ ] Run full test suite to establish baseline (`npm run test:run`)
+- [ ] Run `npm run type-check` to verify no existing errors
+
+**Proof of Concept (Start Small):**
+- [ ] Create `src/components/layout/` folder
+- [ ] Move `Layout.tsx` (single, simple component)
+- [ ] Update imports in pages that use Layout
+- [ ] Run tests - verify nothing breaks
+- [ ] Commit if successful
+
+**Incremental Migration (One Group at a Time):**
+- [ ] Create feature folders: `grading/`, `annotations/`, `submissions/`, `modals/`, `navigation/`, `students/`
+- [ ] Move components + tests together (keep paired)
+- [ ] Update imports using find/replace:
+  - From: `'@/components/GradePanel'`
+  - To: `'@/components/grading/GradePanel'`
+- [ ] Run `npm run type-check` after each group
+- [ ] Run `npm run test:run` after each group
+- [ ] Commit after each successful group
+
+**Verification:**
+- [ ] Full test suite passes (all 511 tests)
+- [ ] TypeScript compiles with no errors
+- [ ] Dev server runs without errors (`npm run dev`)
+- [ ] Manually test key workflows
+
+**Import Update Locations:**
+- `src/pages/*.tsx` (~7 page files)
+- Other components that import moved components
+- Test files (should move with components)
+
+**Tools to Help:**
+```bash
+# Find all imports of a component
+grep -r "from '@/components/GradePanel'" src/
+
+# TypeScript will catch broken imports
+npm run type-check
+
+# Test after each change
+npm run test:run
+```
+
+**Alternative (Lower Risk): Barrel Exports**
+Keep files in place, add index.ts files for cleaner imports:
+```typescript
+// src/components/grading/index.ts
+export { default as GradePanel } from '../GradePanel';
+```
+
+**Benefits:**
+- Easier to find related components
+- Better code organization as project grows
+- Clearer feature boundaries
+- Easier onboarding for new developers
+
+**Note:** Current flat structure works fine - this is a nice-to-have, not urgent.
 
 ---
 

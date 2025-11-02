@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, GitCompare, Printer, Download, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +24,7 @@ export default function Submission() {
   const { id } = useParams();
   const navigate = useNavigate();
   const bridge = useBridge();
+  const queryClient = useQueryClient();
 
   const [draftMode, setDraftMode] = useState<'single' | 'comparison'>('single');
   const [selectedStudentUuid, setSelectedStudentUuid] = useState('');
@@ -69,11 +70,12 @@ export default function Submission() {
     }
   }, [assignmentId, assignmentsData]);
 
-  // Load existing submission if ID is provided
+  // Load existing submission if ID is provided (from URL or state)
+  const effectiveId = id || submissionId;
   const { data: existingSubmission } = useQuery({
-    queryKey: ['submission', id],
-    queryFn: () => getSubmission(id!),
-    enabled: !!id,
+    queryKey: ['submission', effectiveId],
+    queryFn: () => getSubmission(effectiveId!),
+    enabled: !!effectiveId,
   });
 
   useEffect(() => {
@@ -146,7 +148,17 @@ export default function Submission() {
       // Show temporary success message
       setSaveMessage('Grade saved successfully!');
       setTimeout(() => setSaveMessage(null), 3000);
-      // Stay on the page - don't navigate away
+      
+      // Invalidate and refetch the submission query to update UI state
+      const effectiveId = id || submissionId;
+      if (effectiveId) {
+        queryClient.invalidateQueries({ queryKey: ['submission', effectiveId] });
+      }
+      
+      // Navigate to the submission URL if not already there (for new submissions)
+      if (!id && submissionId) {
+        navigate(`/submission/${submissionId}`, { replace: true });
+      }
     },
   });
 
