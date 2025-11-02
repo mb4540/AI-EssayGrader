@@ -8,6 +8,22 @@
 
 ---
 
+## 📑 Table of Contents
+
+1. [TODO Management Instructions](#-todo-management-instructions)
+2. [PRIORITY #1: Submission.tsx Refactor](#-priority-1-submissiontsx-refactor-careful-incremental-approach)
+3. [PRIORITY #2: Class Period Organization](#-priority-2-add-class-period-organization-for-students)
+4. [Testing & Quality Assurance](#-testing--quality-assurance--highest-priority)
+5. [Refactoring & Code Organization](#-refactoring--code-organization)
+6. [High Priority - Dashboard Enhancements](#-high-priority---next-up)
+7. [Medium Priority - Grading Enhancements](#-medium-priority)
+8. [Low Priority - Performance Optimizations](#-low-priority--nice-to-have)
+9. [Known Issues to Fix](#-known-issues-to-fix)
+10. [Recommended Timeline](#-recommended-timeline)
+11. [Out of Scope](#-out-of-scope-future-branches)
+
+---
+
 ## 📋 TODO MANAGEMENT INSTRUCTIONS
 
 ### How to Use This File:
