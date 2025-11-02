@@ -1,9 +1,11 @@
 // React hook for bridge operations
 // Provides state management and operations for the student identity bridge
+// CRITICAL: Now user-scoped for FERPA compliance
 
 import { useState, useCallback, useEffect } from 'react';
 import { BridgeEntry, EncryptedBridgeFile, ImportResult } from '../bridge/bridgeTypes';
 import { getBridgeStore } from '../bridge/bridgeStore';
+import { useAuth } from '../contexts/AuthContext';
 import {
   isFileSystemAccessSupported,
   chooseBridgeFile,
@@ -48,6 +50,7 @@ export interface UseBridgeReturn {
 }
 
 export function useBridge(): UseBridgeReturn {
+  const { user } = useAuth();
   const [isLocked, setIsLocked] = useState(true);
   const [students, setStudents] = useState<BridgeEntry[]>([]);
   const [fileHandle, setFileHandle] = useState<FileSystemFileHandle | null>(null);
@@ -56,6 +59,12 @@ export function useBridge(): UseBridgeReturn {
 
   const store = getBridgeStore();
   const supportsFileSystem = isFileSystemAccessSupported();
+  
+  // CRITICAL: Require user_id for FERPA compliance
+  const userId = user?.user_id;
+  if (!userId) {
+    console.warn('useBridge: No user_id available - bridge operations will fail');
+  }
 
   // Sync component state with store state on mount
   useEffect(() => {
@@ -68,14 +77,14 @@ export function useBridge(): UseBridgeReturn {
 
   // Load bridge from IndexedDB on mount (fallback storage)
   useEffect(() => {
-    if (!supportsFileSystem) {
-      loadBridgeFromIndexedDB().then((data) => {
+    if (!supportsFileSystem && userId) {
+      loadBridgeFromIndexedDB(userId).then((data) => {
         if (data) {
           // Bridge file exists in IndexedDB, but still locked
         }
       }).catch(console.error);
     }
-  }, [supportsFileSystem]);
+  }, [supportsFileSystem, userId]);
 
   // Refresh students list
   const refreshStudents = useCallback(() => {
@@ -94,13 +103,16 @@ export function useBridge(): UseBridgeReturn {
       await store.createNew(passphrase, metadata);
       refreshStudents();
       
-      // Auto-save to storage
+      // Auto-save to storage (user-specific)
+      if (!userId) {
+        throw new Error('User ID required for bridge storage (FERPA compliance)');
+      }
       const encrypted = await store.export();
       if (supportsFileSystem) {
         const handle = await saveBridgeFile(encrypted);
         setFileHandle(handle);
       } else {
-        await saveBridgeToIndexedDB(encrypted);
+        await saveBridgeToIndexedDB(encrypted, userId);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create bridge');
@@ -117,8 +129,11 @@ export function useBridge(): UseBridgeReturn {
     try {
       let encryptedFile: EncryptedBridgeFile | undefined = file;
 
-      // If no file provided, try to load from storage
+      // If no file provided, try to load from storage (user-specific)
       if (!encryptedFile) {
+        if (!userId) {
+          throw new Error('User ID required for bridge storage (FERPA compliance)');
+        }
         if (supportsFileSystem) {
           const handle = await chooseBridgeFile();
           if (!handle) {
@@ -128,7 +143,7 @@ export function useBridge(): UseBridgeReturn {
           encryptedFile = await readBridgeFile(handle);
           setFileHandle(handle);
         } else {
-          const loaded = await loadBridgeFromIndexedDB();
+          const loaded = await loadBridgeFromIndexedDB(userId);
           if (!loaded) {
             throw new Error('No bridge file found. Please import or create a new bridge.');
           }
@@ -197,17 +212,20 @@ export function useBridge(): UseBridgeReturn {
   const findByLocalId = useCallback((localId: string) => store.findByLocalId(localId), [store]);
   const findByName = useCallback((name: string) => store.findByName(name), [store]);
 
-  // Save to current file handle or IndexedDB
+  // Save to current file handle or IndexedDB (user-specific)
   const save = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
+      if (!userId) {
+        throw new Error('User ID required for bridge storage (FERPA compliance)');
+      }
       const encrypted = await store.export();
       
       if (supportsFileSystem && fileHandle) {
         await writeBridgeFile(fileHandle, encrypted);
       } else {
-        await saveBridgeToIndexedDB(encrypted);
+        await saveBridgeToIndexedDB(encrypted, userId);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save bridge');
@@ -215,7 +233,7 @@ export function useBridge(): UseBridgeReturn {
     } finally {
       setLoading(false);
     }
-  }, [store, fileHandle, supportsFileSystem]);
+  }, [store, fileHandle, supportsFileSystem, userId]);
 
   // Export to new file
   const exportFile = useCallback(async () => {
@@ -261,8 +279,11 @@ export function useBridge(): UseBridgeReturn {
       }
 
       if (encrypted) {
-        // Store in IndexedDB for future use
-        await saveBridgeToIndexedDB(encrypted);
+        // Store in IndexedDB for future use (user-specific)
+        if (!userId) {
+          throw new Error('User ID required for bridge storage (FERPA compliance)');
+        }
+        await saveBridgeToIndexedDB(encrypted, userId);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to import bridge');

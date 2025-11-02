@@ -5,7 +5,19 @@ import { EncryptedBridgeFile } from './bridgeTypes';
 
 const INDEXEDDB_NAME = 'ai-essaygrader-bridge';
 const INDEXEDDB_STORE = 'bridge';
-const INDEXEDDB_KEY = 'encrypted-bridge';
+// NOTE: Key is now user-specific to prevent cross-user data exposure (FERPA compliance)
+const INDEXEDDB_KEY_PREFIX = 'encrypted-bridge-user-';
+
+/**
+ * Generate user-specific IndexedDB key
+ * CRITICAL: This ensures each user's bridge data is isolated
+ */
+function getUserBridgeKey(userId: string): string {
+  if (!userId) {
+    throw new Error('userId is required for bridge storage (FERPA compliance)');
+  }
+  return `${INDEXEDDB_KEY_PREFIX}${userId}`;
+}
 
 // Type declarations for File System Access API
 declare global {
@@ -142,16 +154,20 @@ function openIndexedDB(): Promise<IDBDatabase> {
 }
 
 /**
- * Save bridge to IndexedDB
+ * Save bridge to IndexedDB (user-specific)
+ * @param data - Encrypted bridge file
+ * @param userId - User ID for data isolation (FERPA compliance)
  */
 export async function saveBridgeToIndexedDB(
-  data: EncryptedBridgeFile
+  data: EncryptedBridgeFile,
+  userId: string
 ): Promise<void> {
   const db = await openIndexedDB();
+  const key = getUserBridgeKey(userId);
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([INDEXEDDB_STORE], 'readwrite');
     const store = transaction.objectStore(INDEXEDDB_STORE);
-    const request = store.put(data, INDEXEDDB_KEY);
+    const request = store.put(data, key);
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve();
@@ -159,14 +175,16 @@ export async function saveBridgeToIndexedDB(
 }
 
 /**
- * Load bridge from IndexedDB
+ * Load bridge from IndexedDB (user-specific)
+ * @param userId - User ID for data isolation (FERPA compliance)
  */
-export async function loadBridgeFromIndexedDB(): Promise<EncryptedBridgeFile | null> {
+export async function loadBridgeFromIndexedDB(userId: string): Promise<EncryptedBridgeFile | null> {
   const db = await openIndexedDB();
+  const key = getUserBridgeKey(userId);
   return new Promise((resolve, reject) => {
     const transaction = db.transaction([INDEXEDDB_STORE], 'readonly');
     const store = transaction.objectStore(INDEXEDDB_STORE);
-    const request = store.get(INDEXEDDB_KEY);
+    const request = store.get(key);
 
     request.onerror = () => reject(request.error);
     request.onsuccess = () => resolve(request.result || null);
