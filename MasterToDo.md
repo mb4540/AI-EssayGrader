@@ -290,6 +290,93 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 
 ---
 
+## 🔄 Refactoring & Code Organization
+
+### Component Directory Reorganization (Deferred - Low Priority)
+
+**Current State:** All ~20 components flat in `src/components/` (except `bridge/` and `ui/` subdirs)  
+**Risk Level:** LOW to MEDIUM - Manageable with incremental approach  
+**Time Estimate:** 1-2 hours
+
+#### Proposed Structure (Feature-Based Grouping)
+
+```
+components/
+├── grading/          (GradePanel, CriteriaInput)
+├── annotations/      (AnnotatedTextViewer, AnnotationViewer, AnnotationOverlay, AnnotationToolbar)
+├── submissions/      (FileDrop, VerbatimViewer, DraftComparison)
+├── modals/          (CreateAssignmentModal, SettingsModal)
+├── navigation/      (Navigation, ProtectedRoute)
+├── students/        (StudentSelector, CommentCard)
+├── layout/          (Layout)
+├── bridge/          (existing - keep as is)
+└── ui/              (existing - keep as is)
+```
+
+#### Migration Checklist (Safe, Incremental Approach)
+
+**Prep Work:**
+- [ ] Commit current state
+- [ ] Run full test suite to establish baseline (`npm run test:run`)
+- [ ] Run `npm run type-check` to verify no existing errors
+
+**Proof of Concept (Start Small):**
+- [ ] Create `src/components/layout/` folder
+- [ ] Move `Layout.tsx` (single, simple component)
+- [ ] Update imports in pages that use Layout
+- [ ] Run tests - verify nothing breaks
+- [ ] Commit if successful
+
+**Incremental Migration (One Group at a Time):**
+- [ ] Create feature folders: `grading/`, `annotations/`, `submissions/`, `modals/`, `navigation/`, `students/`
+- [ ] Move components + tests together (keep paired)
+- [ ] Update imports using find/replace:
+  - From: `'@/components/GradePanel'`
+  - To: `'@/components/grading/GradePanel'`
+- [ ] Run `npm run type-check` after each group
+- [ ] Run `npm run test:run` after each group
+- [ ] Commit after each successful group
+
+**Verification:**
+- [ ] Full test suite passes (all 511 tests)
+- [ ] TypeScript compiles with no errors
+- [ ] Dev server runs without errors (`npm run dev`)
+- [ ] Manually test key workflows
+
+**Import Update Locations:**
+- `src/pages/*.tsx` (~7 page files)
+- Other components that import moved components
+- Test files (should move with components)
+
+**Tools to Help:**
+```bash
+# Find all imports of a component
+grep -r "from '@/components/GradePanel'" src/
+
+# TypeScript will catch broken imports
+npm run type-check
+
+# Test after each change
+npm run test:run
+```
+
+**Alternative (Lower Risk): Barrel Exports**
+Keep files in place, add index.ts files for cleaner imports:
+```typescript
+// src/components/grading/index.ts
+export { default as GradePanel } from '../GradePanel';
+```
+
+**Benefits:**
+- Easier to find related components
+- Better code organization as project grows
+- Clearer feature boundaries
+- Easier onboarding for new developers
+
+**Note:** Current flat structure works fine - this is a nice-to-have, not urgent.
+
+---
+
 ### 5. Add "Clean Text" Feature for Copy-Pasted PDF Content ⭐⭐ HIGH PRIORITY
 **Goal:** Clean up markdown artifacts and formatting issues when teachers paste text from PDFs
 
