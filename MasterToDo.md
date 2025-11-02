@@ -99,12 +99,12 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 ### Test Suite Implementation
 **Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
 
-**Status:** 🟡 **IN PROGRESS** - 5/40 test files complete (12.5%)  
-**Coverage:** ~20% current → 75%+ target  
-**Tests:** 197 passing, 4 skipped  
+**Status:** 🟡 **IN PROGRESS** - 9/40 test files complete (22.5%)  
+**Coverage:** ~30% current → 75%+ target  
+**Tests:** 269 passing, 4 skipped  
 **Test Plan:** See `TEST_PLAN.md` for full specifications
 
-#### ✅ Completed Tests (5/40)
+#### ✅ Completed Tests (9/40)
 - [x] **Auth Utils** (25 tests) - `netlify/functions/lib/auth-utils.test.ts`
   - Password hashing (bcrypt, 12 rounds)
   - JWT token generation/verification
@@ -135,6 +135,24 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
   - Fuzzy matching
   - **Status:** ✅ 37/37 passing (100%)
 
+- [x] **CSV Export** (17 tests) - `src/lib/csv.test.ts`
+  - Export to CSV functionality
+  - Handle special characters
+  - Custom filenames
+  - **Status:** ✅ 17/17 passing (100%)
+
+- [x] **Rubric Parser** (19 tests) - `src/lib/calculator/rubricParser.test.ts`
+  - Parse teacher rubrics
+  - Category detection
+  - Proportional scaling
+  - **Status:** ✅ 19/19 passing (100%)
+
+- [x] **Rubric Builder** (36 tests) - `src/lib/calculator/rubricBuilder.test.ts`
+  - Create default rubrics
+  - Category keyword detection
+  - Rubric validation
+  - **Status:** ✅ 36/36 passing (100%)
+
 #### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
 
 **Authentication & Security:**
@@ -145,13 +163,13 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ BulletProof Calculator - `src/lib/calculator/calculator.test.ts` (17/17 passing)
 - [x] ✅ Annotation Normalizer - `src/lib/annotations/normalizer.test.ts` (19/19 passing)
 - [x] ✅ Line Number Utilities - `src/lib/annotations/lineNumbers.test.ts` (37/37 passing)
-- [ ] CSV Parser - `src/lib/csv.test.ts`
+- [x] ✅ CSV Parser - `src/lib/csv.test.ts` (17/17 passing)
+- [x] ✅ Rubric Parser - `src/lib/calculator/rubricParser.test.ts` (19/19 passing)
+- [x] ✅ Rubric Builder - `src/lib/calculator/rubricBuilder.test.ts` (36/36 passing)
 - [ ] DOCX Parser - `src/lib/docx.test.ts`
 - [ ] OCR Handler - `src/lib/ocr.test.ts`
 - [ ] Document Types - `src/lib/documentTypes.test.ts`
 - [ ] Print Utilities - `src/lib/print.test.ts`
-- [ ] Rubric Parser - `src/lib/calculator/rubricParser.test.ts`
-- [ ] Rubric Builder - `src/lib/calculator/rubricBuilder.test.ts`
 
 **React Components (70%+ coverage goal):**
 - [ ] GradePanel - `src/components/GradePanel.test.tsx`
