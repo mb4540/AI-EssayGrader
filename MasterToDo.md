@@ -208,6 +208,20 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ Submission - `src/pages/Submission.test.tsx` (placeholder - complex React Query/routing)
 - [x] ✅ Help - `src/pages/Help.test.tsx` (11/11 passing)
 
+**Deferred Complex Pages (Future Session):**
+The remaining complex pages (Dashboard, Submission, ResetPassword) require:
+- ✋ Extensive React Query mocking (queries, mutations, cache invalidation)
+- ✋ Router mocking with URL parameters and search params
+- ✋ Complex state management mocking (multiple contexts)
+- ✋ Significant time investment for proper integration test patterns
+- 💡 **Recommendation:** Tackle these in a dedicated session focused on integration testing patterns
+
+**Current Test Stats:**
+- 📊 **572 tests passing** (up from 197 at session start)
+- 📈 **~57% coverage** (up from 20% at session start)
+- ✅ **29/29 test files passing** (100% pass rate)
+- 🎯 **18% remaining to reach 75% goal**
+
 #### 🟡 Priority 2: Integration Tests (15% of codebase)
 
 **API + Database Tests:**
