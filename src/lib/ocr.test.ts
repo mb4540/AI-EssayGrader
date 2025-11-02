@@ -71,7 +71,7 @@ describe('OCR Handler', () => {
 
       // Simulate progress updates
       let loggerCallback: any;
-      vi.mocked(createWorker).mockImplementation(async (lang, oem, options: any) => {
+      vi.mocked(createWorker).mockImplementation(async (_lang, _oem, options: any) => {
         loggerCallback = options.logger;
         return mockWorker;
       });
@@ -93,7 +93,7 @@ describe('OCR Handler', () => {
       const mockFile = new File(['image data'], 'test.jpg', { type: 'image/jpeg' });
 
       let loggerCallback: any;
-      vi.mocked(createWorker).mockImplementation(async (lang, oem, options: any) => {
+      vi.mocked(createWorker).mockImplementation(async (_lang, _oem, options: any) => {
         loggerCallback = options.logger;
         return mockWorker;
       });
@@ -214,7 +214,7 @@ describe('OCR Handler', () => {
       const onProgress = vi.fn();
 
       let loggerCallback: any;
-      vi.mocked(createWorker).mockImplementation(async (lang, oem, options: any) => {
+      vi.mocked(createWorker).mockImplementation(async (_lang, _oem, options: any) => {
         loggerCallback = options.logger;
         return mockWorker;
       });
@@ -287,7 +287,7 @@ describe('OCR Handler', () => {
       const onProgress = vi.fn();
 
       let loggerCallback: any;
-      vi.mocked(createWorker).mockImplementation(async (lang, oem, options: any) => {
+      vi.mocked(createWorker).mockImplementation(async (_lang, _oem, options: any) => {
         loggerCallback = options.logger;
         return mockWorker;
       });
@@ -311,7 +311,7 @@ describe('OCR Handler', () => {
       const onProgress = vi.fn();
 
       let loggerCallback: any;
-      vi.mocked(createWorker).mockImplementation(async (lang, oem, options: any) => {
+      vi.mocked(createWorker).mockImplementation(async (_lang, _oem, options: any) => {
         loggerCallback = options.logger;
         return mockWorker;
       });

@@ -187,7 +187,7 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ DOCX Parser - `src/lib/docx.test.ts` (16/16 passing)
 - [x] ✅ Document Types - `src/lib/documentTypes.test.ts` (27/27 passing)
 - [x] ✅ Print Utilities - `src/lib/print.test.ts` (34/34 passing)
-- [ ] OCR Handler - `src/lib/ocr.test.ts`
+- [x] ✅ OCR Handler - `src/lib/ocr.test.ts` (20/20 passing)
 
 **React Components (70%+ coverage goal):**
 - [ ] GradePanel - `src/components/GradePanel.test.tsx`
