@@ -51,7 +51,7 @@ export default function Register() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900">Create Account</h2>
           <p className="mt-2 text-sm text-gray-600">
-            Join FastAI Grader to start grading essays
+            Join EssayEase to start grading essays
           </p>
         </div>
 

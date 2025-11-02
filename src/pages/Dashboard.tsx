@@ -4,12 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import { Download, Search, Trash2, User, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { listSubmissions, deleteSubmission } from '@/lib/api';
 import { exportToCSV } from '@/lib/csv';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
+import PageHeader from '@/components/PageHeader';
 
 type SortField = 'student_name' | 'assignment_title' | 'ai_grade' | 'teacher_grade' | 'created_at';
 type SortDirection = 'asc' | 'desc';
@@ -177,50 +178,47 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
-        {/* Dashboard Header Card */}
-        <Card className="shadow-xl border-t-4 border-t-indigo-500 bg-white mb-6">
-          <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                  <span className="text-2xl">📚</span>
-                </div>
-                <CardTitle className="text-2xl text-gray-900">Dashboard</CardTitle>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleExport} 
-                  variant="outline"
-                  size="sm"
-                  disabled={!data?.submissions?.length}
-                  className="text-gray-700"
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
-                <div className="w-px h-8 bg-gray-300 mx-2" />
-                <Button
-                  variant={viewMode === 'list' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('list')}
-                  className={viewMode === 'list' ? 'bg-indigo-600' : ''}
-                >
-                  <User className="w-4 h-4 mr-2" />
-                  By Student
-                </Button>
-                <Button
-                  variant={viewMode === 'grouped' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('grouped')}
-                  className={viewMode === 'grouped' ? 'bg-indigo-600' : ''}
-                >
-                  <FolderOpen className="w-4 h-4 mr-2" />
-                  By Assignment
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+        {/* Dashboard Header */}
+        <PageHeader
+          icon={<span className="text-2xl">📚</span>}
+          title="Dashboard"
+          subtitle="View and manage all submissions"
+          showAddAssignment={true}
+          showBridgeLock={true}
+          actions={
+            <>
+              <Button 
+                onClick={handleExport} 
+                variant="outline"
+                size="sm"
+                disabled={!data?.submissions?.length}
+                className="text-gray-700"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+              </Button>
+              <div className="w-px h-8 bg-gray-300 mx-2" />
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className={viewMode === 'list' ? 'bg-indigo-600' : ''}
+              >
+                <User className="w-4 h-4 mr-2" />
+                By Student
+              </Button>
+              <Button
+                variant={viewMode === 'grouped' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grouped')}
+                className={viewMode === 'grouped' ? 'bg-indigo-600' : ''}
+              >
+                <FolderOpen className="w-4 h-4 mr-2" />
+                By Assignment
+              </Button>
+            </>
+          }
+        />
 
         {/* Search Bar */}
         <div className="mb-6">
