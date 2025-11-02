@@ -195,8 +195,8 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [ ] AnnotationViewer - `src/components/AnnotationViewer.test.tsx`
 - [x] ✅ FileDrop - `src/components/FileDrop.test.tsx` (18/18 passing)
 - [x] ✅ StudentSelector - `src/components/StudentSelector.test.tsx` (22/22 passing)
-- [ ] CreateAssignmentModal - `src/components/CreateAssignmentModal.test.tsx`
-- [ ] SettingsModal - `src/components/SettingsModal.test.tsx`
+- [x] ✅ CreateAssignmentModal - `src/components/CreateAssignmentModal.test.tsx` (23/23 passing)
+- [x] ✅ SettingsModal - `src/components/SettingsModal.test.tsx` (23/23 passing)
 - [x] ✅ VerbatimViewer - `src/components/VerbatimViewer.test.tsx` (34/34 passing)
 
 **Pages:**
