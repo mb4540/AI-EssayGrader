@@ -139,13 +139,5 @@ export function base64ToUint8Array(base64: string): Uint8Array {
   return bytes;
 }
 
-/**
- * Securely wipe data from memory (best effort)
- */
-export function zeroize(data: Uint8Array | string): void {
-  if (data instanceof Uint8Array) {
-    data.fill(0);
-  }
-  // Note: Strings are immutable in JS, can't truly zeroize
-  // This is a limitation of the platform
-}
+// Removed unused zeroize function - was never called in codebase
+// If needed in future, can restore from git history

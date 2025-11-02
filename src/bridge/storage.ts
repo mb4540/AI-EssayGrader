@@ -173,21 +173,6 @@ export async function loadBridgeFromIndexedDB(): Promise<EncryptedBridgeFile | n
   });
 }
 
-/**
- * Delete bridge from IndexedDB
- */
-export async function deleteBridgeFromIndexedDB(): Promise<void> {
-  const db = await openIndexedDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction([INDEXEDDB_STORE], 'readwrite');
-    const store = transaction.objectStore(INDEXEDDB_STORE);
-    const request = store.delete(INDEXEDDB_KEY);
-
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-}
-
 // ============================================================================
 // Manual Export/Import (for browsers without File System Access API)
 // ============================================================================
