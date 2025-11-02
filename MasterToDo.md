@@ -200,8 +200,8 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ VerbatimViewer - `src/components/VerbatimViewer.test.tsx` (34/34 passing)
 
 **Pages:**
-- [ ] Login - `src/pages/Login.test.tsx`
-- [ ] Register - `src/pages/Register.test.tsx`
+- [x] ✅ Login - `src/pages/Login.test.tsx` (15/15 passing)
+- [x] ✅ Register - `src/pages/Register.test.tsx` (17/17 passing)
 - [ ] ForgotPassword - `src/pages/ForgotPassword.test.tsx`
 - [ ] ResetPassword - `src/pages/ResetPassword.test.tsx`
 - [ ] Dashboard - `src/pages/Dashboard.test.tsx`
