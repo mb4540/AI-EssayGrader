@@ -36,7 +36,7 @@ export default function PageHeader({
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 shadow-sm mb-6">
+    <div className="bg-white border-b border-gray-200 shadow-sm mb-6 border-t-4 border-t-indigo-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="flex items-center justify-between">
           {/* Left: Icon + Title */}
@@ -52,42 +52,48 @@ export default function PageHeader({
           <div className="flex items-center gap-2">
             {/* Add Assignment Button */}
             {showAddAssignment && (
-              <Button
-                onClick={handleAddAssignment}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Assignment
-              </Button>
-            )}
-
-            {/* Bridge Lock/Unlock Button */}
-            {showBridgeLock && (
-              <Button
-                onClick={handleBridgeToggle}
-                variant="outline"
-                className={`border-2 ${
-                  isLocked
-                    ? 'border-red-500 text-red-600 hover:bg-red-50'
-                    : 'border-green-500 text-green-600 hover:bg-green-50'
-                }`}
-              >
-                {isLocked ? (
-                  <>
-                    <Lock className="w-4 h-4 mr-2" />
-                    Unlock Students
-                  </>
-                ) : (
-                  <>
-                    <Unlock className="w-4 h-4 mr-2" />
-                    Lock Students
-                  </>
-                )}
-              </Button>
+              <>
+                <Button
+                  onClick={handleAddAssignment}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Assignment
+                </Button>
+                {(actions || showBridgeLock) && <div className="w-px h-8 bg-gray-300 mx-2" />}
+              </>
             )}
 
             {/* Custom Actions */}
             {actions}
+
+            {/* Bridge Lock/Unlock Button - Always on far right */}
+            {showBridgeLock && (
+              <>
+                {actions && <div className="w-px h-8 bg-gray-300 mx-2" />}
+                <Button
+                  onClick={handleBridgeToggle}
+                  variant="outline"
+                  className={`border-2 ${
+                    isLocked
+                      ? 'border-red-500 text-red-600 hover:bg-red-50'
+                      : 'border-green-500 text-green-600 hover:bg-green-50'
+                  }`}
+                >
+                  {isLocked ? (
+                    <>
+                      <Lock className="w-4 h-4 mr-2" />
+                      Lock
+                    </>
+                  ) : (
+                    <>
+                      <Unlock className="w-4 h-4 mr-2" />
+                      Lock
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>

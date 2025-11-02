@@ -10,8 +10,6 @@ export default function Help() {
           icon={<BookOpen className="w-6 h-6 text-indigo-600" />}
           title="Help Guide"
           subtitle="Simple guide for teachers"
-          showAddAssignment={true}
-          showBridgeLock={true}
         />
         {/* Introduction */}
         <Card className="mb-6 shadow-xl border-t-4 border-t-indigo-500">

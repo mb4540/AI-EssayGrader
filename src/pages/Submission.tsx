@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FileText, GitCompare, Printer, Download, PenTool } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -439,9 +438,9 @@ export default function Submission() {
                 <PenTool className="w-4 h-4 mr-2" />
                 New Submission
               </Button>
+              <div className="w-px h-8 bg-gray-300 mx-2" />
               {submissionId && aiFeedback && (
                 <>
-                  <div className="w-px h-8 bg-gray-300 mx-2" />
                   <Button
                     variant="outline"
                     size="sm"
