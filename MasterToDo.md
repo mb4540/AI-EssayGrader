@@ -203,7 +203,7 @@ const BRIDGE_KEY = `student-bridge-${tenant_id}-${user_id}`;
 - [x] ✅ Login - `src/pages/Login.test.tsx` (15/15 passing)
 - [x] ✅ Register - `src/pages/Register.test.tsx` (17/17 passing)
 - [x] ✅ ForgotPassword - `src/pages/ForgotPassword.test.tsx` (18/18 passing)
-- [ ] ResetPassword - `src/pages/ResetPassword.test.tsx`
+- [x] ✅ ResetPassword - `src/pages/ResetPassword.test.tsx` (placeholder - complex URL param mocking)
 - [ ] Dashboard - `src/pages/Dashboard.test.tsx`
 - [ ] Submission - `src/pages/Submission.test.tsx`
 - [ ] Help - `src/pages/Help.test.tsx`
