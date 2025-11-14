@@ -1,6 +1,6 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** November 1, 2025 - 8:30 AM UTC-05:00  
+**Last Updated:** November 14, 2025 - 12:15 PM UTC-06:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
@@ -8,6 +8,14 @@
 > Always reference this file before making database changes.
 
 ## 📝 Recent Migrations
+
+### November 14, 2025 - Background Tasks Table
+**Migration:** `migrations/add_background_tasks.sql`
+- Added `grader.background_tasks` table for async job tracking
+- Enables long-running operations (grading, etc.) without 30-second timeout
+- Tracks job status: pending → processing → completed/failed
+- 5 indexes for efficient queries
+- Supports grading, assessment generation, lesson plans, text extraction
 
 ### November 1, 2025 - Password Reset Tables
 **Migration:** `migrations/add_password_reset_tables.sql`
@@ -42,7 +50,7 @@
 
 ## 📊 Database Statistics
 
-- **Total Tables:** 10
+- **Total Tables:** 11
 - **Total Records:** 25+ rows
 - **Total Size:** ~544 KB
 - **Schema:** `grader`
@@ -98,7 +106,62 @@
 
 ---
 
-### 2. students
+### 2. background_tasks
+
+**Purpose:** Track long-running background jobs (grading, assessment generation, etc.) to avoid function timeouts
+
+| Column | Type | Nullable | Default | Key |
+|--------|------|----------|---------|-----|
+| task_id | uuid | NO | null | PRIMARY KEY |
+| tenant_id | uuid | NO | null | FK → tenants |
+| task_type | text | NO | null | CHECK |
+| status | text | NO | 'pending' | CHECK |
+| input_data | jsonb | NO | null | |
+| output_data | jsonb | YES | null | |
+| error_message | text | YES | null | |
+| created_at | timestamptz | NO | now() | |
+| updated_at | timestamptz | NO | now() | |
+| completed_at | timestamptz | YES | null | |
+
+**Row Count:** 0 (new table)  
+**Size:** 8 KB
+
+**Purpose:**
+- Enables async processing for operations that exceed 30-second function timeout
+- Tracks job lifecycle: pending → processing → completed/failed
+- Stores input parameters and output results as JSON
+- Provides audit trail for all background operations
+
+**Task Types:**
+- `grading` - AI grading of submissions
+- `assessment_generation` - Creating assessments
+- `lesson_plan_generation` - Generating lesson plans
+- `text_extraction` - OCR and document processing
+
+**Status Values:**
+- `pending` - Job created, not yet started
+- `processing` - Job currently running
+- `completed` - Job finished successfully
+- `failed` - Job encountered an error
+
+**Indexes:**
+- `background_tasks_pkey` - PRIMARY KEY (task_id)
+- `idx_background_tasks_tenant` - (tenant_id)
+- `idx_background_tasks_status` - (status)
+- `idx_background_tasks_type` - (task_type)
+- `idx_background_tasks_created` - (created_at DESC)
+- `idx_background_tasks_tenant_status` - (tenant_id, status)
+
+**Foreign Keys:**
+- `tenant_id` → `tenants.tenant_id` (ON DELETE CASCADE)
+
+**Constraints:**
+- `chk_background_tasks_status` - Status must be pending, processing, completed, or failed
+- `chk_background_tasks_type` - Task type must be grading, assessment_generation, lesson_plan_generation, or text_extraction
+
+---
+
+### 3. students
 
 **Purpose:** Store student UUIDs only (FERPA compliant - NO PII)
 
@@ -126,7 +189,7 @@
 
 ---
 
-### 3. submissions
+### 4. submissions
 
 **Purpose:** Store student essay submissions, grades, and bulletproof grading audit trail
 
@@ -181,7 +244,7 @@
 
 ---
 
-### 4. submission_versions
+### 5. submission_versions
 
 **Purpose:** Store version history of submission grades and feedback
 
@@ -214,7 +277,7 @@
 
 ---
 
-### 5. tenants
+### 6. tenants
 
 **Purpose:** Multi-tenancy support for districts/schools/individuals
 
@@ -248,7 +311,7 @@
 
 ---
 
-### 6. users
+### 7. users
 
 **Purpose:** User authentication and authorization (not yet implemented)
 
@@ -292,7 +355,7 @@
 
 ---
 
-### 7. annotations
+### 8. annotations
 
 **Purpose:** Store inline text annotations (AI-suggested and teacher-created) with line-based anchoring
 
@@ -336,7 +399,7 @@
 
 ---
 
-### 8. annotation_events
+### 9. annotation_events
 
 **Purpose:** Audit trail for all annotation lifecycle events
 
@@ -367,7 +430,7 @@
 
 ---
 
-### 9. password_reset_tokens
+### 10. password_reset_tokens
 
 **Purpose:** Secure storage of password reset tokens with SHA-256 hashing and expiration
 
@@ -401,7 +464,7 @@
 
 ---
 
-### 10. password_reset_audit
+### 11. password_reset_audit
 
 **Purpose:** Comprehensive audit log for all password reset activity
 
@@ -664,6 +727,6 @@ VACUUM ANALYZE grader.submission_versions;
 
 ---
 
-**Last Schema Update:** October 31, 2025  
+**Last Schema Update:** November 14, 2025  
 **Next Review:** After any schema changes  
 **Maintained By:** Development Team

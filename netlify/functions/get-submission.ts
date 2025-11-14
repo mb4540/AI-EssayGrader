@@ -43,7 +43,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         s.computed_scores,
         s.calculator_version,
         a.title as assignment_title,
-        a.assignment_id as assignment_id
+        a.assignment_id as assignment_id,
+        a.rubric_json as assignment_rubric
       FROM grader.submissions s
       LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
       WHERE s.submission_id = ${submissionId}
@@ -66,6 +67,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       aiFeedback = {
         ...aiFeedback,
         bulletproof: {
+          rubric: submission.assignment_rubric || null, // Include rubric with max_points
           extracted_scores: submission.extracted_scores,
           computed_scores: submission.computed_scores,
           calculator_version: submission.calculator_version,

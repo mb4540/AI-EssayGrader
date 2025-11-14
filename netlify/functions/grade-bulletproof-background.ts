@@ -1,15 +1,13 @@
 /**
- * BulletProof Grading Function
+ * BulletProof Grading Background Function
  * 
- * Uses deterministic Decimal calculator for accurate scoring.
- * LLM extracts per-criterion scores, calculator computes totals.
+ * Runs the actual grading process without time limits.
+ * Called by grade-bulletproof-trigger.ts via fire-and-forget pattern.
  */
 
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { OpenAI } from 'openai';
 import { sql } from './db';
-import { GradeRequestSchema } from '../../src/lib/schema';
-import { authenticateRequest } from './lib/auth';
 import { computeScores, validateRubric } from '../../src/lib/calculator/calculator';
 import { rubricFromJSON, extractedScoresFromJSON } from '../../src/lib/calculator/converters';
 import { createDefaultRubric, isValidRubric } from '../../src/lib/calculator/rubricBuilder';
@@ -26,51 +24,29 @@ import type { RawAnnotation } from '../../src/lib/annotations/types';
 const CALCULATOR_VERSION = 'v1.0.0-ts';
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
-  // CORS headers
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  };
-
-  // Handle preflight
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: '',
-    };
-  }
-
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' }),
-    };
-  }
+  let jobId: string | null = null;
 
   try {
-    // Authenticate request
-    const auth = await authenticateRequest(event.headers.authorization);
-    const { tenant_id } = auth;
-
     const body = JSON.parse(event.body || '{}');
-    
-    // Validate request
-    const validation = GradeRequestSchema.safeParse(body);
-    if (!validation.success) {
+    jobId = body.jobId;
+
+    if (!jobId) {
       return {
         statusCode: 400,
-        headers,
-        body: JSON.stringify({ 
-          error: 'Invalid request', 
-          details: validation.error.issues 
-        }),
+        body: JSON.stringify({ error: 'jobId is required' }),
       };
     }
 
-    const { submission_id } = validation.data;
+    console.log(`🎯 Starting background grading job: ${jobId}`);
+
+    // Mark job as processing in DB
+    await sql`
+      INSERT INTO grader.background_tasks (task_id, tenant_id, task_type, status, input_data, created_at, updated_at)
+      VALUES (${jobId}, ${body.tenant_id}, 'grading', 'processing', ${JSON.stringify(body)}, NOW(), NOW())
+      ON CONFLICT (task_id) DO UPDATE SET status='processing', updated_at=NOW(), input_data=${JSON.stringify(body)}
+    `;
+
+    const { tenant_id, submission_id, grading_prompt } = body;
 
     // Fetch submission with assignment rubric
     const submission = await sql`
@@ -97,11 +73,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     `;
 
     if (submission.length === 0) {
-      return {
-        statusCode: 404,
-        headers,
-        body: JSON.stringify({ error: 'Submission not found or access denied' }),
-      };
+      throw new Error('Submission not found or access denied');
     }
 
     const { 
@@ -123,24 +95,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     let rubric: RubricJSON;
     
     if (rubric_json && isValidRubric(rubric_json)) {
-      // Use existing structured rubric from assignment
       rubric = rubric_json as RubricJSON;
       
-      // Override scale settings if provided
-      if (scale_mode) {
-        rubric.scale.mode = scale_mode;
-      }
-      if (total_points) {
-        rubric.scale.total_points = total_points.toString();
-      }
-      if (rounding_mode) {
-        rubric.scale.rounding.mode = rounding_mode as 'HALF_UP' | 'HALF_EVEN' | 'HALF_DOWN';
-      }
+      if (scale_mode) rubric.scale.mode = scale_mode;
+      if (total_points) rubric.scale.total_points = total_points.toString();
+      if (rounding_mode) rubric.scale.rounding.mode = rounding_mode as 'HALF_UP' | 'HALF_EVEN' | 'HALF_DOWN';
       if (rounding_decimals !== null && rounding_decimals !== undefined) {
         rubric.scale.rounding.decimals = rounding_decimals;
       }
     } else if (teacher_criteria && teacher_criteria.trim().length > 0) {
-      // ✅ SOLUTION: Parse the teacher's rubric text
       try {
         rubric = parseTeacherRubric(
           teacher_criteria, 
@@ -148,13 +111,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           total_points
         );
         
-        // Validate parsed rubric
         const validation = validateParsedRubric(rubric);
         if (!validation.valid) {
           console.warn('Parsed rubric validation warnings:', validation.errors);
         }
         
-        // Override scale settings if provided in assignment
         if (scale_mode) rubric.scale.mode = scale_mode;
         if (total_points) rubric.scale.total_points = total_points.toString();
         if (rounding_mode) rubric.scale.rounding.mode = rounding_mode as 'HALF_UP' | 'HALF_EVEN' | 'HALF_DOWN';
@@ -171,7 +132,6 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         rubric = createDefaultRubric(assignment_id || 'default', teacher_criteria);
       }
     } else {
-      // Fallback: No criteria provided
       throw new Error('No grading criteria provided. Please add criteria to grade this submission.');
     }
 
@@ -179,23 +139,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const rubricObj = rubricFromJSON(rubric);
     validateRubric(rubricObj);
 
-    // Check for OpenAI API key
     if (!process.env.OPENAI_API_KEY) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'OpenAI API key not configured' }),
-      };
+      throw new Error('OpenAI API key not configured');
     }
 
     // Call OpenAI with extractor prompt
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
 
-    // Get custom grading prompt from request body
-    const customGradingPrompt = body.grading_prompt;
-
-    // Build extractor prompt based on draft mode
     const essayText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
     const extractorPrompt = draft_mode === 'comparison'
       ? buildComparisonExtractorPrompt(
@@ -203,16 +154,18 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           rough_draft_text, 
           final_draft_text, 
           submission_id,
-          customGradingPrompt,  // ✅ Pass custom prompt
-          document_type  // ✅ Pass document type
+          grading_prompt,
+          document_type
         )
       : buildExtractorPrompt(
           rubric, 
           essayText, 
           submission_id,
-          customGradingPrompt,  // ✅ Pass custom prompt
-          document_type  // ✅ Pass document type
+          grading_prompt,
+          document_type
         );
+
+    console.log('Calling OpenAI for grading...');
     const response = await openai.chat.completions.create({
       model,
       response_format: { type: 'json_object' },
@@ -225,17 +178,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     const content = response.choices[0]?.message?.content;
     if (!content) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'No response from OpenAI' }),
-      };
+      throw new Error('No response from OpenAI');
     }
 
     // Parse extracted scores
     const extractedJSON: ExtractedScoresJSON = JSON.parse(content);
     
-    // Validate extracted scores structure
     if (!extractedJSON.scores || !Array.isArray(extractedJSON.scores)) {
       throw new Error('Invalid extracted scores format: missing scores array');
     }
@@ -295,8 +243,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Compute final scores using calculator
     const computed = computeScores(rubricObj, extracted);
 
-    // Convert computed scores to legacy format for backward compatibility
+    // Convert computed scores to legacy format
     const legacyGrade = parseFloat(computed.percent);
+    
+    // DEBUG: Log rubric structure to verify max_points are present
+    console.log('Rubric criteria count:', rubric.criteria.length);
+    rubric.criteria.forEach((c, idx) => {
+      console.log(`  Criterion ${idx}: id=${c.id}, max_points=${c.max_points}, weight=${c.weight}`);
+    });
+    
     const legacyFeedback = {
       overall_grade: legacyGrade,
       rubric_scores: extracted.scores.map(s => ({
@@ -310,10 +265,20 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       evidence_findings: [],
       top_3_suggestions: [],
       supportive_summary: extracted.notes || 'Graded using bulletproof calculator',
-      // BulletProof specific fields
       computed_scores: computed,
       calculator_version: CALCULATOR_VERSION,
+      // Include bulletproof section with rubric for frontend display
+      bulletproof: {
+        rubric: rubric, // Include rubric so UI can show max points per criterion
+        extracted_scores: extractedJSON,
+        computed_scores: computed,
+        calculator_version: CALCULATOR_VERSION,
+      },
     };
+    
+    // DEBUG: Verify bulletproof section is complete
+    console.log('Bulletproof section has rubric:', !!legacyFeedback.bulletproof.rubric);
+    console.log('Rubric has criteria:', legacyFeedback.bulletproof.rubric.criteria?.length || 0);
 
     // Update submission with both extracted and computed scores
     await sql`
@@ -347,58 +312,45 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       )
     `;
 
+    // Mark job completed in DB
+    const outputData = {
+      submission_id,
+      ai_grade: legacyGrade,
+      annotation_stats: annotationStats,
+      computed_scores: computed,
+    };
+
+    await sql`
+      UPDATE grader.background_tasks
+      SET status='completed', output_data=${JSON.stringify(outputData)}, updated_at=NOW(), completed_at=NOW()
+      WHERE task_id=${jobId}
+    `;
+
+    console.log(`✅ Background grading job completed: ${jobId}`);
+
     return {
       statusCode: 200,
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...legacyFeedback,
-        bulletproof: {
-          rubric: rubric, // Include rubric so UI can show max points per criterion
-          extracted_scores: extractedJSON,
-          computed_scores: computed,
-          calculator_version: CALCULATOR_VERSION,
-        },
-      }),
+      body: JSON.stringify({ ok: true }),
     };
+
   } catch (error) {
-    console.error('BulletProof grade error:', error);
+    console.error('Background grading error:', error);
     
-    // Handle authentication errors
-    if (error instanceof Error) {
-      if (error.message.includes('Authentication required') || 
-          error.message.includes('Invalid or expired token')) {
-        return {
-          statusCode: 401,
-          headers,
-          body: JSON.stringify({ error: 'Authentication required' }),
-        };
+    try {
+      if (jobId) {
+        await sql`
+          UPDATE grader.background_tasks
+          SET status='failed', error_message=${String(error instanceof Error ? error.message : error)}, updated_at=NOW()
+          WHERE task_id=${jobId}
+        `;
       }
-      
-      // Handle validation errors
-      if (error.message.includes('Invalid points') || 
-          error.message.includes('Criterion mismatch') ||
-          error.message.includes('not in range')) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ 
-            error: 'Grading validation failed',
-            message: error.message 
-          }),
-        };
-      }
+    } catch (dbError) {
+      console.error('Failed to update task status:', dbError);
     }
-    
+
     return {
       statusCode: 500,
-      headers,
-      body: JSON.stringify({ 
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
-      }),
+      body: JSON.stringify({ error: String(error instanceof Error ? error.message : error) }),
     };
   }
 };

@@ -2,8 +2,8 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 2, 2025 - 11:45 AM  
-**Branch:** `main`  
+**Last Updated:** November 14, 2025 - 11:55 AM  
+**Branch:** `feature/enhanced-print-20251114`  
 **Status:** Active Development
 
 ---
@@ -19,8 +19,9 @@
 7. [Medium Priority - Grading Enhancements](#-medium-priority)
 8. [Low Priority - Performance Optimizations](#-low-priority--nice-to-have)
 9. [Known Issues to Fix](#-known-issues-to-fix)
-10. [Recommended Timeline](#-recommended-timeline)
-11. [Out of Scope](#-out-of-scope-future-branches)
+10. [User Feedback - Week of November 11, 2025](#-user-feedback---week-of-november-11-2025)
+11. [Recommended Timeline](#-recommended-timeline)
+12. [Out of Scope](#-out-of-scope-future-branches)
 
 ---
 
@@ -853,7 +854,101 @@ ADD COLUMN anchor_chart_file_url text;
 
 ---
 
-## 📅 Recommended Timeline
+## � User Feedback - Week of November 11, 2025
+
+### Shana's Feedback (6th Grade ELAR Teacher)
+
+1. **[ ] Rubric grading points info on print/download**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** Print and download need to show detailed rubric breakdown with points
+   - **Files:** `src/lib/print.ts`, `src/lib/printAnnotated.ts`, `src/pages/Submission.tsx`
+   - **Time:** 4-6 hours
+   - **Related:** PLAN_enhanced_print_download.md
+
+2. **[ ] Points must show as portion of grade (47/50 not 47/100)**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** Raw points showing wrong denominator - should be category max, not assignment total
+   - **Files:** `src/lib/print.ts`, `src/lib/calculator/calculator.ts`
+   - **Time:** 2-3 hours
+
+3. **[ ] Bug: Create Assignment Modal not confirming save**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** No confirmation message after saving assignment
+   - **Files:** `src/components/CreateAssignmentModal.tsx`
+   - **Time:** 1-2 hours
+
+4. **[ ] CSV import: Handle header row**
+   - **Priority:** ⭐⭐ MEDIUM
+   - **Issue:** CSV import may not handle header rows correctly
+   - **Files:** `src/components/bridge/BridgeManager.tsx`
+   - **Time:** 1-2 hours
+
+5. **[ ] Add capability for no student roster**
+   - **Priority:** ⭐⭐ MEDIUM
+   - **Issue:** Allow grading without pre-defined student list
+   - **Files:** `src/pages/Submission.tsx`, `src/components/StudentSelector.tsx`
+   - **Time:** 2-3 hours
+
+6. **[ ] Print must have 100% of info from Grade page**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** Print output needs all information visible on Grade Submission page
+   - **Files:** `src/lib/print.ts`, `src/lib/printAnnotated.ts`
+   - **Time:** Included in item #1
+   - **Related:** Item #1 above
+
+---
+
+### Miranda's Feedback (High School AP World History Teacher)
+
+**Context:** AP World History essays with 7-page College Board rubrics, graded on evidence/analysis not style/grammar.
+
+1. **[ ] Assignment save UX issue with large rubrics**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** Modal says "OK" but appears to fail (actually saves, just poor UX)
+   - **Root Cause:** Timeout with large rubric (7 pages), no progress indicator
+   - **Files:** `src/components/CreateAssignmentModal.tsx`
+   - **Time:** 2-3 hours
+
+2. **[ ] Assignment visibility on Dashboard**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** Saved assignments only visible in dropdown, not on Dashboard
+   - **Files:** `src/pages/Dashboard.tsx`
+   - **Time:** 2-3 hours
+
+3. **[ ] Support PDF/Word upload for rubrics**
+   - **Priority:** ⭐⭐ MEDIUM
+   - **Issue:** Copy/paste of 7-page rubric is slow and error-prone
+   - **Files:** `src/components/CreateAssignmentModal.tsx`, `netlify/functions/parse-rubric-file.ts` (new)
+   - **Time:** 4-5 hours
+
+4. **[ ] Assignment switching bug - criteria not updating**
+   - **Priority:** ⭐⭐⭐ HIGH
+   - **Issue:** When switching assignments, points update but criteria text doesn't
+   - **Files:** `src/pages/Submission.tsx`
+   - **Time:** 2-3 hours
+
+5. **[ ] Add ability to delete assignments**
+   - **Priority:** ⭐⭐ MEDIUM
+   - **Issue:** No way to delete assignments once created
+   - **Files:** `src/pages/Dashboard.tsx`, `netlify/functions/delete-assignment.ts` (new)
+   - **Time:** 2-3 hours
+
+6. **[ ] Mass edit/delete for student roster**
+   - **Priority:** ⭐ LOW
+   - **Issue:** Can only delete students one at a time
+   - **Files:** `src/components/bridge/BridgeManager.tsx`
+   - **Time:** 2-3 hours
+
+7. **[ ] Non-ELAR subject grading (focus on content not grammar)**
+   - **Priority:** ⭐⭐ MEDIUM
+   - **Issue:** AI grades based on ELAR criteria even for history essays
+   - **Solution:** Add subject field and grading focus checkboxes (Content/Evidence, Analysis, Organization, Style, Grammar, Spelling)
+   - **Files:** `netlify/functions/grade.ts`, `src/components/CreateAssignmentModal.tsx`, `src/components/SettingsModal.tsx`
+   - **Time:** 3-4 hours
+
+---
+
+## �� Recommended Timeline
 
 ### This Week (Nov 1-7, 2025)
 **Focus: Dashboard Polish**
