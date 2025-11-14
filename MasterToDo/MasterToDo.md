@@ -858,9 +858,27 @@ ADD COLUMN anchor_chart_file_url text;
 
 ### Shana's Feedback (6th Grade ELAR Teacher)
 
-1. **✅ WORKING NOW: Rubric grading points on print/download**
-   - Status: ✅ Complete - Enhanced print functionality implemented
-   - Shows detailed rubric breakdown with earned/total points
+1. **🔴 CRITICAL: Rubric grading points on print/download**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - Restarting implementation
+   - **Issue:** Print/download output needs to show detailed rubric breakdown with earned/total points
+   - **Expected:** Print shows all grading details, rubric sections, BulletProof breakdown
+   - **Current:** Basic print functionality exists but needs enhancement
+   - **Impact:** Teachers need comprehensive print output for records
+   - **Related to:** PLAN_enhanced_print_download.md
+   - **Files:** 
+     - `src/lib/print.ts`
+     - `src/lib/printAnnotated.ts`
+     - `src/pages/Submission.tsx`
+   - **Time:** 4-6 hours
+   - **Tasks:**
+     - [ ] Implement enhanced print HTML generation
+     - [ ] Add detailed rubric breakdown section
+     - [ ] Add BulletProof scoring display
+     - [ ] Add assignment details and full rubric text
+     - [ ] Add essay with line numbers
+     - [ ] Add teacher comments section
+     - [ ] Test print preview and PDF output
 
 2. **🔴 CRITICAL: Points must show as portion of grade (e.g., 47/50 not 47/100)**
    - **Priority:** ⭐⭐⭐ HIGH PRIORITY
@@ -936,9 +954,26 @@ ADD COLUMN anchor_chart_file_url text;
      - [ ] Update validation to allow null student_id
      - [ ] Test grading without student roster
 
-6. **✅ WORKING NOW: Print has 100% of info from Grade page**
-   - Status: ✅ Complete - Enhanced print functionality implemented
-   - Shows all grading details, rubric, feedback, annotations
+6. **🔴 CRITICAL: Print must have 100% of info from Grade page**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - Restarting implementation
+   - **Issue:** Print output needs to include all information visible on Grade Submission page
+   - **Expected:** Print includes assignment description, full rubric, all grading details, BulletProof breakdown, feedback cards, teacher comments, annotations
+   - **Current:** Basic print functionality exists but needs comprehensive enhancement
+   - **Impact:** Teachers need complete records for documentation and student review
+   - **Related to:** Item #1 above and PLAN_enhanced_print_download.md
+   - **Files:** 
+     - `src/lib/print.ts`
+     - `src/lib/printAnnotated.ts`
+     - `src/pages/Submission.tsx`
+   - **Time:** Included in item #1 (4-6 hours total)
+   - **Tasks:**
+     - [ ] Ensure all UI elements are represented in print
+     - [ ] Include assignment metadata
+     - [ ] Include complete rubric text
+     - [ ] Include all feedback sections
+     - [ ] Include teacher comments
+     - [ ] Test completeness against live UI
 
 ---
 
@@ -1091,23 +1126,25 @@ ADD COLUMN anchor_chart_file_url text;
 ### Summary of Action Items by Priority
 
 **🔴 CRITICAL (Do First):**
-1. Points display fix (47/50 not 47/100) - 2-3 hours
-2. Create Assignment Modal confirmation - 1-2 hours
-3. Assignment save UX with large rubrics - 2-3 hours
-4. Assignment visibility on Dashboard - 2-3 hours
-5. Assignment switching bug (criteria not updating) - 2-3 hours
+1. Enhanced print/download functionality - 4-6 hours
+2. Print must have 100% of info from Grade page - (included in #1)
+3. Points display fix (47/50 not 47/100) - 2-3 hours
+4. Create Assignment Modal confirmation - 1-2 hours
+5. Assignment save UX with large rubrics - 2-3 hours
+6. Assignment visibility on Dashboard - 2-3 hours
+7. Assignment switching bug (criteria not updating) - 2-3 hours
 
 **🟡 HIGH PRIORITY (Do Soon):**
-6. CSV import header handling - 1-2 hours
-7. No student roster capability - 2-3 hours
-8. Delete assignments feature - 2-3 hours
-9. Non-ELAR grading focus - 3-4 hours
+8. CSV import header handling - 1-2 hours
+9. No student roster capability - 2-3 hours
+10. Delete assignments feature - 2-3 hours
+11. Non-ELAR grading focus - 3-4 hours
 
 **🟢 MEDIUM PRIORITY (Nice to Have):**
-10. PDF/Word rubric upload - 4-5 hours
-11. Mass edit/delete student roster - 2-3 hours
+12. PDF/Word rubric upload - 4-5 hours
+13. Mass edit/delete student roster - 2-3 hours
 
-**Total Estimated Time:** 24-33 hours
+**Total Estimated Time:** 28-39 hours
 
 ---
 
