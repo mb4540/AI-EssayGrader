@@ -2,8 +2,8 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 2, 2025 - 11:45 AM  
-**Branch:** `main`  
+**Last Updated:** November 14, 2025 - 11:45 AM  
+**Branch:** `feature/enhanced-print-20251114`  
 **Status:** Active Development
 
 ---
@@ -19,8 +19,9 @@
 7. [Medium Priority - Grading Enhancements](#-medium-priority)
 8. [Low Priority - Performance Optimizations](#-low-priority--nice-to-have)
 9. [Known Issues to Fix](#-known-issues-to-fix)
-10. [Recommended Timeline](#-recommended-timeline)
-11. [Out of Scope](#-out-of-scope-future-branches)
+10. [User Feedback - Week of November 11, 2025](#-user-feedback---week-of-november-11-2025)
+11. [Recommended Timeline](#-recommended-timeline)
+12. [Out of Scope](#-out-of-scope-future-branches)
 
 ---
 
@@ -853,7 +854,264 @@ ADD COLUMN anchor_chart_file_url text;
 
 ---
 
-## 📅 Recommended Timeline
+## � USER FEEDBACK - Week of November 11, 2025
+
+### Shana's Feedback (6th Grade ELAR Teacher)
+
+1. **✅ WORKING NOW: Rubric grading points on print/download**
+   - Status: ✅ Complete - Enhanced print functionality implemented
+   - Shows detailed rubric breakdown with earned/total points
+
+2. **🔴 CRITICAL: Points must show as portion of grade (e.g., 47/50 not 47/100)**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - Needs immediate fix
+   - **Issue:** Raw points display showing total assignment points instead of category/rubric section points
+   - **Expected:** "Content: 47/50" (earned out of section total)
+   - **Current:** "Content: 47/100" (showing assignment total incorrectly)
+   - **Impact:** Confusing for teachers and students
+   - **Files:** 
+     - `src/lib/print.ts` (renderBulletProof function)
+     - `src/lib/printAnnotated.ts` (renderBulletProof function)
+     - `src/lib/calculator/calculator.ts` (BulletProof scoring logic)
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Review BulletProof computed_scores structure
+     - [ ] Update renderBulletProof to show category max points
+     - [ ] Verify rubric parser extracts category point values
+     - [ ] Test with various rubric formats
+     - [ ] Update print preview and download output
+
+3. **🔴 Bug: Create Assignment Modal not confirming save**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - Needs investigation
+   - **Issue:** Modal doesn't show "OK" confirmation after saving assignment
+   - **Expected:** Success message or modal close after save
+   - **Current:** No feedback, unclear if save succeeded
+   - **Impact:** User confusion, potential duplicate assignments
+   - **Files:** 
+     - `src/components/CreateAssignmentModal.tsx`
+     - `netlify/functions/create-assignment.ts`
+   - **Time:** 1-2 hours
+   - **Tasks:**
+     - [ ] Add success toast notification
+     - [ ] Close modal on successful save
+     - [ ] Add error handling for failed saves
+     - [ ] Test with various assignment types
+     - [ ] Add loading state during save
+
+4. **🟡 CSV Import: Handle header row**
+   - **Priority:** ⭐⭐ MEDIUM PRIORITY
+   - **Status:** 🟡 OPEN - Enhancement needed
+   - **Issue:** CSV import may not properly handle files with header rows
+   - **Expected:** Auto-detect and skip header row, or provide option
+   - **Current:** Unclear if headers are handled correctly
+   - **Impact:** Import errors or header row imported as student
+   - **Files:** 
+     - `src/components/bridge/BridgeManager.tsx`
+     - `src/bridge/bridgeCore.ts`
+   - **Time:** 1-2 hours
+   - **Tasks:**
+     - [ ] Test current CSV import with header row
+     - [ ] Add header row detection logic
+     - [ ] Add "First row is header" checkbox option
+     - [ ] Update import validation
+     - [ ] Add sample CSV template download
+
+5. **🟡 Add capability for no student roster**
+   - **Priority:** ⭐⭐ MEDIUM PRIORITY
+   - **Status:** 🟡 OPEN - Feature request
+   - **Issue:** System requires student roster, but some teachers want to grade without it
+   - **Expected:** Allow grading without pre-defined student list
+   - **Current:** Must add students to bridge before grading
+   - **Use Case:** Guest grading, demo mode, quick one-off grading
+   - **Impact:** Limits flexibility for certain workflows
+   - **Files:** 
+     - `src/pages/Submission.tsx`
+     - `src/components/StudentSelector.tsx`
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Add "Anonymous Student" or "Guest" option
+     - [ ] Make student selection optional
+     - [ ] Allow manual name entry without bridge
+     - [ ] Update validation to allow null student_id
+     - [ ] Test grading without student roster
+
+6. **✅ WORKING NOW: Print has 100% of info from Grade page**
+   - Status: ✅ Complete - Enhanced print functionality implemented
+   - Shows all grading details, rubric, feedback, annotations
+
+---
+
+### Miranda's Feedback (High School World History Teacher - AP Level)
+
+**Context:** AP World History essays with College Board rubrics (7 pages), graded on evidence and analysis rather than style/grammar.
+
+#### Issues Encountered:
+
+1. **🔴 CRITICAL: Assignment save appears to fail but actually succeeds**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - UX issue
+   - **Issue:** Modal says "OK" then assignment doesn't appear to save, but it actually did save
+   - **Root Cause:** Likely timeout with large rubric (7 pages), poor feedback during save
+   - **Expected:** Clear progress indicator, success confirmation, immediate visibility
+   - **Current:** Confusing UX - appears to fail but works
+   - **Impact:** User thinks save failed, may retry and create duplicates
+   - **Related to:** Shana's issue #3 (Create Assignment Modal)
+   - **Files:** 
+     - `src/components/CreateAssignmentModal.tsx`
+     - `netlify/functions/create-assignment.ts`
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Add loading spinner during save
+     - [ ] Add progress indicator for large rubrics
+     - [ ] Increase timeout for large content
+     - [ ] Add clear success message
+     - [ ] Refresh assignment list immediately after save
+     - [ ] Add "Saving..." state with estimated time
+
+2. **🔴 Assignment visibility issue: Only shows in Assignments dropdown, not Dashboard**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - UX issue
+   - **Issue:** Saved assignments only visible in assignment dropdown, not at dashboard level
+   - **Expected:** Dashboard should show all available assignments
+   - **Current:** Must click into Assignments to see what's available
+   - **Impact:** Poor discoverability, confusing UX
+   - **Files:** 
+     - `src/pages/Dashboard.tsx`
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Add "Assignments" section to Dashboard
+     - [ ] Show list of available assignments with metadata
+     - [ ] Add quick actions (grade, edit, delete)
+     - [ ] Show assignment count and recent activity
+     - [ ] Add "Create Assignment" button to Dashboard
+
+3. **🟡 Support PDF/Word upload for rubrics (not just copy/paste)**
+   - **Priority:** ⭐⭐ MEDIUM PRIORITY
+   - **Status:** 🟡 OPEN - Feature request
+   - **Issue:** Copy/paste of 7-page rubric is slow and error-prone
+   - **Expected:** Upload PDF or Word doc of rubric directly
+   - **Current:** Only text input via copy/paste
+   - **Impact:** Time-consuming setup, potential formatting loss
+   - **Files:** 
+     - `src/components/CreateAssignmentModal.tsx`
+     - `netlify/functions/parse-rubric-file.ts` (new)
+   - **Time:** 4-5 hours
+   - **Tasks:**
+     - [ ] Add file upload option to assignment modal
+     - [ ] Support PDF rubric upload
+     - [ ] Support Word doc rubric upload
+     - [ ] Extract text from uploaded file
+     - [ ] Parse rubric structure automatically
+     - [ ] Show preview before saving
+     - [ ] Handle large files (7+ pages)
+
+4. **🔴 CRITICAL: Assignment switching bug - criteria not updating**
+   - **Priority:** ⭐⭐⭐ HIGH PRIORITY
+   - **Status:** 🔴 OPEN - Known bug (see Known Issues section)
+   - **Issue:** When switching assignments, points update but criteria text doesn't change
+   - **Expected:** Both points and criteria should update when switching assignments
+   - **Current:** Stale criteria from previous assignment
+   - **Impact:** Grading with wrong rubric, incorrect feedback
+   - **Related:** Known issue in line 104-125 of this file
+   - **Files:** 
+     - `src/pages/Submission.tsx`
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Debug assignment switching logic
+     - [ ] Ensure criteria state updates with assignment
+     - [ ] Clear stale data when switching
+     - [ ] Add loading state during switch
+     - [ ] Test with multiple assignments
+
+5. **🔴 No way to delete assignments**
+   - **Priority:** ⭐⭐ MEDIUM PRIORITY
+   - **Status:** 🔴 OPEN - Missing feature
+   - **Issue:** Cannot delete assignments once created
+   - **Expected:** Delete button or action for assignments
+   - **Current:** No delete functionality
+   - **Impact:** Clutter, test assignments can't be removed
+   - **Files:** 
+     - `src/pages/Dashboard.tsx` or Assignments page
+     - `netlify/functions/delete-assignment.ts` (new)
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Add delete button to assignment list
+     - [ ] Add confirmation dialog
+     - [ ] Create delete-assignment API endpoint
+     - [ ] Handle cascade delete (or prevent if submissions exist)
+     - [ ] Update UI after delete
+     - [ ] Add soft delete option (archive)
+
+6. **🟡 No mass edit/delete for student roster**
+   - **Priority:** ⭐ LOW PRIORITY
+   - **Status:** 🟡 OPEN - Enhancement
+   - **Issue:** Can only delete students one at a time
+   - **Expected:** Bulk select and delete, clear entire roster option
+   - **Current:** Individual delete only
+   - **Impact:** Time-consuming to manage large rosters
+   - **Files:** 
+     - `src/components/bridge/BridgeManager.tsx`
+   - **Time:** 2-3 hours
+   - **Tasks:**
+     - [ ] Add "Select All" checkbox
+     - [ ] Add "Delete Selected" button
+     - [ ] Add "Clear Roster" button with confirmation
+     - [ ] Add bulk edit capability
+     - [ ] Show count of selected students
+
+7. **🟡 Non-ELAR subjects: Grading not based on style/grammar**
+   - **Priority:** ⭐⭐ MEDIUM PRIORITY
+   - **Status:** 🟡 OPEN - Feature request
+   - **Issue:** AI grades based on ELAR criteria (style, grammar, spelling) even for history essays
+   - **Expected:** Grading should focus on rubric criteria (evidence, analysis) not grammar
+   - **Current:** Grammar/spelling feedback dominates even when not in rubric
+   - **Impact:** Irrelevant feedback for content-focused subjects
+   - **Use Case:** AP World History, Science, Math essays
+   - **Files:** 
+     - `netlify/functions/grade.ts` (AI prompt)
+     - `src/components/CreateAssignmentModal.tsx` (subject selection)
+     - `src/components/SettingsModal.tsx` (grading preferences)
+   - **Time:** 3-4 hours
+   - **Tasks:**
+     - [ ] Add "Subject" field to assignment (ELAR, History, Science, etc.)
+     - [ ] Add checkboxes for grading focus:
+       - [ ] Content/Evidence
+       - [ ] Analysis/Reasoning
+       - [ ] Organization/Structure
+       - [ ] Style/Voice
+       - [ ] Grammar/Mechanics
+       - [ ] Spelling/Punctuation
+     - [ ] Update AI prompt to respect subject and focus areas
+     - [ ] Test with non-ELAR essays
+     - [ ] Add subject-specific rubric templates
+
+---
+
+### Summary of Action Items by Priority
+
+**🔴 CRITICAL (Do First):**
+1. Points display fix (47/50 not 47/100) - 2-3 hours
+2. Create Assignment Modal confirmation - 1-2 hours
+3. Assignment save UX with large rubrics - 2-3 hours
+4. Assignment visibility on Dashboard - 2-3 hours
+5. Assignment switching bug (criteria not updating) - 2-3 hours
+
+**🟡 HIGH PRIORITY (Do Soon):**
+6. CSV import header handling - 1-2 hours
+7. No student roster capability - 2-3 hours
+8. Delete assignments feature - 2-3 hours
+9. Non-ELAR grading focus - 3-4 hours
+
+**🟢 MEDIUM PRIORITY (Nice to Have):**
+10. PDF/Word rubric upload - 4-5 hours
+11. Mass edit/delete student roster - 2-3 hours
+
+**Total Estimated Time:** 24-33 hours
+
+---
+
+## �� Recommended Timeline
 
 ### This Week (Nov 1-7, 2025)
 **Focus: Dashboard Polish**
