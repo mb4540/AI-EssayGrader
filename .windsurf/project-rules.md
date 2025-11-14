@@ -4,7 +4,31 @@ This directory contains AI assistant rules and guidelines for the FastAI Grader 
 
 ## Rules Files
 
-### Database Rules
+### Code Style Conventions
+- **File**: `rules/code-style.md`
+- **Purpose**: TypeScript and general coding standards
+- **Covers**:
+  - Naming conventions (camelCase, PascalCase, UPPER_SNAKE_CASE, kebab-case)
+  - TypeScript best practices (explicit types, no `any`)
+  - Import organization (external, internal, relative, CSS)
+  - Function style and length guidelines
+  - Error handling patterns
+  - Code formatting and comments
+  - User-centric design principles (speed, simplicity, minimize clicks)
+
+### Database Design Rules
+- **File**: `rules/database-design.md`
+- **Purpose**: Standards for database schema design and naming conventions
+- **Covers**:
+  - Database reference file (`/db_ref.md`) workflow
+  - Table and column naming conventions
+  - Primary key naming (use `tablename_id` not `id`)
+  - Foreign key relationships and ON DELETE rules
+  - Index naming and strategy
+  - Data types and constraints
+  - Migration patterns and schema organization
+
+### Neon Database Rules
 - **File**: `rules/neon-database.md`
 - **Purpose**: Guidelines for connecting to and working with Neon Postgres database
 - **Covers**: 
@@ -13,17 +37,6 @@ This directory contains AI assistant rules and guidelines for the FastAI Grader 
   - Schema structure and migrations
   - Connection configuration
   - Best practices and troubleshooting
-
-### Database Design Rules
-- **File**: `rules/database-design.md`
-- **Purpose**: Standards for database schema design and naming conventions
-- **Covers**:
-  - Table and column naming conventions
-  - Primary key naming (use `tablename_id` not `id`)
-  - Foreign key relationships and constraints
-  - Index naming and strategy
-  - Data types and constraints
-  - Migration patterns
 
 ### API Design Rules
 - **File**: `rules/api-design.md`
@@ -42,10 +55,11 @@ This directory contains AI assistant rules and guidelines for the FastAI Grader 
 - **Covers**:
   - Environment variable handling
   - API key protection
-  - SQL injection prevention
+  - SQL injection prevention (parameterized queries)
   - Input sanitization and validation
   - Error message security
   - CORS configuration
+  - FERPA compliance considerations
 
 ### Frontend Components Rules
 - **File**: `rules/frontend-components.md`
@@ -62,23 +76,12 @@ This directory contains AI assistant rules and guidelines for the FastAI Grader 
 - **File**: `rules/testing.md`
 - **Purpose**: Testing standards and practices
 - **Covers**:
-  - Unit testing patterns
+  - Unit testing patterns (Vitest)
   - Integration testing
   - Test file organization
   - Mock data and fixtures
-  - Coverage requirements
+  - Coverage requirements (75% target)
   - CI/CD integration
-
-### Code Style Conventions
-- **File**: `rules/code-style.md`
-- **Purpose**: TypeScript and general coding standards
-- **Covers**:
-  - Naming conventions
-  - TypeScript best practices
-  - Import organization
-  - Function style
-  - Error handling patterns
-  - Code formatting
 
 ### Git Workflow Rules
 - **File**: `rules/git-workflow.md`
@@ -90,6 +93,48 @@ This directory contains AI assistant rules and guidelines for the FastAI Grader 
   - Code review guidelines
   - Merge strategies
   - Release procedures
+
+### Multi-Project Workspace Rules
+- **File**: `rules/multi-project-workspace.md`
+- **Purpose**: Rules for working with multiple projects in workspace
+- **Covers**:
+  - AI-EssayGrader (ACTIVE PROJECT - all changes allowed)
+  - gift-of-time-assistant (REFERENCE ONLY - read only)
+  - Critical access rules and permissions
+  - Path verification before write operations
+
+### Cleanup Workflow
+- **File**: `rules/cleanup.md`
+- **Purpose**: Code cleanup and organization workflow
+- **Covers**:
+  - Backup and safety procedures
+  - Dead code removal process
+  - Console.log cleanup
+  - Import optimization
+  - File organization
+  - Verification steps
+
+### Refactoring Workflow
+- **File**: `rules/refactor.md`
+- **Purpose**: Code refactoring and quality improvement workflow
+- **Covers**:
+  - Code quality standards
+  - Testing strategy (75%+ coverage target)
+  - Refactoring patterns
+  - Component organization
+  - Type safety improvements
+  - Performance optimization
+
+### Safe Code Release
+- **File**: `rules/safe-code-release.md`
+- **Purpose**: Safe deployment and release procedures
+- **Covers**:
+  - Pre-release checklist
+  - Testing requirements
+  - Backup procedures
+  - Deployment steps
+  - Rollback procedures
+  - Post-deployment verification
 
 ## How to Use
 
@@ -129,6 +174,8 @@ To add new rule files:
 ## Quick Links
 
 - Main Documentation: `/README.md`
-- Setup Guide: `/SETUP_GUIDE.md`
-- Database Rules: `.windsurf/rules/neon-database.md`
-- Commands Reference: `/COMMANDS.md`
+- Database Reference: `/db_ref.md`
+- Database Schema Query: `/get_complete_schema.sql`
+- All Rules: `.windsurf/rules/`
+- Master Todo: `/MasterToDo/MasterToDo.md`
+- Completed Tasks: `/MasterToDo/CompletedToDo.md`
