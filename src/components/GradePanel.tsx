@@ -98,7 +98,49 @@ export default function GradePanel({
                       // Find max points for this criterion from rubric
                       const rubric = (aiFeedback as any).bulletproof?.rubric;
                       const criterion = rubric?.criteria?.find((c: any) => c.id === score.criterion_id);
-                      const maxPoints = criterion?.max_points;
+                      
+                      // DEBUG: Log what we have
+                      if (idx === 0) {
+                        console.log('🔍 DEBUG: Rubric structure:', rubric);
+                        console.log('🔍 DEBUG: All rubric criteria IDs:', rubric?.criteria?.map((c: any) => c.id));
+                        console.log('🔍 DEBUG: First score criterion_id:', score.criterion_id);
+                        console.log('🔍 DEBUG: First criterion found:', criterion);
+                        console.log('🔍 DEBUG: First criterion max_points:', criterion?.max_points);
+                      }
+                      
+                      // Try multiple ways to get max points
+                      let maxPoints = criterion?.max_points;
+                      
+                      if (idx === 0) {
+                        console.log('🔍 DEBUG: maxPoints after direct lookup:', maxPoints);
+                      }
+                      
+                      // If max_points not found, try to get it from levels
+                      if (!maxPoints && criterion?.levels && Array.isArray(criterion.levels)) {
+                        const maxLevel = criterion.levels.reduce((max: any, level: any) => {
+                          const points = parseFloat(level.points || level.max_points || 0);
+                          return points > max ? points : max;
+                        }, 0);
+                        if (maxLevel > 0) maxPoints = maxLevel.toFixed(1);
+                      }
+                      
+                      // If still not found, calculate from weight and total points
+                      if (!maxPoints && criterion?.weight && rubric?.scale?.total_points) {
+                        const totalPoints = parseFloat(rubric.scale.total_points);
+                        const weight = parseFloat(criterion.weight);
+                        maxPoints = (totalPoints * weight).toFixed(1);
+                      }
+                      
+                      // If STILL not found, calculate from computed_scores max_points
+                      if (!maxPoints) {
+                        const computedScores = (aiFeedback as any).bulletproof?.computed_scores;
+                        if (computedScores?.max_points) {
+                          // Estimate based on proportion of total
+                          const totalMax = parseFloat(computedScores.max_points);
+                          const numCriteria = ((aiFeedback as any).bulletproof.extracted_scores as ExtractedScoresJSON).scores.length;
+                          maxPoints = (totalMax / numCriteria).toFixed(1);
+                        }
+                      }
                       
                       return (
                         <div key={idx} className="bg-white dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
@@ -108,7 +150,7 @@ export default function GradePanel({
                               <span className="font-bold text-purple-600 dark:text-purple-400">{score.points_awarded}</span>
                               {maxPoints && (
                                 <>
-                                  <span className="text-xs text-gray-500 mx-1">of</span>
+                                  <span className="text-gray-500 mx-1">/</span>
                                   <span className="font-bold text-gray-600 dark:text-gray-400">{maxPoints}</span>
                                 </>
                               )}

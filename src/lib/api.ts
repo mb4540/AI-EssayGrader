@@ -61,16 +61,83 @@ export async function ingestSubmission(data: IngestRequest) {
   return handleResponse<{ submission_id: string }>(response);
 }
 
-export async function gradeSubmission(data: GradeRequest) {
+/**
+ * Start a background grading job (returns immediately with task_id)
+ */
+export async function startGradingJob(data: GradeRequest) {
   const customPrompts = getCustomPrompts();
-  // Use bulletproof grading endpoint for deterministic scoring
-  const response = await fetch(`${API_BASE}/grade-bulletproof`, {
+  const response = await fetch(`${API_BASE}/grade-bulletproof-trigger`, {
     method: 'POST',
     headers: getAuthHeaders(),
     body: JSON.stringify({ ...data, ...customPrompts }),
   });
 
-  return handleResponse<Feedback>(response);
+  return handleResponse<{
+    ok: boolean;
+    task_id: string;
+    status: string;
+    message: string;
+  }>(response);
+}
+
+/**
+ * Check the status of a background grading job
+ */
+export async function checkGradingStatus(taskId: string) {
+  const response = await fetch(`${API_BASE}/grade-bulletproof-status?jobId=${taskId}`, {
+    headers: getAuthHeaders(),
+  });
+
+  return handleResponse<{
+    ok: boolean;
+    id: string;
+    status: 'pending' | 'processing' | 'completed' | 'failed';
+    updatedAt: string;
+    completedAt?: string;
+    result?: {
+      submission_id: string;
+      ai_grade: number;
+      annotation_stats: { saved: number; unresolved: number };
+      computed_scores: any;
+    };
+    error?: string;
+  }>(response);
+}
+
+/**
+ * Grade a submission using background processing with polling
+ * This replaces the old synchronous gradeSubmission
+ */
+export async function gradeSubmission(data: GradeRequest): Promise<Feedback> {
+  // Start the background job
+  const { task_id } = await startGradingJob(data);
+
+  // Poll for completion
+  const maxAttempts = 60; // 60 attempts = 2 minutes max
+  const pollInterval = 2000; // 2 seconds
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+
+    const status = await checkGradingStatus(task_id);
+
+    if (status.status === 'completed') {
+      // Fetch the updated submission to get the full feedback
+      const submission = await getSubmission(data.submission_id);
+      if (!submission.ai_feedback) {
+        throw new Error('Grading completed but no feedback found');
+      }
+      return submission.ai_feedback;
+    }
+
+    if (status.status === 'failed') {
+      throw new Error(status.error || 'Grading failed');
+    }
+
+    // Continue polling if status is 'pending' or 'processing'
+  }
+
+  throw new Error('Grading timeout - job is still processing');
 }
 
 export async function saveTeacherEdits(data: SaveEditsRequest) {
