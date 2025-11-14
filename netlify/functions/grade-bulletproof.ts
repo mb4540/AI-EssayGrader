@@ -356,6 +356,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       body: JSON.stringify({
         ...legacyFeedback,
         bulletproof: {
+          rubric: rubric, // Include rubric so UI can show max points per criterion
           extracted_scores: extractedJSON,
           computed_scores: computed,
           calculator_version: CALCULATOR_VERSION,

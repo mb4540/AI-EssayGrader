@@ -94,23 +94,36 @@ export default function GradePanel({
                   
                   {/* Per-Criterion Scores */}
                   <div className="space-y-3 mb-4">
-                    {((aiFeedback as any).bulletproof.extracted_scores as ExtractedScoresJSON).scores.map((score, idx) => (
-                      <div key={idx} className="bg-white dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div className="flex justify-between items-start mb-1">
-                          <span className="font-medium text-sm">{score.criterion_id}</span>
-                          <div className="text-right">
-                            <span className="font-bold text-purple-600 dark:text-purple-400">{score.points_awarded}</span>
-                            <span className="text-xs text-gray-500 ml-1">pts</span>
+                    {((aiFeedback as any).bulletproof.extracted_scores as ExtractedScoresJSON).scores.map((score, idx) => {
+                      // Find max points for this criterion from rubric
+                      const rubric = (aiFeedback as any).bulletproof?.rubric;
+                      const criterion = rubric?.criteria?.find((c: any) => c.id === score.criterion_id);
+                      const maxPoints = criterion?.max_points;
+                      
+                      return (
+                        <div key={idx} className="bg-white dark:bg-slate-700 p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-medium text-sm">{score.criterion_id}</span>
+                            <div className="text-right">
+                              <span className="font-bold text-purple-600 dark:text-purple-400">{score.points_awarded}</span>
+                              {maxPoints && (
+                                <>
+                                  <span className="text-xs text-gray-500 mx-1">of</span>
+                                  <span className="font-bold text-gray-600 dark:text-gray-400">{maxPoints}</span>
+                                </>
+                              )}
+                              <span className="text-xs text-gray-500 ml-1">pts</span>
+                            </div>
                           </div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
+                              {score.level}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 dark:text-gray-300">{score.rationale}</p>
                         </div>
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded">
-                            {score.level}
-                          </span>
-                        </div>
-                        <p className="text-xs text-gray-600 dark:text-gray-300">{score.rationale}</p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   {/* Computed Scores */}
