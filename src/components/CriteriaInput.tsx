@@ -71,7 +71,11 @@ export default function CriteriaInput({
       return;
     }
 
-    console.log('🎯 Enhance With AI clicked - Total Points:', totalPoints);
+    console.log('🎯 Enhance With AI clicked');
+    console.log('📊 Total Points value:', totalPoints);
+    console.log('📊 Total Points type:', typeof totalPoints);
+    console.log('📊 Sending to API:', { simple_rules: value.substring(0, 50) + '...', total_points: totalPoints });
+    
     setIsEnhancing(true);
     try {
       const enhanced = await enhanceRubricWithAI(value, totalPoints);

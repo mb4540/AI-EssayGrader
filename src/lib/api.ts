@@ -243,6 +243,36 @@ export async function createAssignment(data: { title: string; description?: stri
       total_points?: number;
       created_at: string;
     };
+    parseWarning?: string | null;
+  }>(response);
+}
+
+export async function updateAssignment(
+  assignmentId: string,
+  data: {
+    title: string;
+    description?: string;
+    grading_criteria?: string;
+    total_points?: number;
+    document_type?: string;
+  }
+) {
+  const response = await fetch(`${API_BASE}/assignments`, {
+    method: 'PUT',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ assignment_id: assignmentId, ...data }),
+  });
+
+  return handleResponse<{
+    assignment: {
+      id: string;
+      title: string;
+      description?: string;
+      grading_criteria?: string;
+      total_points?: number;
+      created_at: string;
+    };
+    parseWarning?: string | null;
   }>(response);
 }
 

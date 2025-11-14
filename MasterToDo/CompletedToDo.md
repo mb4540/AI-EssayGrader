@@ -2,6 +2,7 @@
 ## FastAI Grader - Archive of Finished Work
 
 **Created:** November 2, 2025  
+**Last Updated:** November 14, 2025  
 **Purpose:** Archive of all completed features and fixes
 
 ---
@@ -20,6 +21,88 @@
 - **MasterToDo.md** = Open TODO items only
 - **CompletedToDo.md** = Archived completed items (this file)
 - **REFACTOR_LESSONS_LEARNED.md** = Lessons from failed attempts
+
+---
+
+## ✅ COMPLETED - November 14, 2025
+
+### Background Grading & Bulletproof Max Points ⭐⭐⭐
+**Priority:** 🔴 **CRITICAL** - Timeout issues and incorrect denominator display  
+**Status:** ✅ **COMPLETE** - Branch: `feature/enhanced-print-download`
+
+**Problems Solved:**
+1. **30-Second Netlify Timeout** - Grading jobs failing on long essays
+2. **Incorrect Denominators** - Max points showing wrong values (e.g., "12.8/11.4 pts" instead of "12.8/15 pts")
+
+**Implementation:**
+
+**1. Background Grading System**
+- ✅ Created `background_tasks` table for job tracking
+- ✅ Implemented trigger → background → status polling pattern
+- ✅ `grade-bulletproof-trigger.ts` - Returns immediately with job ID
+- ✅ `grade-bulletproof-background.ts` - Runs without timeout
+- ✅ `grade-bulletproof-status.ts` - Polling endpoint for frontend
+- ✅ Updated frontend API to use trigger + polling
+- ✅ No more 30-second timeouts!
+
+**2. Bulletproof Max Points Storage**
+- ✅ Store rubric structure with `max_points` in `assignments.rubric_json`
+- ✅ Auto-parse rubric when creating assignments
+- ✅ Created `populate-rubric-json.ts` script for existing assignments
+- ✅ Updated `get-submission.ts` to include rubric in response
+- ✅ Frontend displays correct fractions (e.g., "12.8/15 pts")
+- ✅ Never relies on LLM for max points - bulletproof!
+
+**3. Enhanced Print Output**
+- ✅ Removed Download button (use browser Save as PDF)
+- ✅ Added Grading Criteria section with total points
+- ✅ Added Detailed Grading Breakdown with denominators
+- ✅ Added Strengths, Improvements, Suggestions sections
+- ✅ Added Grammar and Spelling sections
+- ✅ Added Teacher Comments section
+- ✅ Moved Grading Criteria to bottom of report
+- ✅ Removed "BulletProof" badge for cleaner look
+- ✅ Print output now has 100% of Grade Submission page info
+
+**Files Modified:**
+- `migrations/add_background_tasks.sql`
+- `migrations/populate_rubric_json.sql`
+- `netlify/functions/grade-bulletproof-trigger.ts` (new)
+- `netlify/functions/grade-bulletproof-background.ts` (new)
+- `netlify/functions/grade-bulletproof-status.ts` (new)
+- `netlify/functions/assignments.ts` (rubric parsing)
+- `netlify/functions/get-submission.ts` (include rubric)
+- `src/lib/api.ts` (polling pattern)
+- `src/lib/print.ts` (enhanced sections)
+- `src/lib/printAnnotated.ts` (enhanced sections)
+- `src/pages/Submission.tsx` (removed Download button)
+- `src/components/GradePanel.tsx` (denominator display)
+- `scripts/populate-rubric-json.ts` (new)
+
+**Documentation:**
+- `BACKGROUND_GRADING_IMPLEMENTATION.md`
+- `POPULATE_RUBRIC_JSON.md`
+- `IMPLEMENTATION_SUMMARY.md`
+- `RUN_MIGRATION.md`
+- `PLAN_enhanced_print_download.md`
+- `PLAN_REVIEW_SUMMARY.md`
+
+**Database Changes:**
+- Added `background_tasks` table with indexes
+- Populated `rubric_json` for 3/7 existing assignments
+- Updated `db_ref.md` with new schema
+
+**Benefits:**
+- ✅ No more 30-second timeouts on grading
+- ✅ Max points always available (never relies on LLM)
+- ✅ Better UX with progress indication
+- ✅ Scalable for concurrent grading jobs
+- ✅ Professional print output with all information
+- ✅ Correct denominators throughout UI and print
+
+**Completed:** November 14, 2025  
+**Time:** ~4 hours total  
+**Commits:** Multiple commits on `feature/enhanced-print-download` branch, merged to `main`
 
 ---
 

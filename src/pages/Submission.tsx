@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, GitCompare, Printer, Download, PenTool } from 'lucide-react';
+import { FileText, GitCompare, Printer, PenTool, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,12 +13,13 @@ import GradePanel from '@/components/GradePanel';
 import DraftComparison from '@/components/DraftComparison';
 import AnnotationViewer from '@/components/AnnotationViewer';
 import { ingestSubmission, gradeSubmission, saveTeacherEdits, getSubmission, listAssignments, uploadFile, getInlineAnnotations } from '@/lib/api';
-import { printSubmission, downloadSubmissionHTML } from '@/lib/print';
+import { printSubmission } from '@/lib/print';
 import { generateAnnotatedPrintHTML } from '@/lib/printAnnotated';
 import type { Feedback } from '@/lib/schema';
 import type { Annotation } from '@/lib/annotations/types';
 import { useBridge } from '@/hooks/useBridge';
 import PageHeader from '@/components/PageHeader';
+import AssignmentModal from '@/components/CreateAssignmentModal';
 
 export default function Submission() {
   const { id } = useParams();
@@ -48,6 +49,8 @@ export default function Submission() {
   const [storedImageUrl, setStoredImageUrl] = useState<string | undefined>();
   const [pendingFile, setPendingFile] = useState<{ data: string; extension: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'grade' | 'annotate'>('grade');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingAssignment, setEditingAssignment] = useState<any>(null);
   const [originalFileUrl, setOriginalFileUrl] = useState<string | undefined>();
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
 
@@ -355,6 +358,7 @@ export default function Submission() {
         assignment_title: existingSubmission.assignment_title,
         verbatim_text: (draftMode === 'single' ? verbatimText : finalDraftText) || '',
         teacher_criteria: criteria,
+        total_points: totalPoints,
         ai_grade: existingSubmission.ai_grade,
         ai_feedback: aiFeedback || undefined,
         teacher_grade: teacherGrade,
@@ -379,6 +383,7 @@ export default function Submission() {
         rough_draft_text: roughDraftText || undefined,
         final_draft_text: finalDraftText || undefined,
         teacher_criteria: criteria,
+        total_points: totalPoints,
         ai_grade: existingSubmission.ai_grade,
         ai_feedback: aiFeedback || undefined,
         teacher_grade: teacherGrade,
@@ -388,28 +393,6 @@ export default function Submission() {
     }
   };
 
-  const handleDownload = () => {
-    if (!existingSubmission) {
-      alert('Please save the submission first');
-      return;
-    }
-    
-    downloadSubmissionHTML({
-      student_name: studentName,
-      student_id: studentId || undefined,
-      assignment_title: existingSubmission.assignment_title,
-      draft_mode: draftMode,
-      verbatim_text: verbatimText || undefined,
-      rough_draft_text: roughDraftText || undefined,
-      final_draft_text: finalDraftText || undefined,
-      teacher_criteria: criteria,
-      ai_grade: existingSubmission.ai_grade,
-      ai_feedback: aiFeedback || undefined,
-      teacher_grade: teacherGrade,
-      teacher_feedback: teacherFeedback,
-      created_at: existingSubmission.created_at,
-    });
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -450,15 +433,6 @@ export default function Submission() {
                     <Printer className="w-4 h-4 mr-2" />
                     Print
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownload}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                  <div className="w-px h-8 bg-gray-300 mx-2" />
                 </>
               )}
               <Button
@@ -570,9 +544,28 @@ export default function Submission() {
                 />
               </div>
               <div>
-                <Label htmlFor="assignment" className="text-gray-700 dark:text-gray-300 font-medium">
-                  Assignment <span className="text-gray-400 text-xs">(optional)</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="assignment" className="text-gray-700 dark:text-gray-300 font-medium">
+                    Assignment <span className="text-gray-400 text-xs">(optional)</span>
+                  </Label>
+                  {assignmentId && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const selectedAssignment = assignmentsData?.assignments.find(a => a.id === assignmentId);
+                        if (selectedAssignment) {
+                          setEditingAssignment(selectedAssignment);
+                          setIsEditModalOpen(true);
+                        }
+                      }}
+                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7"
+                    >
+                      <Pencil className="w-3 h-3 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
                 <Select value={assignmentId || ''} onValueChange={(value) => setAssignmentId(value || undefined)}>
                   <SelectTrigger className="mt-1 border-gray-300">
                     <SelectValue placeholder="Select an assignment..." />
@@ -692,6 +685,30 @@ export default function Submission() {
           )}
         </div>
       </div>
+
+      {/* Edit Assignment Modal */}
+      <AssignmentModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingAssignment(null);
+        }}
+        mode="edit"
+        existingAssignment={editingAssignment}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['assignments'] });
+          // Refresh criteria if this assignment is currently selected
+          if (editingAssignment?.id === assignmentId) {
+            const updatedAssignment = assignmentsData?.assignments.find(a => a.id === assignmentId);
+            if (updatedAssignment?.grading_criteria) {
+              setCriteria(updatedAssignment.grading_criteria);
+            }
+            if (updatedAssignment?.total_points) {
+              setTotalPoints(updatedAssignment.total_points);
+            }
+          }
+        }}
+      />
     </div>
   );
 }

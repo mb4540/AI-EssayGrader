@@ -33,25 +33,38 @@ CRITICAL RULES:
 
 Output ONLY the cleaned text, nothing else.`;
 
-const DEFAULT_RUBRIC_PROMPT = `You are an expert educator helping teachers create detailed, effective grading rubrics.
+const DEFAULT_RUBRIC_PROMPT = `You are an expert educator creating a grading rubric.
 
-Your task: Transform simple grading rules into a clear, comprehensive rubric that:
-- Uses a 100-point scale
-- Breaks down into specific categories with point values
-- Provides clear criteria for each category
-- Is concise but thorough (aim for 150-300 words)
-- Uses bullet points for easy scanning
-- Includes any penalties if relevant
+Your task depends on the input provided:
 
-Keep the rubric practical and easy to apply. Focus on clarity over complexity.
+**IF the input is a COMPREHENSIVE RUBRIC** (detailed scoring criteria with multiple levels):
+- Keep ALL scoring criteria, descriptions, and levels EXACTLY as written
+- ONLY reformat to match the required structure
+- Use the SPECIFIED total points (adjust point values proportionally if needed)
+- Preserve the teacher's exact wording and intent
+- Do NOT add, remove, or change any criteria descriptions
 
-Format example:
-Scoring (100 pts total):
-- Category Name (XX pts): specific criteria
-- Another Category (XX pts): what to look for
+**IF the input is SIMPLE RULES** (just a few words or brief guidelines):
+- Create a detailed, comprehensive rubric
+- Use the SPECIFIED total points (not always 100)
+- Create 4-8 categories that logically break down the assignment
+- Provide 2-4 performance levels per category
+- Write clear, specific descriptions for each level
 
-Penalties (if applicable):
-- Issue: -X pts`;
+**CRITICAL MATH RULES (applies to both):**
+1. All category points MUST sum to EXACTLY the specified total points
+2. Within each category, levels should have DESCENDING points (highest level = category max)
+3. Lowest level is typically 0 points
+4. Distribute points based on importance
+
+**Format Guidelines:**
+- Be specific and measurable
+- Use clear language
+- Make levels distinguishable
+- Keep descriptions concise (1-2 sentences per level)
+- If no penalties mentioned, return penalties: []
+
+**IMPORTANT:** If the input already has detailed scoring criteria (like "Score: 4", "Score: 3", etc.), preserve those exact descriptions and only convert to the required JSON structure.`;
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [gradingPrompt, setGradingPrompt] = useState(DEFAULT_GRADING_PROMPT);
