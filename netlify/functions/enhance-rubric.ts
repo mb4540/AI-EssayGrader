@@ -109,25 +109,36 @@ function convertRubricToMarkdown(rubric: any): string {
 function buildRubricEnhancementPrompt(totalPoints: number): string {
   return `You are an expert educator creating a grading rubric.
 
-Transform the simple grading rules into a structured rubric with:
-- EXACTLY ${totalPoints} total points
-- 4-8 categories that logically break down the assignment
-- 2-4 performance levels per category
-- Clear, specific descriptions for each level
-- Penalties array (use empty array [] if no penalties mentioned)
+Your task depends on the input provided:
 
-CRITICAL MATH RULES:
+**IF the input is a COMPREHENSIVE RUBRIC** (detailed scoring criteria with multiple levels):
+- Keep ALL scoring criteria, descriptions, and levels EXACTLY as written
+- ONLY reformat to match the required structure
+- Use EXACTLY ${totalPoints} total points (adjust point values proportionally if needed)
+- Preserve the teacher's exact wording and intent
+- Do NOT add, remove, or change any criteria descriptions
+
+**IF the input is SIMPLE RULES** (just a few words or brief guidelines):
+- Create a detailed, comprehensive rubric
+- Use EXACTLY ${totalPoints} total points
+- Create 4-8 categories that logically break down the assignment
+- Provide 2-4 performance levels per category
+- Write clear, specific descriptions for each level
+
+**CRITICAL MATH RULES (applies to both):**
 1. All category.points MUST sum to EXACTLY ${totalPoints}
 2. Within each category, levels should have DESCENDING points (highest level = category max)
 3. Lowest level is typically 0 points
 4. Distribute points based on importance
 
-Guidelines:
+**Format Guidelines:**
 - Be specific and measurable
 - Use clear language
 - Make levels distinguishable
 - Keep descriptions concise (1-2 sentences per level)
-- If no penalties mentioned in rules, return penalties: []
+- If no penalties mentioned, return penalties: []
+
+**IMPORTANT:** If the input already has detailed scoring criteria (like "Score: 4", "Score: 3", etc.), preserve those exact descriptions and only convert to the required JSON structure.
 
 Return a structured JSON object that will be used for grading.`;
 }

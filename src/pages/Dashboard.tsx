@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Download, Search, Trash2, User, FolderOpen } from 'lucide-react';
+import { Download, Search, Trash2, User, FolderOpen, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { listSubmissions, deleteSubmission } from '@/lib/api';
+import { listSubmissions, deleteSubmission, listAssignments } from '@/lib/api';
 import { exportToCSV } from '@/lib/csv';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
@@ -24,11 +24,13 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [editingAssignment, setEditingAssignment] = useState<any>(null);
   const [sortField] = useState<SortField>('created_at'); // setSortField unused - for future sorting
   const [sortDirection] = useState<SortDirection>('desc'); // setSortDirection unused - for future sorting
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteAssignmentTitle, setDeleteAssignmentTitle] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grouped'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grouped' | 'assignments'>('list');
   const pageSize = 20;
   
   // Refs for scroll synchronization (unused - was for flat table view)
@@ -50,6 +52,12 @@ export default function Dashboard() {
       page: page + 1,
       limit: pageSize,
     }),
+  });
+
+  // Fetch assignments list for edit functionality
+  const { data: assignmentsData } = useQuery({
+    queryKey: ['assignments'],
+    queryFn: listAssignments,
   });
 
   // Delete mutation
@@ -214,7 +222,7 @@ export default function Dashboard() {
                 className={viewMode === 'grouped' ? 'bg-indigo-600' : ''}
               >
                 <FolderOpen className="w-4 h-4 mr-2" />
-                By Assignment
+                Assignments
               </Button>
             </>
           }
@@ -335,10 +343,13 @@ export default function Dashboard() {
                 ))}
               </Accordion>
             ) : (
-              /* Grouped View - Accordion by Assignment */
+              /* Assignments View - Shows all assignments with submission counts */
               <Accordion type="multiple" className="w-full">
-                {Object.entries(groupedSubmissions).map(([assignmentTitle, submissions]) => (
-                  <AccordionItem key={assignmentTitle} value={assignmentTitle} className="border-b">
+                {assignmentsData?.assignments && assignmentsData.assignments.length > 0 ? (
+                  assignmentsData.assignments.map((assignment) => {
+                    const submissions = groupedSubmissions[assignment.title] || [];
+                    return (
+                  <AccordionItem key={assignment.id} value={assignment.id} className="border-b">
                     <AccordionTrigger className="hover:no-underline px-4 py-4 bg-gradient-to-r from-slate-50 to-blue-50 hover:from-slate-100 hover:to-blue-100">
                       <div className="flex items-center justify-between gap-3 flex-1">
                         <div className="flex items-center gap-3">
@@ -347,21 +358,37 @@ export default function Dashboard() {
                           </div>
                           <div className="text-left">
                             <div className="font-semibold text-lg text-gray-900">
-                              {assignmentTitle}
+                              {assignment.title}
                             </div>
                             <div className="text-sm text-gray-500">
                               {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => handleDeleteAssignment(assignmentTitle, e)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50 mr-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingAssignment(assignment);
+                              setModalMode('edit');
+                              setIsAssignmentModalOpen(true);
+                            }}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title="Edit assignment"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => handleDeleteAssignment(assignment.title, e)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -437,7 +464,13 @@ export default function Dashboard() {
                       </div>
                     </AccordionContent>
                   </AccordionItem>
-                ))}
+                    );
+                  })
+                ) : (
+                  <div className="text-center py-12 text-gray-500">
+                    No assignments found. Click "Add Assignment" to create one.
+                  </div>
+                )}
               </Accordion>
             )}
           </CardContent>
@@ -447,7 +480,16 @@ export default function Dashboard() {
       {/* Modals */}
       <CreateAssignmentModal 
         isOpen={isAssignmentModalOpen} 
-        onClose={() => setIsAssignmentModalOpen(false)} 
+        onClose={() => {
+          setIsAssignmentModalOpen(false);
+          setModalMode('create');
+          setEditingAssignment(null);
+        }}
+        mode={modalMode}
+        existingAssignment={editingAssignment}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['submissions'] });
+        }}
       />
 
       {/* Delete Assignment Confirmation Modal */}

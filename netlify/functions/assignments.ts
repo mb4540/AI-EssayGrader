@@ -51,6 +51,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
       // Parse rubric if grading_criteria provided
       let rubricJson = null;
+      let parseWarning = null;
       if (grading_criteria && grading_criteria.trim().length > 0) {
         try {
           const parsedRubric = parseTeacherRubric(
@@ -65,6 +66,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           }
         } catch (parseError) {
           console.warn('Failed to parse rubric during assignment creation:', parseError);
+          parseWarning = parseError instanceof Error ? parseError.message : 'Failed to parse rubric format';
           // Continue without rubric_json - can be populated later
         }
       }
@@ -97,7 +99,10 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       return {
         statusCode: 201,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ assignment: result[0] }),
+        body: JSON.stringify({ 
+          assignment: result[0],
+          parseWarning: parseWarning || null
+        }),
       };
     } catch (error) {
       console.error('Create assignment error:', error);
@@ -105,6 +110,88 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         statusCode: 500,
         body: JSON.stringify({ 
           error: 'Failed to create assignment',
+          message: error instanceof Error ? error.message : 'Unknown error'
+        }),
+      };
+    }
+  }
+
+  // PUT: Update existing assignment
+  if (event.httpMethod === 'PUT' || event.httpMethod === 'PATCH') {
+    try {
+      const tenant_id = PUBLIC_TENANT_ID; // TODO: Get from auth context
+      const { assignment_id, title, description, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
+
+      if (!assignment_id) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'assignment_id is required' }),
+        };
+      }
+
+      if (!title || typeof title !== 'string' || title.trim().length === 0) {
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ error: 'Assignment title is required' }),
+        };
+      }
+
+      // Parse rubric if grading_criteria provided
+      let rubricJson = null;
+      let parseWarning = null;
+      if (grading_criteria && grading_criteria.trim().length > 0) {
+        try {
+          const parsedRubric = parseTeacherRubric(
+            grading_criteria.trim(),
+            assignment_id,
+            total_points || 100
+          );
+          
+          if (isValidRubric(parsedRubric)) {
+            rubricJson = parsedRubric;
+            console.log(`✅ Parsed rubric with ${parsedRubric.criteria.length} criteria`);
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse rubric during assignment update:', parseError);
+          parseWarning = parseError instanceof Error ? parseError.message : 'Failed to parse rubric format';
+        }
+      }
+
+      const result = await sql`
+        UPDATE grader.assignments
+        SET 
+          title = ${title.trim()},
+          description = ${description?.trim() || null},
+          grading_criteria = ${grading_criteria?.trim() || null},
+          document_type = ${document_type || null},
+          total_points = ${total_points || 100},
+          rubric_json = ${rubricJson ? JSON.stringify(rubricJson) : null}
+        WHERE assignment_id = ${assignment_id}
+        AND tenant_id = ${tenant_id}
+        RETURNING assignment_id as id, title, description, grading_criteria, document_type, total_points, rubric_json, created_at
+      `;
+
+      if (result.length === 0) {
+        return {
+          statusCode: 404,
+          body: JSON.stringify({ error: 'Assignment not found' }),
+        };
+      }
+
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          assignment: result[0],
+          parseWarning: parseWarning || null
+        }),
+      };
+    } catch (error) {
+      console.error('Update assignment error:', error);
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ 
+          error: 'Failed to update assignment',
           message: error instanceof Error ? error.message : 'Unknown error'
         }),
       };

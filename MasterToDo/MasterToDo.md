@@ -2,8 +2,8 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 14, 2025 - 11:55 AM  
-**Branch:** `feature/enhanced-print-20251114`  
+**Last Updated:** November 14, 2025 - 3:36 PM  
+**Branch:** `main`  
 **Status:** Active Development
 
 ---
@@ -11,17 +11,20 @@
 ## 📑 Table of Contents
 
 1. [TODO Management Instructions](#-todo-management-instructions)
-2. [PRIORITY #1: Submission.tsx Refactor](#-priority-1-submissiontsx-refactor-careful-incremental-approach)
-3. [PRIORITY #2: Class Period Organization](#-priority-2-add-class-period-organization-for-students)
-4. [Testing & Quality Assurance](#-testing--quality-assurance--highest-priority)
-5. [Refactoring & Code Organization](#-refactoring--code-organization)
-6. [High Priority - Dashboard Enhancements](#-high-priority---next-up)
-7. [Medium Priority - Grading Enhancements](#-medium-priority)
-8. [Low Priority - Performance Optimizations](#-low-priority--nice-to-have)
-9. [Known Issues to Fix](#-known-issues-to-fix)
-10. [User Feedback - Week of November 11, 2025](#-user-feedback---week-of-november-11-2025)
-11. [Recommended Timeline](#-recommended-timeline)
-12. [Out of Scope](#-out-of-scope-future-branches)
+2. [🔴 CRITICAL: Rubric-Driven Grading (Not ELAR-Specific)](#-critical-rubric-driven-grading-not-elar-specific)
+3. [⭐⭐⭐ HIGH: Assignment Modal Remaining Items](#-high-assignment-modal-remaining-items)
+4. [⭐⭐ MEDIUM: Blob Storage for Large Rubrics](#-medium-blob-storage-for-large-rubrics)
+5. [PRIORITY #1: Submission.tsx Refactor](#-priority-1-submissiontsx-refactor-careful-incremental-approach)
+6. [PRIORITY #2: Class Period Organization](#-priority-2-add-class-period-organization-for-students)
+7. [Testing & Quality Assurance](#-testing--quality-assurance--highest-priority)
+8. [Refactoring & Code Organization](#-refactoring--code-organization)
+9. [High Priority - Dashboard Enhancements](#-high-priority---next-up)
+10. [Medium Priority - Grading Enhancements](#-medium-priority)
+11. [Low Priority - Performance Optimizations](#-low-priority--nice-to-have)
+12. [Known Issues to Fix](#-known-issues-to-fix)
+13. [User Feedback - Week of November 11, 2025](#-user-feedback---week-of-november-11-2025)
+14. [Recommended Timeline](#-recommended-timeline)
+15. [Out of Scope](#-out-of-scope-future-branches)
 
 ---
 
@@ -48,6 +51,172 @@
 ---
 
 ## 📋 OPEN TODO ITEMS
+
+---
+
+## 🔴 CRITICAL: Rubric-Driven Grading (Not ELAR-Specific)
+
+**Priority:** CRITICAL  
+**Estimated Time:** 3-4 hours  
+**Plan File:** `PLAN_rubric_driven_grading.md`  
+**Status:** Planning Complete - Ready to Implement
+
+### Problem
+Current grading prompt is hardcoded with ELAR-specific criteria (grammar, spelling, punctuation, etc.). This doesn't work for:
+- Math teachers (need: correct answers, work shown, reasoning)
+- Science teachers (need: hypothesis, procedure, data analysis)
+- History teachers (need: thesis, evidence, contextualization)
+- ANY non-ELAR subject
+
+### Solution
+Make grading and annotations rubric-driven instead of ELAR-specific.
+
+### Tasks
+- [ ] **Phase 1: Update Grading Prompt** (30 min)
+  - Update `DEFAULT_GRADING_PROMPT` in `SettingsModal.tsx`
+  - Remove hardcoded ELAR criteria
+  - Add rubric-first language
+  - Test with ELAR rubric (verify no regression)
+  - Test with math rubric (verify it works)
+
+- [ ] **Phase 2: Update Annotation Logic** (1 hour)
+  - Update `get-inline-annotations.ts`
+  - Parse rubric categories from `rubric_json`
+  - Pass categories to AI prompt
+  - Tag annotations with category
+  - Return category metadata with annotations
+
+- [ ] **Phase 3: Update Annotation Display** (45 min)
+  - Update `AnnotationViewer.tsx`
+  - Group annotations by rubric category
+  - Add category filtering
+  - Add category-specific icons
+  - Test UI with different rubrics
+
+- [ ] **Phase 4: Testing** (1 hour)
+  - Test ELAR essay (regression test)
+  - Test math problem set
+  - Test science lab report
+  - Test history analysis
+  - Test custom rubric
+
+- [ ] **Phase 5: Documentation** (30 min)
+  - Update Help documentation
+  - Add rubric best practices guide
+  - Update Settings modal help text
+  - Create example rubrics for different subjects
+
+### Files to Modify
+- `src/components/SettingsModal.tsx` - Update DEFAULT_GRADING_PROMPT
+- `netlify/functions/grade-bulletproof-background.ts` - Update grading logic
+- `netlify/functions/get-inline-annotations.ts` - Update annotation logic
+- `src/components/AnnotationViewer.tsx` - Update annotation display
+
+### Success Criteria
+- ✅ Grading prompt is rubric-driven, not ELAR-specific
+- ✅ Annotations based on rubric categories
+- ✅ Works for math, science, history, and other subjects
+- ✅ No regression for ELAR teachers
+- ✅ All test cases pass
+
+---
+
+## ⭐⭐⭐ HIGH: Assignment Modal Remaining Items
+
+**Priority:** HIGH  
+**Estimated Time:** 1-2 hours  
+**Plan File:** `OldPlans/PLAN_assignment_modal_confirmation.md`  
+**Status:** Most features complete - Minor items remaining
+
+### Completed ✅
+- Backend returns parseWarning in response
+- Frontend shows loading spinner during save
+- Success/warning messages display correctly
+- Assignment saves even if parser fails
+- Edit Assignment feature fully implemented
+- Edit button on Dashboard (all assignments view)
+- Edit button on Grade page
+- Rubric enhancement uses correct total points
+- No double submission bug
+- Settings Modal prompt updated
+
+### Remaining Tasks
+- [ ] **Fix OK Button Not Closing Modal** (LOW PRIORITY)
+  - Status: DEFERRED - Use X button workaround for now
+  - Problem: Success/warning message displays, OK button click detected, but modal doesn't close
+  - Workaround: Use X button in top-right to close modal
+  - Files: `CreateAssignmentModal.tsx`, `Dashboard.tsx`
+  - Investigation needed: Check if parent component's `isOpen` state is updating
+
+- [ ] **Testing & Deployment**
+  - Run through all test cases
+  - Deploy to production
+  - Get user confirmation that fix works
+
+### Files Involved
+- `src/components/CreateAssignmentModal.tsx` (OK button issue)
+- `src/pages/Dashboard.tsx` (modal state management)
+
+---
+
+## ⭐⭐ MEDIUM: Blob Storage for Large Rubrics
+
+**Priority:** MEDIUM  
+**Estimated Time:** 2-3 hours  
+**Research File:** `BLOB_STORAGE_RESEARCH.md`  
+**Status:** Research Complete - Implementation Optional
+
+### Problem
+Large rubrics (7+ pages, 5000+ characters) may cause:
+- Database storage inefficiency
+- Slow query performance
+- Potential size limits
+
+### Solution
+Use Netlify Blobs for large rubrics (similar to gift-of-time-assistant pattern).
+
+### Implementation Phases
+
+#### Phase 1: Setup (30 min)
+- [ ] Install `@netlify/blobs` package (may already be installed)
+- [ ] Add `rubric_blob_key` column to `assignments` table
+- [ ] Decide threshold (recommend 5000 characters)
+
+#### Phase 2: Upload (45 min)
+- [ ] Modify `assignments.ts` to detect large rubrics
+- [ ] Store large rubrics in blob with key pattern: `rubrics/{userId}/{uuid}.txt`
+- [ ] Save blob key in database
+- [ ] Keep small rubrics in database as-is
+
+#### Phase 3: Retrieval (30 min)
+- [ ] Modify `get-submission.ts` to check for `rubric_blob_key`
+- [ ] Fetch from blob if key exists
+- [ ] Return rubric text to frontend
+
+#### Phase 4: Deletion (15 min)
+- [ ] Modify delete assignment function to cleanup blob
+- [ ] Prevent orphaned blobs
+
+#### Phase 5: Migration (30 min)
+- [ ] Create script to find existing large rubrics
+- [ ] Move them to blob storage
+
+### Files to Modify
+- `netlify/functions/assignments.ts` - Upload logic
+- `netlify/functions/get-submission.ts` - Retrieval logic
+- Database: Add `rubric_blob_key` column to `assignments` table
+
+### Success Criteria
+- ✅ Large rubrics (>5000 chars) stored in blob storage
+- ✅ Small rubrics remain in database
+- ✅ Transparent to frontend (no changes needed)
+- ✅ Cleanup on delete prevents orphaned blobs
+- ✅ Existing large rubrics migrated
+
+### Priority Note
+This is OPTIONAL unless users report issues with large rubrics. Current system works fine for most use cases.
+
+---
 
 ---
 
@@ -858,18 +1027,21 @@ ADD COLUMN anchor_chart_file_url text;
 
 ### Shana's Feedback (6th Grade ELAR Teacher)
 
-1. **[ ] Rubric grading points info on print/download**
-   - **Priority:** ⭐⭐⭐ HIGH
-   - **Issue:** Print and download need to show detailed rubric breakdown with points
-   - **Files:** `src/lib/print.ts`, `src/lib/printAnnotated.ts`, `src/pages/Submission.tsx`
-   - **Time:** 4-6 hours
-   - **Related:** PLAN_enhanced_print_download.md
+**✅ COMPLETED (November 14, 2025):**
+1. ✅ **Rubric grading points info on print/download** - COMPLETE
+   - Print now shows detailed rubric breakdown with points
+   - See CompletedToDo.md for details
 
-2. **[ ] Points must show as portion of grade (47/50 not 47/100)**
-   - **Priority:** ⭐⭐⭐ HIGH
-   - **Issue:** Raw points showing wrong denominator - should be category max, not assignment total
-   - **Files:** `src/lib/print.ts`, `src/lib/calculator/calculator.ts`
-   - **Time:** 2-3 hours
+2. ✅ **Points show as portion of grade (12.8/15 not 12.8/11.4)** - COMPLETE
+   - Denominators now show correct max points per criterion
+   - Bulletproof solution using database rubric_json
+   - See CompletedToDo.md for details
+
+6. ✅ **Print has 100% of info from Grade page** - COMPLETE
+   - Print includes all sections: criteria, breakdown, feedback, grammar, spelling, teacher comments
+   - See CompletedToDo.md for details
+
+**🔴 REMAINING OPEN ITEMS:**
 
 3. **[ ] Bug: Create Assignment Modal not confirming save**
    - **Priority:** ⭐⭐⭐ HIGH
@@ -888,13 +1060,6 @@ ADD COLUMN anchor_chart_file_url text;
    - **Issue:** Allow grading without pre-defined student list
    - **Files:** `src/pages/Submission.tsx`, `src/components/StudentSelector.tsx`
    - **Time:** 2-3 hours
-
-6. **[ ] Print must have 100% of info from Grade page**
-   - **Priority:** ⭐⭐⭐ HIGH
-   - **Issue:** Print output needs all information visible on Grade Submission page
-   - **Files:** `src/lib/print.ts`, `src/lib/printAnnotated.ts`
-   - **Time:** Included in item #1
-   - **Related:** Item #1 above
 
 ---
 

@@ -9,6 +9,7 @@ interface PrintSubmissionData {
   rough_draft_text?: string;
   final_draft_text?: string;
   teacher_criteria: string;
+  total_points?: number;
   ai_grade?: number;
   ai_feedback?: Feedback;
   teacher_grade?: number;
@@ -342,76 +343,155 @@ export function generatePrintHTML(data: PrintSubmissionData): string {
 
   <div class="page-break"></div>
 
-  <div class="criteria-box">
-    <h4>📋 Grading Criteria Used</h4>
-    <div class="criteria-text">${data.teacher_criteria}</div>
-  </div>
-
-  ${data.ai_feedback ? `
-    <div class="feedback-section">
-      <h4>🤖 AI Assessment Details</h4>
+  ${data.ai_feedback && (data.ai_feedback as any).bulletproof?.extracted_scores ? `
+    <div class="section">
+      <h3>📊 Detailed Grading Breakdown</h3>
       
-      ${data.ai_feedback.rubric_scores && data.ai_feedback.rubric_scores.length > 0 ? `
-        <div style="margin: 15px 0;">
-          <strong>Category Scores:</strong>
-          <ul class="feedback-list">
-            ${data.ai_feedback.rubric_scores.map(score => `
-              <li><strong>${score.category}:</strong> ${score.score}/100 - ${score.comments}</li>
+      ${((data.ai_feedback as any).bulletproof.extracted_scores.scores || []).map((score: any) => {
+        const rubric = (data.ai_feedback as any).bulletproof?.rubric;
+        const criterion = rubric?.criteria?.find((c: any) => c.id === score.criterion_id);
+        const maxPoints = criterion?.max_points;
+        
+        return `
+          <div style="background: white; border: 2px solid #e5e7eb; padding: 15px; border-radius: 8px; margin: 12px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+              <div style="font-weight: 600; font-size: 15px; color: #1f2937;">${score.criterion_id.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}</div>
+              <div style="text-align: right;">
+                <span style="font-size: 18px; font-weight: bold; color: #8b5cf6;">${score.points_awarded}</span>${maxPoints ? `<span style="font-size: 18px; font-weight: bold; color: #6b7280;">/${maxPoints}</span>` : ''}<span style="font-size: 12px; color: #6b7280; margin-left: 4px;">pts</span>
+              </div>
+            </div>
+            <div style="display: inline-block; background: #dbeafe; color: #1e40af; padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-bottom: 8px;">
+              ${score.level}
+            </div>
+            <div style="font-size: 13px; color: #374151; line-height: 1.6;">
+              ${score.rationale}
+            </div>
+          </div>
+        `;
+      }).join('')}
+      
+      ${(data.ai_feedback as any).bulletproof?.computed_scores ? `
+        <div style="background: linear-gradient(135deg, #faf5ff 0%, #fce7f3 100%); border: 2px solid #c084fc; padding: 20px; border-radius: 8px; margin-top: 20px;">
+          <div style="font-size: 12px; font-weight: 600; color: #7c3aed; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">FINAL CALCULATION</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 14px;">
+            <div>
+              <span style="color: #6b7280;">Raw Score:</span>
+              <span style="font-family: 'Courier New', monospace; font-weight: 600; margin-left: 8px;">${((data.ai_feedback as any).bulletproof.computed_scores.raw_points || 0)} / ${((data.ai_feedback as any).bulletproof.computed_scores.max_points || 0)}</span>
+            </div>
+            <div>
+              <span style="color: #6b7280;">Percentage:</span>
+              <span style="font-family: 'Courier New', monospace; font-weight: bold; color: #8b5cf6; margin-left: 8px;">${((data.ai_feedback as any).bulletproof.computed_scores.percent || 0)}%</span>
+            </div>
+          </div>
+          <div style="font-size: 11px; color: #6b7280; margin-top: 12px; font-family: 'Courier New', monospace;">
+            ✓ Calculated with ${(data.ai_feedback as any).bulletproof.calculator_version || 'BulletProof'}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  ` : ''}
+
+  ${data.ai_feedback && (data.ai_feedback as any).bulletproof?.extracted_scores?.feedback ? `
+    <div class="section">
+      <h3>💬 Grading Feedback</h3>
+      
+      ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.strengths || []).length > 0 ? `
+        <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 15px; margin: 15px 0; border-radius: 4px;">
+          <h4 style="color: #065f46; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>✓</span> Strengths
+          </h4>
+          <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+            ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.strengths || []).map((strength: string) => `
+              <li style="color: #047857; margin: 6px 0;">${strength}</li>
             `).join('')}
           </ul>
         </div>
       ` : ''}
       
-      ${data.ai_feedback.improvement_summary ? `
-        <div style="margin: 15px 0; padding: 12px; background: #faf5ff; border-radius: 4px;">
-          <strong style="color: #7c3aed;">📈 Improvement Analysis:</strong>
-          <p style="margin: 8px 0;">${data.ai_feedback.improvement_summary}</p>
-          ${data.ai_feedback.growth_percentage !== undefined ? `
-            <p style="margin: 8px 0;"><strong>Growth:</strong> ${data.ai_feedback.growth_percentage}%</p>
-          ` : ''}
-        </div>
-      ` : ''}
-      
-      <div style="margin: 15px 0;">
-        <strong>Summary:</strong>
-        <p style="margin: 8px 0;">${data.ai_feedback.supportive_summary}</p>
-      </div>
-      
-      ${data.ai_feedback.top_3_suggestions.length > 0 ? `
-        <div style="margin: 15px 0;">
-          <strong>Top Suggestions for Improvement:</strong>
-          <ul class="feedback-list">
-            ${data.ai_feedback.top_3_suggestions.map(s => `<li>${s}</li>`).join('')}
+      ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.areas_for_improvement || []).length > 0 ? `
+        <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 15px 0; border-radius: 4px;">
+          <h4 style="color: #1e40af; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>💡</span> Areas for Improvement
+            <span style="font-size: 11px; background: #dbeafe; color: #1e40af; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Rubric-Based</span>
+          </h4>
+          <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+            ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.areas_for_improvement || []).map((area: string) => `
+              <li style="color: #1e40af; margin: 6px 0;">${area}</li>
+            `).join('')}
           </ul>
         </div>
       ` : ''}
       
-      ${data.ai_feedback.grammar_findings.length > 0 ? `
-        <div style="margin: 15px 0;">
-          <strong>Grammar Issues:</strong>
-          <ul class="feedback-list">
-            ${data.ai_feedback.grammar_findings.slice(0, 10).map(f => `<li>${f}</li>`).join('')}
+      ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.top_3_suggestions || []).length > 0 ? `
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 15px 0; border-radius: 4px;">
+          <h4 style="color: #92400e; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>⭐</span> Top 3 Suggestions for Next Time
+          </h4>
+          <ol style="margin: 0; padding-left: 20px; line-height: 1.8;">
+            ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.top_3_suggestions || []).map((suggestion: string) => `
+              <li style="color: #78350f; margin: 6px 0;">${suggestion}</li>
+            `).join('')}
+          </ol>
+        </div>
+      ` : ''}
+      
+      ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.grammar_findings || []).length > 0 ? `
+        <div style="background: #fef9c3; border-left: 4px solid #eab308; padding: 15px; margin: 15px 0; border-radius: 4px;">
+          <h4 style="color: #713f12; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>📝</span> Grammar
+            <span style="font-size: 11px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Not Affecting Score</span>
+          </h4>
+          <p style="font-size: 12px; color: #78350f; font-style: italic; margin: 0 0 10px 0;">Constructive feedback to help you improve</p>
+          <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+            ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.grammar_findings || []).map((finding: string) => `
+              <li style="color: #854d0e; margin: 6px 0; font-size: 13px;">${finding}</li>
+            `).join('')}
           </ul>
         </div>
       ` : ''}
       
-      ${data.ai_feedback.spelling_findings.length > 0 ? `
-        <div style="margin: 15px 0;">
-          <strong>Spelling Issues:</strong>
-          <ul class="feedback-list">
-            ${data.ai_feedback.spelling_findings.slice(0, 10).map(f => `<li>${f}</li>`).join('')}
+      ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.spelling_findings || []).length > 0 ? `
+        <div style="background: #fef9c3; border-left: 4px solid #eab308; padding: 15px; margin: 15px 0; border-radius: 4px;">
+          <h4 style="color: #713f12; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>✏️</span> Spelling
+            <span style="font-size: 11px; background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px; font-weight: 600;">Not Affecting Score</span>
+          </h4>
+          <p style="font-size: 12px; color: #78350f; font-style: italic; margin: 0 0 10px 0;">Constructive feedback to help you improve</p>
+          <ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+            ${((data.ai_feedback as any).bulletproof.extracted_scores.feedback.spelling_findings || []).map((finding: string) => `
+              <li style="color: #854d0e; margin: 6px 0; font-size: 13px;">${finding}</li>
+            `).join('')}
           </ul>
+        </div>
+      ` : ''}
+      
+      ${data.teacher_feedback ? `
+        <div style="background: #faf5ff; border-left: 4px solid #9333ea; padding: 15px; margin: 15px 0; border-radius: 4px;">
+          <h4 style="color: #6b21a8; margin: 0 0 10px 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>👨‍🏫</span> Teacher Comments
+          </h4>
+          <p style="margin: 0; color: #581c87; line-height: 1.8; white-space: pre-wrap;">${data.teacher_feedback}</p>
         </div>
       ` : ''}
     </div>
   ` : ''}
 
-  ${data.teacher_feedback ? `
-    <div class="teacher-comments">
-      <h4>👨‍🏫 Teacher Comments</h4>
-      <div style="white-space: pre-wrap; font-size: 14px;">${data.teacher_feedback}</div>
+  <div class="page-break"></div>
+
+  <div class="section">
+    <h3>📋 Grading Criteria</h3>
+    ${data.total_points ? `
+      <div style="background: #fef3c7; border: 2px solid #fbbf24; padding: 12px 20px; border-radius: 8px; margin-bottom: 15px; text-align: center;">
+        <div style="font-size: 14px; color: #92400e; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Points Available</div>
+        <div style="font-size: 36px; font-weight: bold; color: #78350f; margin: 5px 0;">${Number(data.total_points).toFixed(2)}</div>
+        <div style="font-size: 12px; color: #92400e;">Maximum Points for this Assignment</div>
+      </div>
+    ` : ''}
+    <div class="criteria-box">
+      <h4>Rubric Details</h4>
+      <div class="criteria-text">${data.teacher_criteria}</div>
     </div>
-  ` : ''}
+  </div>
 
   <div class="footer">
     <p>Generated by EssayEase - AI-Powered Essay Grading Assistant</p>
