@@ -321,24 +321,33 @@ export default function GradePanel({
                       <ul className="space-y-2">
                         {annotations
                           .filter(a => a.status !== 'teacher_rejected')
-                          .map((annotation, idx) => (
-                          <li key={annotation.annotation_id || idx} className="text-sm text-purple-900 dark:text-purple-100 pl-3 border-l-2 border-purple-300 dark:border-purple-700 pl-3">
-                            <div className="flex items-start gap-2">
-                              <span className="text-xs font-mono text-purple-600 dark:text-purple-400 flex-shrink-0">
-                                Line {annotation.line_number}:
-                              </span>
-                              <div className="flex-1">
-                                <span className="font-medium text-purple-800 dark:text-purple-200">
-                                  {annotation.category}
-                                </span>
-                                {' - '}
-                                <span className="italic">"{annotation.quote}"</span>
-                                {' → '}
-                                <span className="text-purple-700 dark:text-purple-300">{annotation.suggestion}</span>
-                              </div>
-                            </div>
-                          </li>
-                        ))}
+                          .map((annotation, idx) => {
+                            // Get rubric criterion name if available
+                            const rubric = (aiFeedback as any).bulletproof?.rubric;
+                            const criterion = annotation.criterion_id 
+                              ? rubric?.criteria?.find((c: any) => c.id === annotation.criterion_id)
+                              : null;
+                            const displayLabel = criterion?.name || annotation.category;
+                            
+                            return (
+                              <li key={annotation.annotation_id || idx} className="text-sm text-purple-900 dark:text-purple-100 pl-3 border-l-2 border-purple-300 dark:border-purple-700 pl-3">
+                                <div className="flex items-start gap-2">
+                                  <span className="text-xs font-mono text-purple-600 dark:text-purple-400 flex-shrink-0">
+                                    Line {annotation.line_number}:
+                                  </span>
+                                  <div className="flex-1">
+                                    <span className="font-medium text-purple-800 dark:text-purple-200">
+                                      {displayLabel}
+                                    </span>
+                                    {' - '}
+                                    <span className="italic">"{annotation.quote}"</span>
+                                    {' → '}
+                                    <span className="text-purple-700 dark:text-purple-300">{annotation.suggestion}</span>
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          })}
                       </ul>
                     </div>
                   )}

@@ -19,6 +19,7 @@ interface VerbatimViewerProps {
   // Annotation props
   submissionId?: string;
   showAnnotations?: boolean;
+  annotationsRefreshKey?: number; // Used to trigger annotation refresh
   // Customization props for reuse in Draft Comparison
   title?: string;
   titleIcon?: string;
@@ -40,6 +41,7 @@ export default function VerbatimViewer({
   imageUrl,
   submissionId,
   showAnnotations = false,
+  annotationsRefreshKey,
   title = "Student Essay (Verbatim)",
   titleIcon = "📝",
   borderColor = "border-emerald-500",
@@ -64,13 +66,14 @@ export default function VerbatimViewer({
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [annotationsLoading, setAnnotationsLoading] = useState(false);
 
-  // Fetch annotations when submission ID is available
+  // Fetch annotations when submission ID is available or when refresh key changes
   useEffect(() => {
     if (submissionId && showAnnotations) {
       setAnnotationsLoading(true);
       getInlineAnnotations(submissionId)
         .then(data => {
           setAnnotations(data.annotations);
+          console.log(`✓ VerbatimViewer loaded ${data.annotations.length} annotations`);
         })
         .catch(error => {
           console.error('Failed to load annotations:', error);
@@ -79,7 +82,7 @@ export default function VerbatimViewer({
           setAnnotationsLoading(false);
         });
     }
-  }, [submissionId, showAnnotations]);
+  }, [submissionId, showAnnotations, annotationsRefreshKey]);
 
   const handleAnnotationUpdate = async (annotationId: string, updates: Partial<Annotation>) => {
     try {

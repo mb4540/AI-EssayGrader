@@ -70,6 +70,7 @@ const handler: Handler = async (event: HandlerEvent) => {
         suggestion,
         severity,
         status,
+        criterion_id,
         created_by,
         created_at,
         updated_at,

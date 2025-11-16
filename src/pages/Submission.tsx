@@ -53,6 +53,7 @@ export default function Submission() {
   const [editingAssignment, setEditingAssignment] = useState<any>(null);
   const [originalFileUrl, setOriginalFileUrl] = useState<string | undefined>();
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [annotationsRefreshKey, setAnnotationsRefreshKey] = useState(0);
 
   // Load assignments list
   const { data: assignmentsData } = useQuery({
@@ -133,10 +134,53 @@ export default function Submission() {
       setAiFeedback(data);
       
       // Fetch annotations from database after grading
+      // Add delay to ensure annotations are fully saved
       if (submissionId) {
         try {
+          // Wait 1 second for annotations to be saved (increased from 500ms)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           const annotationsData = await getInlineAnnotations(submissionId);
-          setAnnotations(annotationsData.annotations || []);
+          const newAnnotations = annotationsData.annotations || [];
+          
+          console.log(`✓ Loaded ${newAnnotations.length} annotations after grading`);
+          
+          // Force state update with new array reference
+          setAnnotations([...newAnnotations]);
+          
+          // Invalidate the submission query to refresh all data
+          queryClient.invalidateQueries({ queryKey: ['submission', submissionId] });
+          
+          // Force a second fetch after another delay to catch any stragglers
+          setTimeout(async () => {
+            try {
+              const retryData = await getInlineAnnotations(submissionId);
+              const retryAnnotations = retryData.annotations || [];
+              if (retryAnnotations.length > newAnnotations.length) {
+                console.log(`✓ Retry found ${retryAnnotations.length - newAnnotations.length} more annotations`);
+                setAnnotations([...retryAnnotations]);
+              }
+            } catch (err) {
+              console.error('Retry fetch failed:', err);
+            }
+          }, 2000);
+          
+          // Third fetch for Pass 2 annotations (which complete ~5 seconds after grading)
+          setTimeout(async () => {
+            try {
+              const pass2Data = await getInlineAnnotations(submissionId);
+              const pass2Annotations = pass2Data.annotations || [];
+              const currentCount = annotations.length;
+              if (pass2Annotations.length > currentCount) {
+                console.log(`✓ Pass 2 fetch found ${pass2Annotations.length - currentCount} more annotations (Total: ${pass2Annotations.length})`);
+                setAnnotations([...pass2Annotations]);
+                // Trigger refresh in VerbatimViewer
+                setAnnotationsRefreshKey(prev => prev + 1);
+              }
+            } catch (err) {
+              console.error('Pass 2 fetch failed:', err);
+            }
+          }, 5000);
         } catch (error) {
           console.error('Failed to fetch annotations after grading:', error);
           setAnnotations([]);
@@ -604,6 +648,7 @@ export default function Submission() {
               imageUrl={storedImageUrl}
               submissionId={submissionId}
               showAnnotations={!!submissionId && !!aiFeedback}
+              annotationsRefreshKey={annotationsRefreshKey}
             />
           ) : (
             <DraftComparison

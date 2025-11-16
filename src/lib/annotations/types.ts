@@ -12,13 +12,11 @@ export type AnnotationStatus =
 export type AnnotationSeverity = 'info' | 'warning' | 'error';
 
 export type AnnotationCategory = 
-  | 'Spelling'
-  | 'Grammar'
-  | 'Punctuation'
+  | 'Content'
+  | 'Evidence'
   | 'Organization'
   | 'Clarity'
-  | 'Evidence'
-  | 'Style'
+  | 'Mechanics'
   | 'Other';
 
 /**
@@ -30,6 +28,7 @@ export interface RawAnnotation {
   category: string;
   suggestion: string;
   severity?: AnnotationSeverity;
+  criterion_id?: string; // Links to rubric criterion
 }
 
 /**
@@ -46,6 +45,7 @@ export interface Annotation {
   suggestion: string;
   severity?: AnnotationSeverity;
   status: AnnotationStatus;
+  criterion_id?: string; // Links to rubric criterion
   created_by?: string;
   created_at?: string;
   updated_at?: string;

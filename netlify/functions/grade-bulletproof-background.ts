@@ -15,7 +15,8 @@ import { parseTeacherRubric, validateParsedRubric } from '../../src/lib/calculat
 import { 
   EXTRACTOR_SYSTEM_MESSAGE, 
   buildExtractorPrompt, 
-  buildComparisonExtractorPrompt 
+  buildComparisonExtractorPrompt,
+  buildCriteriaAnnotationsPrompt
 } from '../../src/lib/prompts/extractor';
 import type { RubricJSON, ExtractedScoresJSON } from '../../src/lib/calculator/types';
 import { normalizeAnnotations } from '../../src/lib/annotations/normalizer';
@@ -173,7 +174,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         { role: 'system', content: EXTRACTOR_SYSTEM_MESSAGE },
         { role: 'user', content: extractorPrompt }
       ],
-      temperature: 0.7,
+      // Note: Some models (like o1) don't support temperature parameter
+      // temperature: 0.7,
     });
 
     const content = response.choices[0]?.message?.content;
@@ -190,15 +192,30 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     // Process inline annotations if present
     let annotationStats = { saved: 0, unresolved: 0 };
+    
+    // DEBUG: Log what we received from AI
+    console.log('Checking for inline_annotations in AI response...');
+    console.log('extractedJSON.feedback keys:', Object.keys(extractedJSON.feedback || {}));
+    console.log('inline_annotations present?', !!extractedJSON.feedback?.inline_annotations);
+    console.log('inline_annotations is array?', Array.isArray(extractedJSON.feedback?.inline_annotations));
+    if (extractedJSON.feedback?.inline_annotations) {
+      console.log('inline_annotations count:', extractedJSON.feedback.inline_annotations.length);
+      console.log('First annotation sample:', JSON.stringify(extractedJSON.feedback.inline_annotations[0], null, 2));
+    }
+    
     if (extractedJSON.feedback?.inline_annotations && Array.isArray(extractedJSON.feedback.inline_annotations)) {
       const rawAnnotations = extractedJSON.feedback.inline_annotations as RawAnnotation[];
       const originalText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
       
+      console.log(`Processing ${rawAnnotations.length} raw annotations...`);
       const normalizationResult = normalizeAnnotations(rawAnnotations, originalText, submission_id);
       
       // Save normalized annotations
+      console.log(`Normalized: ${normalizationResult.normalized.length}, Unresolved: ${normalizationResult.unresolved.length}`);
+      
       for (const annotation of normalizationResult.normalized) {
         try {
+          console.log('Saving annotation:', { line: annotation.line_number, category: annotation.category, quote: annotation.quote.substring(0, 50) });
           await sql`
             INSERT INTO grader.annotations (
               submission_id,
@@ -210,6 +227,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
               suggestion,
               severity,
               status,
+              criterion_id,
               ai_payload
             ) VALUES (
               ${submission_id},
@@ -221,20 +239,101 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
               ${annotation.suggestion},
               ${annotation.severity || null},
               ${annotation.status},
+              ${annotation.criterion_id || null},
               ${JSON.stringify(annotation.ai_payload || null)}
             )
           `;
           annotationStats.saved++;
+          console.log('✓ Annotation saved successfully');
         } catch (error) {
-          console.error('Failed to save annotation:', error);
+          console.error('✗ Failed to save annotation:', error);
         }
       }
       
       annotationStats.unresolved = normalizationResult.unresolved.length;
       
       if (normalizationResult.unresolved.length > 0) {
-        console.log('Unresolved annotations:', normalizationResult.unresolved);
+        console.log('⚠ Unresolved annotations (could not match text):', normalizationResult.unresolved);
       }
+      
+      console.log(`Final annotation stats (Pass 1): ${annotationStats.saved} saved, ${annotationStats.unresolved} unresolved`);
+    } else {
+      console.log('⚠ No inline_annotations found in AI response');
+    }
+
+    // PASS 2: Generate targeted annotations for each rubric criterion
+    console.log('🔍 Pass 2: Generating targeted annotations for each rubric criterion...');
+    
+    const criteriaPrompt = buildCriteriaAnnotationsPrompt(
+      rubric,
+      draft_mode === 'comparison' ? final_draft_text : verbatim_text,
+      extractedJSON.scores,
+      submission_id
+    );
+
+    try {
+      const criteriaResponse = await openai.chat.completions.create({
+        model,
+        response_format: { type: 'json_object' },
+        messages: [
+          { role: 'system', content: 'You are a detailed evaluator providing specific, actionable feedback for each rubric criterion.' },
+          { role: 'user', content: criteriaPrompt }
+        ],
+      });
+
+      const criteriaContent = criteriaResponse.choices[0]?.message?.content;
+      if (criteriaContent) {
+        const criteriaJSON = JSON.parse(criteriaContent);
+        
+        if (criteriaJSON.inline_annotations && Array.isArray(criteriaJSON.inline_annotations)) {
+          const criteriaAnnotations = criteriaJSON.inline_annotations;
+          const originalText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
+          
+          console.log(`Processing ${criteriaAnnotations.length} criterion-specific annotations...`);
+          const criteriaResult = normalizeAnnotations(criteriaAnnotations, originalText, submission_id);
+          
+          // Save criterion-specific annotations
+          for (const annotation of criteriaResult.normalized) {
+            try {
+              await sql`
+                INSERT INTO grader.annotations (
+                  submission_id,
+                  line_number,
+                  start_offset,
+                  end_offset,
+                  quote,
+                  category,
+                  suggestion,
+                  severity,
+                  status,
+                  criterion_id,
+                  ai_payload
+                ) VALUES (
+                  ${submission_id},
+                  ${annotation.line_number},
+                  ${annotation.start_offset},
+                  ${annotation.end_offset},
+                  ${annotation.quote},
+                  ${annotation.category},
+                  ${annotation.suggestion},
+                  ${annotation.severity || null},
+                  ${annotation.status},
+                  ${annotation.criterion_id || null},
+                  ${JSON.stringify(annotation.ai_payload || null)}
+                )
+              `;
+              annotationStats.saved++;
+            } catch (error) {
+              console.error('✗ Failed to save criterion annotation:', error);
+            }
+          }
+          
+          console.log(`✓ Pass 2 complete: ${criteriaResult.normalized.length} criterion-specific annotations saved`);
+        }
+      }
+    } catch (error) {
+      console.error('⚠ Pass 2 criterion annotations failed:', error);
+      // Don't fail the whole grading if Pass 2 fails
     }
 
     // Convert to Decimal objects

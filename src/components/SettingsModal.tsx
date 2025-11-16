@@ -13,7 +13,26 @@ interface SettingsModalProps {
 }
 
 // Default prompts (fallback if not in localStorage)
-const DEFAULT_GRADING_PROMPT = `You are a professional writing evaluator. Grade strictly according to the provided rubric and teacher's criteria. Preserve the student's original words; do not rewrite their work. Provide clear, direct, constructive feedback that identifies specific issues with concrete examples from the text. Focus on: grammar, spelling, punctuation, capitalization, sentence structure, organization, evidence quality, and clarity. Be honest about weaknesses while acknowledging strengths. Use professional language appropriate for educational feedback. Never include personal data about the student.`;
+const DEFAULT_GRADING_PROMPT = `You are a professional evaluator. Grade STRICTLY according to the provided rubric and teacher's criteria.
+
+CRITICAL RULES:
+1. Evaluate ONLY the criteria specified in the rubric
+2. The rubric defines what matters - not assumptions about assignment type
+3. Preserve the student's original words; do not rewrite their work
+4. Provide clear, direct, constructive feedback with concrete examples
+5. Reference specific rubric criteria in your feedback
+6. Be honest about weaknesses while acknowledging strengths
+7. Use professional language appropriate for educational feedback
+8. Never include personal data about the student
+
+GRADING APPROACH:
+- For each rubric category, evaluate against the stated criteria
+- Provide specific examples from the student's work
+- Explain why points were awarded or deducted
+- Reference the rubric's performance levels
+- If the rubric emphasizes content, focus on content
+- If the rubric emphasizes mechanics, focus on mechanics
+- Let the RUBRIC guide your evaluation, not the assignment type`;
 
 const DEFAULT_OCR_PROMPT = `You are a text cleanup assistant for handwritten essay OCR results.
 
@@ -156,16 +175,16 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="grading" className="w-full">
             <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="grading">Essay Grading</TabsTrigger>
+              <TabsTrigger value="grading">Grading System</TabsTrigger>
               <TabsTrigger value="ocr">OCR Cleanup</TabsTrigger>
               <TabsTrigger value="rubric">Rubric Enhancement</TabsTrigger>
               <TabsTrigger value="doctypes">Document Types</TabsTrigger>
             </TabsList>
 
-            {/* Essay Grading Tab */}
+            {/* Grading System Tab */}
             <TabsContent value="grading" className="space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-lg font-semibold">Essay Grading System Prompt</Label>
+                <Label className="text-lg font-semibold">Grading System Prompt</Label>
                 <Button
                   variant="outline"
                   size="sm"
@@ -177,7 +196,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </Button>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                This prompt controls how the AI grades student essays. It sets the tone, grading approach, and output format.
+                This prompt controls how the AI evaluates student work. The AI will grade based on YOUR rubric criteria, 
+                making it work for any subject (ELAR, math, science, history, etc.). The rubric defines what matters.
               </p>
               <Textarea
                 value={gradingPrompt}

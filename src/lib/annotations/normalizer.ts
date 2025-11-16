@@ -85,6 +85,7 @@ export function normalizeAnnotations(
         suggestion: raw.suggestion,
         severity,
         status: 'ai_suggested',
+        criterion_id: raw.criterion_id, // Preserve criterion link
         ai_payload: raw,
       });
     } catch (error) {
@@ -111,13 +112,11 @@ export function normalizeAnnotations(
  */
 function validateCategory(category: string): AnnotationCategory | null {
   const validCategories: AnnotationCategory[] = [
-    'Spelling',
-    'Grammar',
-    'Punctuation',
+    'Content',
+    'Evidence',
     'Organization',
     'Clarity',
-    'Evidence',
-    'Style',
+    'Mechanics',
     'Other',
   ];
 

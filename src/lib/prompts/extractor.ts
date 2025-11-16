@@ -56,14 +56,8 @@ ${levelsDesc}`;
     : "";
   const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
   
-  // Check if grammar/spelling/punctuation are in rubric
-  const rubricIds = rubric.criteria.map(c => c.id.toLowerCase());
-  const hasGrammar = rubricIds.some(id => 
-    id.includes('grammar') || 
-    id.includes('convention') || 
-    id.includes('mechanics') ||
-    id.includes('language')
-  );
+  // Use generic annotation categories that work for any subject
+  const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
 
   return `${gradingPhilosophy}
 
@@ -95,16 +89,19 @@ FEEDBACK GUIDELINES:
    - Explain why you chose that level
    - Points must be within [0, max_points] for each criterion
 
-2. Grammar/Spelling/Punctuation Feedback:
-   ${hasGrammar 
-     ? '- These ARE in the rubric - include in scoring'
-     : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
-   }
-   - Put ALL grammar/spelling/punctuation issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
+2. Inline Annotations (Based on Generic Categories):
+   - Create annotations for issues that affect the rubric criteria
+   - Tag each annotation with the most relevant category:
+     * Content: Issues with ideas, arguments, reasoning, accuracy
+     * Evidence: Issues with supporting details, examples, sources, citations
+     * Organization: Issues with structure, flow, transitions, coherence
+     * Clarity: Issues with unclear writing, explanations, or communication
+     * Mechanics: Grammar, spelling, punctuation, formatting (if relevant to rubric)
+   - Put ALL issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
    - Include line number and exact quoted text for each issue
-   - Provide clear, specific correction for each issue
-   - Keep it constructive and encouraging
-   ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
+   - Provide clear, specific correction or suggestion for each issue
+   - Be specific and constructive
+   - Focus on issues that affect the rubric criteria
 
 3. Strengths:
    - Highlight what the student did well
@@ -150,7 +147,7 @@ OUTPUT ONLY THIS JSON STRUCTURE:
       {
         "line": 5,
         "quote": "the exact text with the issue",
-        "category": "Spelling|Grammar|Punctuation|Organization|Clarity|Evidence|Style",
+        "category": "${annotationCategories}",
         "suggestion": "Specific correction or improvement",
         "severity": "info|warning|error"
       }
@@ -160,15 +157,110 @@ OUTPUT ONLY THIS JSON STRUCTURE:
 }
 
 CRITICAL INLINE ANNOTATIONS RULES:
-- Put EVERY grammar, spelling, and punctuation issue in inline_annotations array
+- Put ALL issues related to rubric criteria in inline_annotations array
 - Leave grammar_findings, spelling_findings, and punctuation_findings as EMPTY arrays []
 - Use line numbers from the numbered essay (e.g., line 5 means "005| ...")
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
-- Category must be one of: Spelling, Grammar, Punctuation, Organization, Clarity, Evidence, Style
+- Category must be one of: ${annotationCategories}
+- Choose the category that best matches the issue type:
+  * Content = problems with ideas, arguments, reasoning, accuracy
+  * Evidence = missing/weak supporting details, examples, sources
+  * Organization = structure, flow, transitions issues
+  * Clarity = unclear writing or explanations
+  * Mechanics = grammar, spelling, punctuation (only if relevant to rubric)
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
 - Include ALL issues you find - do not limit the number of annotations
+
+IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
+}
+
+/**
+ * Build prompt for Pass 2: Generate targeted annotations for each rubric criterion
+ */
+export function buildCriteriaAnnotationsPrompt(
+  rubric: RubricJSON,
+  essayText: string,
+  scores: Array<{ criterion_id: string; points_awarded: string; rationale: string }>,
+  submissionId: string
+): string {
+  // Build list of criteria with their scores and issues
+  const criteriaWithIssues = rubric.criteria
+    .map((criterion) => {
+      const score = scores.find(s => s.criterion_id === criterion.id);
+      const pointsAwarded = score ? parseFloat(score.points_awarded) : 0;
+      const maxPoints = typeof criterion.max_points === 'string' ? parseFloat(criterion.max_points) : criterion.max_points;
+      const hasIssues = pointsAwarded < maxPoints;
+      
+      return {
+        criterion,
+        score,
+        hasIssues,
+        pointsAwarded,
+        maxPoints
+      };
+    })
+    .filter(c => c.hasIssues); // Only include criteria with issues
+
+  const criteriaDescriptions = criteriaWithIssues
+    .map(({ criterion, score, pointsAwarded, maxPoints }) => {
+      return `${criterion.name} (${criterion.id}):
+  Scored: ${pointsAwarded}/${maxPoints} points
+  Issues identified: ${score?.rationale || 'See detailed breakdown'}
+  
+  Your task: Find 2-4 specific examples in the essay where this criterion could be improved.`;
+    })
+    .join('\n\n');
+
+  return `You are reviewing an essay to provide SPECIFIC, LINE-BY-LINE feedback for each rubric criterion that needs improvement.
+
+ESSAY (with line numbers):
+<<<
+${addLineNumbers(essayText)}
+>>>
+
+RUBRIC CRITERIA NEEDING IMPROVEMENT:
+${criteriaDescriptions}
+
+TASK:
+For EACH criterion listed above, identify 2-4 specific locations in the essay where the student could improve on that criterion.
+
+INSTRUCTIONS:
+1. Focus on providing ACTIONABLE, SPECIFIC feedback
+2. Quote the exact text that needs improvement (5-15 words)
+3. Map each annotation to the appropriate generic category:
+   - Content: Issues with ideas, arguments, reasoning, accuracy
+   - Evidence: Missing/weak supporting details, examples, sources
+   - Organization: Structure, flow, transitions issues
+   - Clarity: Unclear writing or explanations
+   - Mechanics: Grammar, spelling, punctuation
+4. Provide clear suggestions for improvement
+5. Include line numbers from the numbered essay
+6. Make sure EVERY criterion gets at least 2 annotations
+
+OUTPUT THIS JSON STRUCTURE:
+{
+  "submission_id": "${submissionId}",
+  "inline_annotations": [
+    {
+      "line": 5,
+      "quote": "exact text with the issue",
+      "category": "Content|Evidence|Organization|Clarity|Mechanics",
+      "suggestion": "Specific improvement suggestion",
+      "severity": "warning",
+      "criterion_id": "the rubric criterion this addresses"
+    }
+  ]
+}
+
+CRITICAL RULES:
+- Provide 2-4 annotations per criterion
+- Quote ONLY the problematic text, WITHOUT line numbers
+- Keep quotes short and precise (5-15 words max)
+- Category must be one of: Content, Evidence, Organization, Clarity, Mechanics
+- Include criterion_id to link back to the rubric
+- Be specific and actionable in suggestions
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }
@@ -206,14 +298,8 @@ ${levelsDesc}`;
     ? `\nDOCUMENT TYPE: ${docType.label}\nGRADING FOCUS: ${docType.gradingFocus}\n`
     : "";
   
-  // Check if grammar/spelling/punctuation are in rubric
-  const rubricIds = rubric.criteria.map(c => c.id.toLowerCase());
-  const hasGrammar = rubricIds.some(id => 
-    id.includes('grammar') || 
-    id.includes('convention') || 
-    id.includes('mechanics') ||
-    id.includes('language')
-  );
+  // Use generic annotation categories that work for any subject
+  const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
 
   return `${gradingPhilosophy}
 
@@ -251,17 +337,20 @@ FEEDBACK GUIDELINES:
    - You may note improvements from rough draft
    - Points must be within [0, max_points] for each criterion
 
-2. Grammar/Spelling/Punctuation Feedback:
-   ${hasGrammar 
-     ? '- These ARE in the rubric - include in scoring'
-     : '- These are NOT in the rubric - provide as INFORMATIONAL FEEDBACK ONLY'
-   }
-   - Put ALL grammar/spelling/punctuation issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
+2. Inline Annotations (Based on Generic Categories):
+   - Create annotations for issues that affect the rubric criteria
+   - Tag each annotation with the most relevant category:
+     * Content: Issues with ideas, arguments, reasoning, accuracy
+     * Evidence: Issues with supporting details, examples, sources, citations
+     * Organization: Issues with structure, flow, transitions, coherence
+     * Clarity: Issues with unclear writing, explanations, or communication
+     * Mechanics: Grammar, spelling, punctuation, formatting (if relevant to rubric)
+   - Put ALL issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
    - Include line number and exact quoted text for each issue
-   - Provide clear, specific correction for each issue
+   - Provide clear, specific correction or suggestion for each issue
    - Note any errors in the FINAL draft
    - Be specific and constructive
-   ${!hasGrammar ? '- DO NOT deduct points for these items' : ''}
+   - Focus on issues that affect the rubric criteria
 
 3. Strengths:
    - Highlight what improved between drafts
@@ -308,7 +397,7 @@ OUTPUT ONLY THIS JSON STRUCTURE:
       {
         "line": 5,
         "quote": "the exact text with the issue",
-        "category": "Spelling|Grammar|Punctuation|Organization|Clarity|Evidence|Style",
+        "category": "${annotationCategories}",
         "suggestion": "Specific correction or improvement",
         "severity": "info|warning|error"
       }
@@ -318,12 +407,18 @@ OUTPUT ONLY THIS JSON STRUCTURE:
 }
 
 CRITICAL INLINE ANNOTATIONS RULES:
-- Put EVERY grammar, spelling, and punctuation issue in inline_annotations array
+- Put ALL issues related to rubric criteria in inline_annotations array
 - Leave grammar_findings, spelling_findings, and punctuation_findings as EMPTY arrays []
 - Use line numbers from the numbered FINAL DRAFT (e.g., line 5 means "005| ...")
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
-- Category must be one of: Spelling, Grammar, Punctuation, Organization, Clarity, Evidence, Style
+- Category must be one of: ${annotationCategories}
+- Choose the category that best matches the issue type:
+  * Content = problems with ideas, arguments, reasoning, accuracy
+  * Evidence = missing/weak supporting details, examples, sources
+  * Organization = structure, flow, transitions issues
+  * Clarity = unclear writing or explanations
+  * Mechanics = grammar, spelling, punctuation (only if relevant to rubric)
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
 - Include ALL issues you find - do not limit the number of annotations
