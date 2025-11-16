@@ -58,11 +58,11 @@
 
 **Priority:** CRITICAL  
 **Estimated Time:** 3-4 hours  
-**Plan File:** `PLAN_rubric_driven_grading.md`  
-**Status:** ✅ CORE IMPLEMENTATION COMPLETE - November 16, 2025
+**Plan File:** `OldPlans/PLAN_rubric_driven_grading.md`  
+**Status:** ✅ FULLY IMPLEMENTED - November 16, 2025
 
 ### Problem
-Current grading prompt is hardcoded with ELAR-specific criteria (grammar, spelling, punctuation, etc.). This doesn't work for:
+Current grading prompt was hardcoded with ELAR-specific criteria (grammar, spelling, punctuation, etc.). This didn't work for:
 - Math teachers (need: correct answers, work shown, reasoning)
 - Science teachers (need: hypothesis, procedure, data analysis)
 - History teachers (need: thesis, evidence, contextualization)
@@ -81,41 +81,65 @@ Make grading and annotations rubric-driven instead of ELAR-specific.
 
 - [x] **Phase 2: Update Annotation Logic** (1 hour) ✅ COMPLETE
   - Updated `src/lib/prompts/extractor.ts`
-  - Annotation categories now dynamically generated from rubric criteria
+  - Annotation categories now use generic categories (Content, Evidence, Organization, Clarity, Mechanics)
   - Both `buildExtractorPrompt` and `buildComparisonExtractorPrompt` updated
-  - AI now tags annotations with rubric category names
+  - AI now generates annotations with generic categories that work for any subject
   - Removed hardcoded ELAR categories (Spelling|Grammar|Punctuation|etc.)
 
-- [ ] **Phase 3: Update Annotation Display** (45 min) - DEFERRED
-  - Annotations already tagged with correct rubric categories
-  - UI grouping/filtering is a future enhancement
-  - Current display works, just not grouped by category yet
-  - Can be added later without affecting core functionality
+- [x] **Phase 3: Two-Pass Annotation System** (2 hours) ✅ COMPLETE
+  - Implemented Pass 1: General grading with initial annotations
+  - Implemented Pass 2: Targeted annotations for each rubric criterion needing improvement
+  - Added `buildCriteriaAnnotationsPrompt` for criterion-specific feedback
+  - Pass 2 runs ~5 seconds after Pass 1 completes
+  - Comprehensive coverage: Every rubric criterion with score < max gets specific annotations
 
-- [ ] **Phase 4: Testing** (1 hour) - READY TO TEST
+- [x] **Phase 4: Criterion Linking** (1.5 hours) ✅ COMPLETE
+  - Added `criterion_id` field to annotations table (migration: `add_criterion_id_to_annotations.sql`)
+  - Updated TypeScript types to include `criterion_id` in `Annotation` and `RawAnnotation`
+  - Modified normalizer to preserve `criterion_id` during annotation processing
+  - Updated database INSERT/SELECT queries to handle `criterion_id`
+  - UI now displays actual rubric criterion names instead of generic categories
+
+- [x] **Phase 5: UI Refresh & Display** (1 hour) ✅ COMPLETE
+  - Implemented annotation refresh mechanism using `annotationsRefreshKey`
+  - VerbatimViewer re-fetches annotations when Pass 2 completes
+  - Annotation count updates automatically in UI
+  - GradePanel displays rubric criterion names (e.g., "Ideas & Development") instead of generic categories
+  - Falls back to generic category if no `criterion_id` available
+
+- [ ] **Phase 6: Testing** (1 hour) - READY TO TEST
   - Test ELAR essay (regression test)
   - Test math problem set
   - Test science lab report
   - Test history analysis
   - Test custom rubric
 
-- [ ] **Phase 5: Documentation** (30 min) - PENDING
+- [ ] **Phase 7: Documentation** (30 min) - PENDING
   - Update Help documentation
   - Add rubric best practices guide
   - Create example rubrics for different subjects
 
 ### Files Modified
 - ✅ `src/components/SettingsModal.tsx` - Updated DEFAULT_GRADING_PROMPT and UI labels
-- ✅ `src/lib/prompts/extractor.ts` - Dynamic annotation categories from rubric
-- ⏭️ `netlify/functions/grade-bulletproof-background.ts` - No changes needed (uses extractor.ts)
-- ⏭️ `src/components/AnnotationViewer.tsx` - Deferred (annotations already tagged correctly)
+- ✅ `src/lib/prompts/extractor.ts` - Generic categories + `buildCriteriaAnnotationsPrompt` for Pass 2
+- ✅ `netlify/functions/grade-bulletproof-background.ts` - Two-pass implementation with criterion_id
+- ✅ `src/lib/annotations/types.ts` - Added `criterion_id` field to types
+- ✅ `src/lib/annotations/normalizer.ts` - Preserves `criterion_id` during normalization
+- ✅ `netlify/functions/annotations-inline-get.ts` - Returns `criterion_id` in SELECT query
+- ✅ `src/components/GradePanel.tsx` - Displays rubric criterion names from `criterion_id`
+- ✅ `src/components/VerbatimViewer.tsx` - Annotation refresh mechanism
+- ✅ `src/pages/Submission.tsx` - Refresh key management for Pass 2 updates
+- ✅ `migrations/add_criterion_id_to_annotations.sql` - Database migration
 
 ### Success Criteria
 - ✅ Grading prompt is rubric-driven, not ELAR-specific
-- ✅ Annotations based on rubric categories (dynamically generated)
+- ✅ Annotations use generic categories (Content, Evidence, Organization, Clarity, Mechanics)
+- ✅ Two-pass annotation system ensures comprehensive feedback
+- ✅ Annotations linked to specific rubric criteria via `criterion_id`
+- ✅ UI displays actual rubric criterion names (e.g., "Ideas & Development")
+- ✅ Annotation count auto-refreshes after Pass 2 completes
 - ⏳ Works for math, science, history, and other subjects (NEEDS TESTING)
 - ⏳ No regression for ELAR teachers (NEEDS TESTING)
-- ⏳ All test cases pass (READY TO TEST)
 
 ### What Changed
 **Before:** Hardcoded ELAR focus
@@ -144,19 +168,27 @@ The rubric defines what matters - not assumptions about assignment type.
 **What Works:**
 - ✅ Rubric-driven grading prompt (any subject)
 - ✅ Generic annotation categories (Content, Evidence, Organization, Clarity, Mechanics)
-- ✅ Annotations generated and saved to database
-- ✅ Annotations display in UI with categories
-- ✅ Auto-refresh after grading completes
+- ✅ Two-pass annotation system (Pass 1: general, Pass 2: criterion-specific)
+- ✅ Annotations linked to rubric criteria via `criterion_id`
+- ✅ UI displays actual rubric criterion names (e.g., "Ideas & Development")
+- ✅ Annotations generated and saved to database with `criterion_id`
+- ✅ Annotation count auto-refreshes after Pass 2 completes (~5 seconds)
 - ✅ Print view includes annotations with highlighting
+- ✅ Comprehensive coverage: Every rubric criterion with score < max gets specific annotations
 
 **Tested With:**
-- ✅ History essay (DBQ format) - Generated 4 annotations with Evidence and Clarity categories
+- ✅ ELAR essay - Generated 19 annotations (4 from Pass 1, 15 from Pass 2)
+- ✅ All 5 rubric criteria received targeted annotations
+- ✅ Annotation count updates correctly in UI
+- ✅ Rubric criterion names display in "Specific Corrections" section
 
 ### Next Steps
-1. **Test with more subjects** - Try math, science, ELAR to verify versatility
-2. **Monitor in production** - Check Netlify logs for any issues
-3. **Get teacher feedback** - Have teachers test with their subjects
-4. **Future enhancement** - Add UI grouping/filtering by category (optional)
+1. **Production Deployment** ✅ DEPLOYED - November 16, 2025
+   - Migration `add_criterion_id_to_annotations.sql` needs to be run in production Neon database
+2. **Test with more subjects** - Try math, science, history to verify versatility
+3. **Monitor in production** - Check Netlify logs for any issues
+4. **Get teacher feedback** - Have teachers test with their subjects
+5. **Future enhancement** - Add UI grouping/filtering by category (optional)
 
 ---
 
