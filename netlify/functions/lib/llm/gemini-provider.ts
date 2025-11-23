@@ -32,7 +32,9 @@ export class GeminiProvider implements LLMProvider {
             systemInstruction: request.systemMessage,
             generationConfig: {
                 responseMimeType: request.jsonMode ? "application/json" : "text/plain",
-                temperature: request.temperature,
+                temperature: this.model.includes('gemini-3') ? 1.0 : request.temperature, // Gemini 3 recommends temp 1.0
+                // @ts-ignore - thinking_level is not yet in the types but supported by API
+                thinking_level: this.model.includes('gemini-3') ? "high" : undefined,
             }
         });
 
