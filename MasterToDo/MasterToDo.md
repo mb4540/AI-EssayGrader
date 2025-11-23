@@ -54,143 +54,50 @@
 
 ---
 
-## 🔴 CRITICAL: Rubric-Driven Grading (Not ELAR-Specific)
+## 🤖 Gemini API Integration & LLM Switching
 
-**Priority:** CRITICAL  
-**Estimated Time:** 3-4 hours  
-**Plan File:** `OldPlans/PLAN_rubric_driven_grading.md`  
-**Status:** ✅ FULLY IMPLEMENTED - November 16, 2025
+**Priority:** ⭐⭐⭐ HIGH
+**Estimated Time:** 2-3 hours
+**Plan File:** `MasterToDo/PLAN_gemini_integration.md`
+**Status:** 🟡 **PLANNING**
 
-### Problem
-Current grading prompt was hardcoded with ELAR-specific criteria (grammar, spelling, punctuation, etc.). This didn't work for:
-- Math teachers (need: correct answers, work shown, reasoning)
-- Science teachers (need: hypothesis, procedure, data analysis)
-- History teachers (need: thesis, evidence, contextualization)
-- ANY non-ELAR subject
+### Goal
+Integrate Google Gemini API alongside OpenAI to allow switching between LLMs for performance evaluation.
 
-### Solution
-Make grading and annotations rubric-driven instead of ELAR-specific.
+### Requirements
+- Add Gemini API key to environment variables.
+- Create an abstraction layer for LLM calls (or update existing one).
+- Add a UI toggle or setting to switch between OpenAI and Gemini.
+- Ensure all grading and annotation features work with Gemini.
+- Compare performance and behavior.
 
 ### Tasks
-- [x] **Phase 1: Update Grading Prompt** (30 min) ✅ COMPLETE
-  - Updated `DEFAULT_GRADING_PROMPT` in `SettingsModal.tsx`
-  - Removed hardcoded ELAR criteria
-  - Added rubric-first language emphasizing "rubric defines what matters"
-  - Updated UI labels: "Essay Grading" → "Grading System"
-  - Updated help text to clarify works for any subject
+- [ ] **Phase 1: Configuration & Auth**
+  - Add `GEMINI_API_KEY` to Netlify environment variables.
+  - Update `src/lib/api` or backend functions to handle Gemini client.
 
-- [x] **Phase 2: Update Annotation Logic** (1 hour) ✅ COMPLETE
-  - Updated `src/lib/prompts/extractor.ts`
-  - Annotation categories now use generic categories (Content, Evidence, Organization, Clarity, Mechanics)
-  - Both `buildExtractorPrompt` and `buildComparisonExtractorPrompt` updated
-  - AI now generates annotations with generic categories that work for any subject
-  - Removed hardcoded ELAR categories (Spelling|Grammar|Punctuation|etc.)
+- [ ] **Phase 2: LLM Abstraction**
+  - Refactor `netlify/functions/lib/openai.ts` (or similar) to be `llm-client.ts`.
+  - Implement common interface for `generateCompletion`, `generateJSON`, etc.
+  - Create Gemini implementation of the interface.
 
-- [x] **Phase 3: Two-Pass Annotation System** (2 hours) ✅ COMPLETE
-  - Implemented Pass 1: General grading with initial annotations
-  - Implemented Pass 2: Targeted annotations for each rubric criterion needing improvement
-  - Added `buildCriteriaAnnotationsPrompt` for criterion-specific feedback
-  - Pass 2 runs ~5 seconds after Pass 1 completes
-  - Comprehensive coverage: Every rubric criterion with score < max gets specific annotations
+- [ ] **Phase 3: UI Controls**
+  - Add "LLM Provider" dropdown in Settings Modal.
+  - Store preference in local storage or user settings.
 
-- [x] **Phase 4: Criterion Linking** (1.5 hours) ✅ COMPLETE
-  - Added `criterion_id` field to annotations table (migration: `add_criterion_id_to_annotations.sql`)
-  - Updated TypeScript types to include `criterion_id` in `Annotation` and `RawAnnotation`
-  - Modified normalizer to preserve `criterion_id` during annotation processing
-  - Updated database INSERT/SELECT queries to handle `criterion_id`
-  - UI now displays actual rubric criterion names instead of generic categories
+- [ ] **Phase 4: Testing & Evaluation**
+  - Test grading with Gemini.
+  - Test annotations with Gemini.
+  - Compare speed and quality.
 
-- [x] **Phase 5: UI Refresh & Display** (1 hour) ✅ COMPLETE
-  - Implemented annotation refresh mechanism using `annotationsRefreshKey`
-  - VerbatimViewer re-fetches annotations when Pass 2 completes
-  - Annotation count updates automatically in UI
-  - GradePanel displays rubric criterion names (e.g., "Ideas & Development") instead of generic categories
-  - Falls back to generic category if no `criterion_id` available
-
-- [ ] **Phase 6: Testing** (1 hour) - READY TO TEST
-  - Test ELAR essay (regression test)
-  - Test math problem set
-  - Test science lab report
-  - Test history analysis
-  - Test custom rubric
-
-- [ ] **Phase 7: Documentation** (30 min) - PENDING
-  - Update Help documentation
-  - Add rubric best practices guide
-  - Create example rubrics for different subjects
-
-### Files Modified
-- ✅ `src/components/SettingsModal.tsx` - Updated DEFAULT_GRADING_PROMPT and UI labels
-- ✅ `src/lib/prompts/extractor.ts` - Generic categories + `buildCriteriaAnnotationsPrompt` for Pass 2
-- ✅ `netlify/functions/grade-bulletproof-background.ts` - Two-pass implementation with criterion_id
-- ✅ `src/lib/annotations/types.ts` - Added `criterion_id` field to types
-- ✅ `src/lib/annotations/normalizer.ts` - Preserves `criterion_id` during normalization
-- ✅ `netlify/functions/annotations-inline-get.ts` - Returns `criterion_id` in SELECT query
-- ✅ `src/components/GradePanel.tsx` - Displays rubric criterion names from `criterion_id`
-- ✅ `src/components/VerbatimViewer.tsx` - Annotation refresh mechanism
-- ✅ `src/pages/Submission.tsx` - Refresh key management for Pass 2 updates
-- ✅ `migrations/add_criterion_id_to_annotations.sql` - Database migration
-
-### Success Criteria
-- ✅ Grading prompt is rubric-driven, not ELAR-specific
-- ✅ Annotations use generic categories (Content, Evidence, Organization, Clarity, Mechanics)
-- ✅ Two-pass annotation system ensures comprehensive feedback
-- ✅ Annotations linked to specific rubric criteria via `criterion_id`
-- ✅ UI displays actual rubric criterion names (e.g., "Ideas & Development")
-- ✅ Annotation count auto-refreshes after Pass 2 completes
-- ⏳ Works for math, science, history, and other subjects (NEEDS TESTING)
-- ⏳ No regression for ELAR teachers (NEEDS TESTING)
-
-### What Changed
-**Before:** Hardcoded ELAR focus
-```
-Focus on: grammar, spelling, punctuation, capitalization, sentence structure, 
-organization, evidence quality, and clarity.
-```
-
-**After:** Rubric-driven approach
-```
-Grade STRICTLY according to the provided rubric and teacher's criteria.
-The rubric defines what matters - not assumptions about assignment type.
-```
-
-**Annotation Categories:**
-- Before: `Spelling|Grammar|Punctuation|Organization|Clarity|Evidence|Style` (hardcoded ELAR)
-- After: `Content|Evidence|Organization|Clarity|Mechanics` (generic categories that work for ANY subject)
-  - **Content**: Issues with ideas, arguments, reasoning, accuracy
-  - **Evidence**: Missing/weak supporting details, examples, sources
-  - **Organization**: Structure, flow, transitions issues
-  - **Clarity**: Unclear writing or explanations
-  - **Mechanics**: Grammar, spelling, punctuation (only if relevant to rubric)
-
-### Implementation Complete! ✅
-
-**What Works:**
-- ✅ Rubric-driven grading prompt (any subject)
-- ✅ Generic annotation categories (Content, Evidence, Organization, Clarity, Mechanics)
-- ✅ Two-pass annotation system (Pass 1: general, Pass 2: criterion-specific)
-- ✅ Annotations linked to rubric criteria via `criterion_id`
-- ✅ UI displays actual rubric criterion names (e.g., "Ideas & Development")
-- ✅ Annotations generated and saved to database with `criterion_id`
-- ✅ Annotation count auto-refreshes after Pass 2 completes (~5 seconds)
-- ✅ Print view includes annotations with highlighting
-- ✅ Comprehensive coverage: Every rubric criterion with score < max gets specific annotations
-
-**Tested With:**
-- ✅ ELAR essay - Generated 19 annotations (4 from Pass 1, 15 from Pass 2)
-- ✅ All 5 rubric criteria received targeted annotations
-- ✅ Annotation count updates correctly in UI
-- ✅ Rubric criterion names display in "Specific Corrections" section
-
-### Next Steps
-1. **Production Deployment** ✅ DEPLOYED - November 16, 2025
-   - Migration `add_criterion_id_to_annotations.sql` needs to be run in production Neon database
-2. **Test with more subjects** - Try math, science, history to verify versatility
-3. **Monitor in production** - Check Netlify logs for any issues
-4. **Get teacher feedback** - Have teachers test with their subjects
-5. **Future enhancement** - Add UI grouping/filtering by category (optional)
+### Files to Modify
+- `netlify/functions/lib/openai.ts` -> `llm-provider.ts`
+- `src/components/SettingsModal.tsx`
+- `.env` (local) and Netlify Config
 
 ---
+
+
 
 ## ⭐⭐⭐ HIGH: Assignment Modal Remaining Items
 
