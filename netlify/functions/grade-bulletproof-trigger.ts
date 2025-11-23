@@ -12,7 +12,7 @@ import { authenticateRequest } from './lib/auth';
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   console.log('🚀 Grading trigger started');
-  
+
   // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -43,16 +43,16 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const { tenant_id } = auth;
 
     const body = JSON.parse(event.body || '{}');
-    
+
     // Validate request
     const validation = GradeRequestSchema.safeParse(body);
     if (!validation.success) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ 
-          error: 'Invalid request', 
-          details: validation.error.issues 
+        body: JSON.stringify({
+          error: 'Invalid request',
+          details: validation.error.issues
         }),
       };
     }
@@ -70,7 +70,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Fire-and-forget with short timeout so trigger returns quickly
     const ac = new AbortController();
     const timeout = setTimeout(() => ac.abort(), 6000);
-    
+
     try {
       const backgroundResponse = await fetch(backgroundUrl, {
         method: 'POST',
@@ -80,12 +80,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           tenant_id,
           submission_id,
           grading_prompt: body.grading_prompt,
+          llmProvider: body.llmProvider,
+          llmModel: body.llmModel,
         }),
         signal: ac.signal
       });
-      
+
       clearTimeout(timeout);
-      
+
       if (!backgroundResponse.ok) {
         const errorText = await backgroundResponse.text().catch(() => '<no body>');
         console.error('Background grading trigger failed:', backgroundResponse.status, errorText);
@@ -103,8 +105,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         ...headers,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ 
-        ok: true, 
+      body: JSON.stringify({
+        ok: true,
         task_id: jobId,
         status: 'processing',
         message: 'Grading started in background'
@@ -113,11 +115,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
   } catch (error) {
     console.error('❌ Grading trigger failed:', error);
-    
+
     // Handle authentication errors
     if (error instanceof Error) {
-      if (error.message.includes('Authentication required') || 
-          error.message.includes('Invalid or expired token')) {
+      if (error.message.includes('Authentication required') ||
+        error.message.includes('Invalid or expired token')) {
         return {
           statusCode: 401,
           headers,
@@ -125,11 +127,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         };
       }
     }
-    
+
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         error: 'Internal server error',
         message: error instanceof Error ? error.message : 'Unknown error'
       }),
