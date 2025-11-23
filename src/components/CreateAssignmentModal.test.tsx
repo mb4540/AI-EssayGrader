@@ -162,7 +162,7 @@ describe('CreateAssignmentModal Component', () => {
 
     it('should show alert when submitting with empty title', async () => {
       const user = userEvent.setup();
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { });
       renderModal();
 
       // Manually enable the button to test the validation
@@ -260,6 +260,14 @@ describe('CreateAssignmentModal Component', () => {
       const submitButton = screen.getByRole('button', { name: /create assignment/i });
       await user.click(submitButton);
 
+      // Wait for success message and click OK button
+      await waitFor(() => {
+        expect(screen.getByText(/has been created successfully/i)).toBeInTheDocument();
+      });
+
+      const okButton = screen.getByRole('button', { name: /ok/i });
+      await user.click(okButton);
+
       await waitFor(() => {
         expect(mockOnClose).toHaveBeenCalled();
       });
@@ -290,8 +298,8 @@ describe('CreateAssignmentModal Component', () => {
 
     it('should show error alert on submission failure', async () => {
       const user = userEvent.setup();
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { });
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
       vi.mocked(createAssignment).mockRejectedValue(new Error('Network error'));
 
       renderModal();

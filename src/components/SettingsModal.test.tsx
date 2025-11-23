@@ -53,16 +53,17 @@ describe('SettingsModal Component', () => {
     it('should render all tabs', () => {
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-      expect(screen.getByRole('tab', { name: /essay grading/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /grading system/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /ocr cleanup/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /rubric enhancement/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /document types/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /llm provider/i })).toBeInTheDocument();
     });
 
     it('should show essay grading tab by default', () => {
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-      expect(screen.getByText(/essay grading system prompt/i)).toBeInTheDocument();
+      expect(screen.getByText(/grading system prompt/i)).toBeInTheDocument();
     });
 
     it('should switch to OCR tab when clicked', async () => {
@@ -136,7 +137,7 @@ describe('SettingsModal Component', () => {
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
       const textarea = screen.getByPlaceholderText(/enter grading prompt/i) as HTMLTextAreaElement;
-      expect(textarea.value).toContain('professional writing evaluator');
+      expect((textarea as HTMLTextAreaElement).value).toContain('professional evaluator');
     });
   });
 
@@ -184,7 +185,7 @@ describe('SettingsModal Component', () => {
   describe('Save Functionality', () => {
     it('should save all prompts to localStorage when save button clicked', async () => {
       const user = userEvent.setup();
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { });
 
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
@@ -203,7 +204,7 @@ describe('SettingsModal Component', () => {
 
     it('should save document type prompt to localStorage', async () => {
       const user = userEvent.setup();
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => { });
 
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
@@ -241,7 +242,7 @@ describe('SettingsModal Component', () => {
       await user.click(resetButton);
 
       expect(confirmSpy).toHaveBeenCalledWith('Reset this prompt to default?');
-      expect((textarea as HTMLTextAreaElement).value).toContain('professional writing evaluator');
+      expect((textarea as HTMLTextAreaElement).value).toContain('professional evaluator');
 
       confirmSpy.mockRestore();
     });
@@ -325,7 +326,7 @@ describe('SettingsModal Component', () => {
       // Find the X button in the header
       const closeButtons = screen.getAllByRole('button');
       const xButton = closeButtons.find(btn => btn.querySelector('svg'));
-      
+
       if (xButton) {
         await user.click(xButton);
         expect(mockOnClose).toHaveBeenCalled();
