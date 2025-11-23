@@ -59,10 +59,11 @@
 **Estimated Time:** 2 hours
 **Plan File:** `MasterToDo/PLAN_gemini_integration.md`
 **Status:** ✅ COMPLETED - November 23, 2025
+**Released:** 🚀 Promoted to `main` (Checkpoint: `WorkingSoftwareCKPoint-20251123-090128UTC`)
 
 ### Tasks
 
-- [ ] **Phase 3: UI Controls**
+- [x] **Phase 1: Backend Abstraction***
   - Add "LLM Provider" dropdown in Settings Modal.
   - Store preference in local storage or user settings.
 
