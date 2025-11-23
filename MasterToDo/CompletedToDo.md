@@ -24,6 +24,50 @@
 
 ---
 
+## ✅ COMPLETED - November 16, 2025
+
+### Rubric-Driven Grading (Not ELAR-Specific) ⭐⭐⭐
+**Priority:** 🔴 **CRITICAL**
+**Status:** ✅ **FULLY IMPLEMENTED**
+
+**Problem:**
+Current grading prompt was hardcoded with ELAR-specific criteria (grammar, spelling, punctuation, etc.). This didn't work for:
+- Math teachers (need: correct answers, work shown, reasoning)
+- Science teachers (need: hypothesis, procedure, data analysis)
+- History teachers (need: thesis, evidence, contextualization)
+- ANY non-ELAR subject
+
+**Solution:**
+Make grading and annotations rubric-driven instead of ELAR-specific.
+
+**Implementation:**
+- ✅ **Updated Grading Prompt**: Removed hardcoded ELAR criteria, added rubric-first language.
+- ✅ **Generic Annotation Categories**: Changed to Content, Evidence, Organization, Clarity, Mechanics.
+- ✅ **Two-Pass Annotation System**: Pass 1 for general grading, Pass 2 for targeted criterion-specific feedback.
+- ✅ **Criterion Linking**: Added `criterion_id` to link annotations to specific rubric criteria.
+- ✅ **UI Refresh**: Displays actual rubric criterion names (e.g., "Ideas & Development").
+
+**Files Modified:**
+- `src/components/SettingsModal.tsx`
+- `src/lib/prompts/extractor.ts`
+- `netlify/functions/grade-bulletproof-background.ts`
+- `src/lib/annotations/types.ts`
+- `src/lib/annotations/normalizer.ts`
+- `netlify/functions/annotations-inline-get.ts`
+- `src/components/GradePanel.tsx`
+- `src/components/VerbatimViewer.tsx`
+- `src/pages/Submission.tsx`
+- `migrations/add_criterion_id_to_annotations.sql`
+
+**Success Criteria:**
+- ✅ Grading prompt is rubric-driven, not ELAR-specific
+- ✅ Annotations use generic categories
+- ✅ Two-pass annotation system ensures comprehensive feedback
+- ✅ Annotations linked to rubric criteria
+- ✅ UI displays actual rubric criterion names
+
+---
+
 ## ✅ COMPLETED - November 14, 2025
 
 ### Background Grading & Bulletproof Max Points ⭐⭐⭐

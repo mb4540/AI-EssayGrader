@@ -54,111 +54,31 @@
 
 ---
 
-## 🔴 CRITICAL: Rubric-Driven Grading (Not ELAR-Specific)
-
-**Priority:** CRITICAL  
-**Estimated Time:** 3-4 hours  
-**Plan File:** `PLAN_rubric_driven_grading.md`  
-**Status:** ✅ CORE IMPLEMENTATION COMPLETE - November 16, 2025
-
-### Problem
-Current grading prompt is hardcoded with ELAR-specific criteria (grammar, spelling, punctuation, etc.). This doesn't work for:
-- Math teachers (need: correct answers, work shown, reasoning)
-- Science teachers (need: hypothesis, procedure, data analysis)
-- History teachers (need: thesis, evidence, contextualization)
-- ANY non-ELAR subject
-
-### Solution
-Make grading and annotations rubric-driven instead of ELAR-specific.
+## 🟢 Gemini API Integration & LLM Switching
+**Priority:** HIGH
+**Estimated Time:** 2 hours
+**Plan File:** `MasterToDo/PLAN_gemini_integration.md`
+**Status:** ✅ COMPLETED - November 23, 2025
 
 ### Tasks
-- [x] **Phase 1: Update Grading Prompt** (30 min) ✅ COMPLETE
-  - Updated `DEFAULT_GRADING_PROMPT` in `SettingsModal.tsx`
-  - Removed hardcoded ELAR criteria
-  - Added rubric-first language emphasizing "rubric defines what matters"
-  - Updated UI labels: "Essay Grading" → "Grading System"
-  - Updated help text to clarify works for any subject
 
-- [x] **Phase 2: Update Annotation Logic** (1 hour) ✅ COMPLETE
-  - Updated `src/lib/prompts/extractor.ts`
-  - Annotation categories now dynamically generated from rubric criteria
-  - Both `buildExtractorPrompt` and `buildComparisonExtractorPrompt` updated
-  - AI now tags annotations with rubric category names
-  - Removed hardcoded ELAR categories (Spelling|Grammar|Punctuation|etc.)
+- [ ] **Phase 3: UI Controls**
+  - Add "LLM Provider" dropdown in Settings Modal.
+  - Store preference in local storage or user settings.
 
-- [ ] **Phase 3: Update Annotation Display** (45 min) - DEFERRED
-  - Annotations already tagged with correct rubric categories
-  - UI grouping/filtering is a future enhancement
-  - Current display works, just not grouped by category yet
-  - Can be added later without affecting core functionality
+- [ ] **Phase 4: Testing & Evaluation**
+  - Test grading with Gemini.
+  - Test annotations with Gemini.
+  - Compare speed and quality.
 
-- [ ] **Phase 4: Testing** (1 hour) - READY TO TEST
-  - Test ELAR essay (regression test)
-  - Test math problem set
-  - Test science lab report
-  - Test history analysis
-  - Test custom rubric
-
-- [ ] **Phase 5: Documentation** (30 min) - PENDING
-  - Update Help documentation
-  - Add rubric best practices guide
-  - Create example rubrics for different subjects
-
-### Files Modified
-- ✅ `src/components/SettingsModal.tsx` - Updated DEFAULT_GRADING_PROMPT and UI labels
-- ✅ `src/lib/prompts/extractor.ts` - Dynamic annotation categories from rubric
-- ⏭️ `netlify/functions/grade-bulletproof-background.ts` - No changes needed (uses extractor.ts)
-- ⏭️ `src/components/AnnotationViewer.tsx` - Deferred (annotations already tagged correctly)
-
-### Success Criteria
-- ✅ Grading prompt is rubric-driven, not ELAR-specific
-- ✅ Annotations based on rubric categories (dynamically generated)
-- ⏳ Works for math, science, history, and other subjects (NEEDS TESTING)
-- ⏳ No regression for ELAR teachers (NEEDS TESTING)
-- ⏳ All test cases pass (READY TO TEST)
-
-### What Changed
-**Before:** Hardcoded ELAR focus
-```
-Focus on: grammar, spelling, punctuation, capitalization, sentence structure, 
-organization, evidence quality, and clarity.
-```
-
-**After:** Rubric-driven approach
-```
-Grade STRICTLY according to the provided rubric and teacher's criteria.
-The rubric defines what matters - not assumptions about assignment type.
-```
-
-**Annotation Categories:**
-- Before: `Spelling|Grammar|Punctuation|Organization|Clarity|Evidence|Style` (hardcoded ELAR)
-- After: `Content|Evidence|Organization|Clarity|Mechanics` (generic categories that work for ANY subject)
-  - **Content**: Issues with ideas, arguments, reasoning, accuracy
-  - **Evidence**: Missing/weak supporting details, examples, sources
-  - **Organization**: Structure, flow, transitions issues
-  - **Clarity**: Unclear writing or explanations
-  - **Mechanics**: Grammar, spelling, punctuation (only if relevant to rubric)
-
-### Implementation Complete! ✅
-
-**What Works:**
-- ✅ Rubric-driven grading prompt (any subject)
-- ✅ Generic annotation categories (Content, Evidence, Organization, Clarity, Mechanics)
-- ✅ Annotations generated and saved to database
-- ✅ Annotations display in UI with categories
-- ✅ Auto-refresh after grading completes
-- ✅ Print view includes annotations with highlighting
-
-**Tested With:**
-- ✅ History essay (DBQ format) - Generated 4 annotations with Evidence and Clarity categories
-
-### Next Steps
-1. **Test with more subjects** - Try math, science, ELAR to verify versatility
-2. **Monitor in production** - Check Netlify logs for any issues
-3. **Get teacher feedback** - Have teachers test with their subjects
-4. **Future enhancement** - Add UI grouping/filtering by category (optional)
+### Files to Modify
+- `netlify/functions/lib/openai.ts` -> `llm-provider.ts`
+- `src/components/SettingsModal.tsx`
+- `.env` (local) and Netlify Config
 
 ---
+
+
 
 ## ⭐⭐⭐ HIGH: Assignment Modal Remaining Items
 

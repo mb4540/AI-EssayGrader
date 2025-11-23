@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
+import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { X, Save, RotateCcw } from 'lucide-react';
+import { X, Save, RotateCcw, Cpu } from 'lucide-react';
 import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
 
 interface SettingsModalProps {
@@ -92,6 +93,12 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [selectedDocType, setSelectedDocType] = useState('personal_narrative');
   const [docTypePrompt, setDocTypePrompt] = useState('');
 
+  // LLM Settings
+  const [llmProvider, setLlmProvider] = useState<'openai' | 'gemini'>('openai');
+  const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
+  const [customGeminiModel, setCustomGeminiModel] = useState('');
+  const [openaiModel, setOpenaiModel] = useState('gpt-4o-mini');
+
   // Load prompts from localStorage on mount
   useEffect(() => {
     const savedGrading = localStorage.getItem('ai_grading_prompt');
@@ -101,13 +108,31 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (savedGrading) setGradingPrompt(savedGrading);
     if (savedOcr) setOcrPrompt(savedOcr);
     if (savedRubric) setRubricPrompt(savedRubric);
+
+    // Load LLM settings
+    const savedProvider = localStorage.getItem('ai_provider');
+    const savedGeminiModel = localStorage.getItem('ai_model_gemini');
+    const savedOpenaiModel = localStorage.getItem('ai_model_openai');
+
+    if (savedProvider === 'openai' || savedProvider === 'gemini') {
+      setLlmProvider(savedProvider);
+    }
+    if (savedGeminiModel) {
+      if (savedGeminiModel === 'gemini-1.5-flash' || savedGeminiModel === 'gemini-1.5-pro') {
+        setGeminiModel(savedGeminiModel);
+      } else {
+        setGeminiModel('custom');
+        setCustomGeminiModel(savedGeminiModel);
+      }
+    }
+    if (savedOpenaiModel) setOpenaiModel(savedOpenaiModel);
   }, []);
 
   // Load document type prompt when selection changes
   useEffect(() => {
     const docType = ELA_DOCUMENT_TYPES.find(t => t.id === selectedDocType);
     const savedPrompt = localStorage.getItem(`ai_doctype_${selectedDocType}_prompt`);
-    
+
     if (savedPrompt) {
       setDocTypePrompt(savedPrompt);
     } else if (docType?.gradingFocus) {
@@ -122,13 +147,18 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     localStorage.setItem('ai_ocr_prompt', ocrPrompt);
     localStorage.setItem('ai_rubric_prompt', rubricPrompt);
     localStorage.setItem(`ai_doctype_${selectedDocType}_prompt`, docTypePrompt);
-    
+
+    // Save LLM settings
+    localStorage.setItem('ai_provider', llmProvider);
+    localStorage.setItem('ai_model_gemini', geminiModel === 'custom' ? customGeminiModel : geminiModel);
+    localStorage.setItem('ai_model_openai', openaiModel);
+
     alert('Settings saved! Note: These prompts are stored locally in your browser.');
   };
 
   const handleReset = (type: 'grading' | 'ocr' | 'rubric' | 'doctype') => {
     if (!confirm('Reset this prompt to default?')) return;
-    
+
     switch (type) {
       case 'grading':
         setGradingPrompt(DEFAULT_GRADING_PROMPT);
@@ -147,7 +177,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         }
         break;
     }
-    
+
   };
 
   if (!isOpen) return null;
@@ -174,12 +204,98 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           <Tabs defaultValue="grading" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
+              <TabsTrigger value="llm">LLM Provider</TabsTrigger>
               <TabsTrigger value="grading">Grading System</TabsTrigger>
               <TabsTrigger value="ocr">OCR Cleanup</TabsTrigger>
               <TabsTrigger value="rubric">Rubric Enhancement</TabsTrigger>
               <TabsTrigger value="doctypes">Document Types</TabsTrigger>
+              <TabsTrigger value="doctypes">Document Types</TabsTrigger>
             </TabsList>
+
+            {/* LLM Provider Tab */}
+            <TabsContent value="llm" className="space-y-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Cpu className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-lg font-semibold">AI Model Configuration</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>AI Provider</Label>
+                  <Select value={llmProvider} onValueChange={(v: 'openai' | 'gemini') => setLlmProvider(v)}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
+                      <SelectItem value="gemini">Google Gemini</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500">
+                    Select which AI provider to use for grading and feedback.
+                  </p>
+                </div>
+
+                {llmProvider === 'openai' && (
+                  <div className="space-y-2">
+                    <Label>OpenAI Model</Label>
+                    <Select value={openaiModel} onValueChange={setOpenaiModel}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cheap)</SelectItem>
+                        <SelectItem value="gpt-4o">GPT-4o (High Quality)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+
+                {llmProvider === 'gemini' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Gemini Model</Label>
+                      <Select value={geminiModel} onValueChange={setGeminiModel}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</SelectItem>
+                          <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</SelectItem>
+                          <SelectItem value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Experimental</SelectItem>
+                          <SelectItem value="gemini-flash-latest">Gemini Flash Latest</SelectItem>
+                          <SelectItem value="custom">Custom Model ID...</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {geminiModel === 'custom' && (
+                      <div className="space-y-2">
+                        <Label>Custom Model ID</Label>
+                        <Input
+                          value={customGeminiModel}
+                          onChange={(e) => setCustomGeminiModel(e.target.value)}
+                          placeholder="e.g., gemini-2.0-flash-exp"
+                          className="font-mono"
+                        />
+                        <p className="text-xs text-blue-600 dark:text-blue-400">
+                          Enter any valid Gemini model ID. Ensure your API key has access to it.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                  <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">API Key Requirement</h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Ensure you have added the corresponding API key ({llmProvider === 'openai' ? 'OPENAI_API_KEY' : 'GEMINI_API_KEY'})
+                    to your Netlify environment variables.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
 
             {/* Grading System Tab */}
             <TabsContent value="grading" className="space-y-4">
@@ -196,14 +312,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </Button>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                This prompt controls how the AI evaluates student work. The AI will grade based on YOUR rubric criteria, 
+                This prompt controls how the AI evaluates student work. The AI will grade based on YOUR rubric criteria,
                 making it work for any subject (ELAR, math, science, history, etc.). The rubric defines what matters.
               </p>
               <Textarea
                 value={gradingPrompt}
                 onChange={(e) => {
                   setGradingPrompt(e.target.value);
-                  
+
                 }}
                 className="min-h-[300px] font-mono text-sm"
                 placeholder="Enter grading prompt..."
@@ -231,7 +347,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 value={ocrPrompt}
                 onChange={(e) => {
                   setOcrPrompt(e.target.value);
-                  
+
                 }}
                 className="min-h-[300px] font-mono text-sm"
                 placeholder="Enter OCR cleanup prompt..."
@@ -259,7 +375,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 value={rubricPrompt}
                 onChange={(e) => {
                   setRubricPrompt(e.target.value);
-                  
+
                 }}
                 className="min-h-[300px] font-mono text-sm"
                 placeholder="Enter rubric enhancement prompt..."
@@ -283,7 +399,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Customize the grading focus for each document type. This guides the AI on what to emphasize when evaluating that type of writing.
               </p>
-              
+
               <div>
                 <Label htmlFor="doctype-select" className="text-sm font-medium mb-2 block">
                   Select Document Type
@@ -306,13 +422,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 value={docTypePrompt}
                 onChange={(e) => {
                   setDocTypePrompt(e.target.value);
-                  
+
                 }}
                 className="min-h-[250px] font-mono text-sm"
                 placeholder="Enter grading focus for this document type..."
               />
               <p className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-950 p-3 rounded">
-                <strong>Tip:</strong> This text is added to the AI prompt when grading this document type. 
+                <strong>Tip:</strong> This text is added to the AI prompt when grading this document type.
                 Focus on what makes this type of writing unique and what criteria are most important.
               </p>
             </TabsContent>
@@ -322,8 +438,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {/* Footer */}
         <div className="border-t p-4 bg-gray-50 dark:bg-slate-900 flex items-center justify-between">
           <p className="text-xs text-gray-600 dark:text-gray-400">
-            <strong>How it works:</strong> These prompts are stored locally in your browser and sent to the AI with each request. 
-            Changes take effect immediately for all AI features (grading, OCR cleanup, and rubric enhancement). 
+            <strong>How it works:</strong> These prompts are stored locally in your browser and sent to the AI with each request.
+            Changes take effect immediately for all AI features (grading, OCR cleanup, and rubric enhancement).
             Note: Prompts will not sync across devices - each browser stores its own settings.
           </p>
           <div className="flex gap-3">

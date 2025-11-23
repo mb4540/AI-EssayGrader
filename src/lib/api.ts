@@ -15,11 +15,11 @@ function getAuthHeaders(): HeadersInit {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
-  
+
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  
+
   return headers;
 }
 
@@ -32,18 +32,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
     // Clear auth data
     localStorage.removeItem('auth_token');
     localStorage.removeItem('auth_user');
-    
+
     // Redirect to login
     window.location.href = '/login';
-    
+
     throw new Error('Authentication required. Redirecting to login...');
   }
-  
+
   if (!response.ok) {
     const error = await response.text();
     throw new Error(error || `Request failed with status ${response.status}`);
   }
-  
+
   return response.json() as Promise<T>;
 }
 
@@ -66,10 +66,23 @@ export async function ingestSubmission(data: IngestRequest) {
  */
 export async function startGradingJob(data: GradeRequest) {
   const customPrompts = getCustomPrompts();
+
+  // Get LLM settings
+  const llmProvider = localStorage.getItem('ai_provider') || 'openai';
+  const geminiModel = localStorage.getItem('ai_model_gemini') || 'gemini-2.0-flash';
+  const openaiModel = localStorage.getItem('ai_model_openai') || 'gpt-4o-mini';
+
+  const llmModel = llmProvider === 'gemini' ? geminiModel : openaiModel;
+
   const response = await fetch(`${API_BASE}/grade-bulletproof-trigger`, {
     method: 'POST',
     headers: getAuthHeaders(),
-    body: JSON.stringify({ ...data, ...customPrompts }),
+    body: JSON.stringify({
+      ...data,
+      ...customPrompts,
+      llmProvider,
+      llmModel
+    }),
   });
 
   return handleResponse<{
@@ -226,8 +239,10 @@ export async function listAssignments() {
   }>(response);
 }
 
-export async function createAssignment(data: { title: string; description?: string; grading_criteria?: string;
-      total_points?: number; document_type?: string }) {
+export async function createAssignment(data: {
+  title: string; description?: string; grading_criteria?: string;
+  total_points?: number; document_type?: string
+}) {
   const response = await fetch(`${API_BASE}/assignments`, {
     method: 'POST',
     headers: getAuthHeaders(),
