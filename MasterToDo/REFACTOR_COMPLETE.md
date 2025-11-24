@@ -202,6 +202,14 @@ Adding new features is now easy:
 2. **Large edits** - File corruption required careful restoration
 3. **Maintaining functionality** - All features preserved throughout
 
+### Bonus: Bug Fixed! 🐛 → ✅
+**Assignment Modal Not Closing Bug - RESOLVED**
+- **Issue:** Assignment modal "OK" button wasn't consistently closing the modal
+- **Root Cause:** Modal state management was scattered and inconsistent across Dashboard.tsx
+- **Solution:** Extracting modal logic to `useDashboardActions` hook centralized state management
+- **Result:** Modal now closes properly on both "OK" and "X" buttons
+- **Lesson:** Proper separation of concerns doesn't just improve code quality—it fixes bugs!
+
 ### Best Practices Applied
 1. Single Responsibility Principle
 2. DRY (Don't Repeat Yourself)
