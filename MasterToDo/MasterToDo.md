@@ -66,26 +66,6 @@
 
 ## ⭐⭐⭐ HIGH PRIORITY (Next Up)
 
-### Class Period Organization
-
-**Status:** 🟡 **OPEN** - Not started  
-**Requested:** November 2, 2025
-
-**Goal:** Allow teachers to organize students into class periods/groups for easier management.
-
-**Tasks:**
-- [ ] Update BridgeStudent interface with classPeriod field
-- [ ] Add class period dropdown to Add Student form
-- [ ] Add class period to Edit Student form
-- [ ] Update StudentSelector to show class period
-- [ ] Add class filter dropdown to Dashboard
-- [ ] Implement filter logic in Dashboard
-- [ ] Add "Group by Class" view option
-- [ ] Update CSV export to include class period
-- [ ] Add bulk edit feature (assign multiple students to class)
-
----
-
 ### Clean Text Feature
 
 **Goal:** Clean up markdown artifacts and formatting issues when teachers paste text from PDFs
@@ -418,10 +398,11 @@
   - Fix blob store initialization in `netlify/functions/upload-file.ts`
 
 ### Low
-- [ ] **Assignment OK Button Not Closing Modal** (Deferred)
-  - Issue: Clicking "OK" on success message does not consistently close the modal
-  - Workaround: Use the "X" button in the top-right corner
-  - Note: Fix attempted on 11/24/25 but unsuccessful. Logic was aligned with X button but issue persists.
+- [x] **Assignment OK Button Not Closing Modal** ✅ FIXED (11/24/25)
+  - **Resolution:** Fixed as part of Dashboard refactoring (commit 0fc1439)
+  - Root cause: Modal state management was scattered across Dashboard.tsx
+  - Solution: Extracted to `useDashboardActions` hook with proper `closeAssignmentModal` handler
+  - Modal now closes correctly on both "OK" button and "X" button
 - [ ] Mobile optimization needed (separate branch)
 - [ ] Dark mode inconsistencies
 
