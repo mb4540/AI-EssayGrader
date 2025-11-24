@@ -66,26 +66,6 @@
 
 ## ⭐⭐⭐ HIGH PRIORITY (Next Up)
 
-### Class Period Organization
-
-**Status:** 🟡 **OPEN** - Not started  
-**Requested:** November 2, 2025
-
-**Goal:** Allow teachers to organize students into class periods/groups for easier management.
-
-**Tasks:**
-- [ ] Update BridgeStudent interface with classPeriod field
-- [ ] Add class period dropdown to Add Student form
-- [ ] Add class period to Edit Student form
-- [ ] Update StudentSelector to show class period
-- [ ] Add class filter dropdown to Dashboard
-- [ ] Implement filter logic in Dashboard
-- [ ] Add "Group by Class" view option
-- [ ] Update CSV export to include class period
-- [ ] Add bulk edit feature (assign multiple students to class)
-
----
-
 ### Clean Text Feature
 
 **Goal:** Clean up markdown artifacts and formatting issues when teachers paste text from PDFs
