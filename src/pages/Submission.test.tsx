@@ -37,7 +37,7 @@ vi.mock('@/components/VerbatimViewer', () => ({
 
 // Mock SubmissionContent to avoid loading VerbatimViewer -> useFileUpload -> docx -> pdfjs-dist
 vi.mock('./Submission/components/SubmissionContent', () => ({
-    default: () => <div data-testid="submission-content">Submission Content</div>,
+    SubmissionContent: () => <div data-testid="submission-content">Submission Content</div>,
 }));
 
 // Mock usePdfPages to avoid loading pdfjs-dist
@@ -58,24 +58,10 @@ vi.mock('@/hooks/usePdfPages', () => ({
     }),
 }));
 
-// Mock useSubmissionActions to avoid loading docx -> pdfjs-dist
-vi.mock('./Submission/hooks/useSubmissionActions', () => ({
-    useSubmissionActions: () => ({
-        handleRunGrade: vi.fn(),
-        handleSaveEdits: vi.fn(),
-        handleNewSubmission: vi.fn(),
-        handlePrint: vi.fn(),
-        handleTextExtraction: vi.fn(),
-        handleEnhanceText: vi.fn(),
-        refreshAssignments: vi.fn(),
-    }),
-}));
-
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import Submission from './Submission';
-import { BridgeProvider } from '@/hooks/useBridge';
 
 // Mock the API hooks
 vi.mock('./Submission/hooks/useSubmissionState', () => ({
@@ -163,6 +149,29 @@ vi.mock('./Submission/hooks/useSubmissionActions', () => ({
     }),
 }));
 
+// Mock AuthContext
+vi.mock('@/contexts/AuthContext', () => ({
+    useAuth: () => ({
+        user: { user_id: 'test-user', email: 'test@example.com' },
+        isAuthenticated: true,
+        token: 'test-token',
+    }),
+    AuthProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
+// Mock bridge storage
+vi.mock('@/bridge/storage', () => ({
+    isFileSystemAccessSupported: vi.fn(() => false),
+    chooseBridgeFile: vi.fn(),
+    saveBridgeFile: vi.fn(),
+    readBridgeFile: vi.fn(),
+    writeBridgeFile: vi.fn(),
+    saveBridgeToIndexedDB: vi.fn(),
+    loadBridgeFromIndexedDB: vi.fn(() => Promise.resolve(null)),
+    downloadBridgeFile: vi.fn(),
+    uploadBridgeFile: vi.fn(),
+}));
+
 describe('Submission Page', () => {
     const queryClient = new QueryClient({
         defaultOptions: {
@@ -175,11 +184,9 @@ describe('Submission Page', () => {
     it('renders without crashing', () => {
         render(
             <QueryClientProvider client={queryClient}>
-                <BridgeProvider>
-                    <BrowserRouter>
-                        <Submission />
-                    </BrowserRouter>
-                </BridgeProvider>
+                <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                    <Submission />
+                </BrowserRouter>
             </QueryClientProvider>
         );
 
