@@ -4,16 +4,12 @@
 
 import { Handler, HandlerEvent } from '@netlify/functions';
 import { neon } from '@neondatabase/serverless';
-import { randomBytes, createHash } from 'crypto';
 import Mailgun from 'mailgun.js';
 import formData from 'form-data';
 import { z } from 'zod';
+import { hashToken, generateToken, TOKEN_EXPIRY_MINUTES } from './lib/password-reset-utils';
 
 const sql = neon(process.env.DATABASE_URL!);
-
-// Constants
-const TOKEN_LENGTH = 32;
-const TOKEN_EXPIRY_MINUTES = 15;
 
 // Request validation schema
 const SendResetSchema = z.object({
@@ -23,13 +19,6 @@ const SendResetSchema = z.object({
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Hash token using SHA-256 for secure storage
- */
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
-}
 
 /**
  * Log audit event
@@ -205,7 +194,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     const firstName = user.full_name.split(' ')[0];
 
     // Generate secure random token
-    const token = randomBytes(TOKEN_LENGTH).toString('hex');
+    const token = generateToken();
     const tokenHash = hashToken(token);
     const expiresAt = new Date(Date.now() + TOKEN_EXPIRY_MINUTES * 60 * 1000);
 

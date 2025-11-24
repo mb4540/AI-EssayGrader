@@ -4,9 +4,9 @@
 
 import { Handler, HandlerEvent } from '@netlify/functions';
 import { neon } from '@neondatabase/serverless';
-import { createHash } from 'crypto';
 import { z } from 'zod';
 import { hashPassword } from './lib/auth';
+import { hashToken } from './lib/password-reset-utils';
 
 const sql = neon(process.env.DATABASE_URL!);
 
@@ -19,13 +19,6 @@ const CompleteResetSchema = z.object({
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Hash token using SHA-256 for database lookup
- */
-function hashToken(token: string): string {
-  return createHash('sha256').update(token).digest('hex');
-}
 
 /**
  * Log audit event

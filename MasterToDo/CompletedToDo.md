@@ -2,7 +2,7 @@
 ## FastAI Grader - Archive of Finished Work
 
 **Created:** November 2, 2025  
-**Last Updated:** November 14, 2025  
+**Last Updated:** November 24, 2025  
 **Purpose:** Archive of all completed features and fixes
 
 ---
@@ -21,6 +21,104 @@
 - **MasterToDo.md** = Open TODO items only
 - **CompletedToDo.md** = Archived completed items (this file)
 - **REFACTOR_LESSONS_LEARNED.md** = Lessons from failed attempts
+
+---
+
+## ✅ COMPLETED - November 24, 2025
+
+### Release v1.3.0: Toast Notifications & Production Fixes ⭐⭐⭐
+**Priority:** HIGH PRIORITY  
+**Status:** ✅ **DEPLOYED TO PRODUCTION**  
+**Branch:** `main`  
+**Checkpoint:** `WorkingSoftwareCKPoint-20251124-091256UTC`  
+**Tag:** `v1.3.0`
+
+**What Was Completed:**
+
+**1. Toast Notification System**
+- ✅ Created reusable Toast component (`src/components/ui/toast.tsx`)
+- ✅ "Grade Saved" popup appears after saving teacher grades
+- ✅ Auto-dismisses after 3 seconds
+- ✅ Manual close button included
+- ✅ Smooth fade-in/fade-out animations
+- ✅ Positioned in top-right corner (non-intrusive)
+- ✅ Green success styling with checkmark icon
+- ✅ Full test coverage (4 tests in `toast.test.tsx`)
+
+**2. GoTIcon.png Production Fix**
+- ✅ Moved icon from root directory to `public/` folder
+- ✅ Now renders correctly in production (Netlify)
+- ✅ Fixes broken favicon in browser tab
+- ✅ Fixes broken navigation logo
+- ✅ Proper Vite asset handling for production builds
+
+**3. Submission Page Refactor** (Completed Nov 23)
+- ✅ Reduced main file from 697 → 134 lines (81% reduction!)
+- ✅ Extracted State Hook (`useSubmissionState.ts`) - 159 lines
+- ✅ Extracted Actions Hook (`useSubmissionActions.ts`) - 373 lines
+- ✅ Created Component Structure:
+  - `SubmissionHeader.tsx` - 76 lines
+  - `StudentInfoCard.tsx` - 162 lines
+  - `SubmissionContent.tsx` - 79 lines
+  - `GradingSection.tsx` - 109 lines
+- ✅ All features preserved (inline annotations, file uploads, grading)
+- ✅ Tests passing (1 test for Submission page)
+- ✅ Incremental approach prevented feature loss
+- ✅ Custom hooks for clean state/actions separation
+- ✅ Component extraction with clear boundaries
+
+**Release Process:**
+- ✅ Build verified (TypeScript + Vite)
+- ✅ Tests passing (577/577 unit tests, 100% pass rate)
+- ✅ Checkpoint branch created for rollback safety
+- ✅ Merged to main with descriptive commit message
+- ✅ Tagged as v1.3.0
+- ✅ Pushed to production (auto-deployed by Netlify)
+
+**Files Modified:**
+- `src/components/ui/toast.tsx` (new)
+- `src/components/ui/toast.test.tsx` (new)
+- `src/pages/Submission.tsx` (refactored)
+- `src/pages/Submission/hooks/useSubmissionState.ts` (new)
+- `src/pages/Submission/hooks/useSubmissionActions.ts` (new)
+- `src/pages/Submission/components/SubmissionHeader.tsx` (new)
+- `src/pages/Submission/components/StudentInfoCard.tsx` (new)
+- `src/pages/Submission/components/SubmissionContent.tsx` (new)
+- `src/pages/Submission/components/GradingSection.tsx` (new)
+- `public/GoTIcon.png` (moved from root)
+
+**Lessons Applied:**
+- Incremental refactoring approach worked perfectly
+- Custom hooks enable clean separation of concerns
+- Component extraction with clear boundaries prevents bugs
+- Feature parity maintained throughout refactor
+- Comprehensive testing catches regressions early
+
+**Completed:** November 24, 2025  
+**Time:** ~3 hours total (refactor + toast + icon fix)  
+**Commits:** Multiple commits on `feature/gemini-enhancements` branch, merged to `main`
+
+### Test Suite Implementation (Phase 1) ⭐⭐⭐
+**Priority:** HIGH PRIORITY  
+**Status:** ✅ **COMPLETE**  
+**Coverage:** ~60% (582 passing tests)
+
+**Achievements:**
+- ✅ **100% Unit Test Pass Rate** (582/582 passing)
+- ✅ **Full Coverage for Critical Utilities:**
+  - Password Reset & Auth Utils
+  - BulletProof Calculator
+  - Bridge/FERPA Manager
+  - Annotation Normalizer
+  - PII Guard
+- ✅ **Full Coverage for React Components:**
+  - GradePanel, AnnotatedTextViewer, FileDrop, etc.
+- ✅ **Integration Tests Implemented:**
+  - Authentication, Submission, Annotations flows
+  - Code exists in `tests/integration/` (skipped in CI due to DB auth)
+- ✅ **Fixed 40+ Broken Tests** from previous refactors
+
+**Completed:** November 24, 2025
 
 ---
 

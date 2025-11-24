@@ -115,19 +115,21 @@ export default function AssignmentModal({
     },
   });
 
-  const handleDismissMessage = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    console.log('🔄 Dismissing message and closing modal');
-    setWarningMessage(null);
-    setSuccessMessage(null);
+  const resetForm = () => {
     setTitle('');
     setDescription('');
     setCriteria('');
     setTotalPoints(100);
     setDocumentType('personal_narrative');
+    setWarningMessage(null);
+    setSuccessMessage(null);
+  };
+
+  const handleDismissMessage = () => {
+    // Don't prevent default or stop propagation, let it bubble naturally like the X button
+    console.log('🔄 OK Button Clicked - calling resetForm and onClose');
+    
+    resetForm();
     onClose();
   };
 
@@ -159,11 +161,7 @@ export default function AssignmentModal({
     if (createMutation.isPending) {
       return; // Don't close while creating
     }
-    setTitle('');
-    setDescription('');
-    setCriteria('');
-    setTotalPoints(100);
-    setDocumentType('personal_narrative');
+    resetForm();
     onClose();
   };
 
@@ -265,14 +263,13 @@ export default function AssignmentModal({
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
                 <p className="text-sm font-medium">{successMessage}</p>
               </div>
-              <Button
+              <button
                 type="button"
-                size="sm"
                 onClick={handleDismissMessage}
-                className="bg-green-600 hover:bg-green-700 text-white"
+                className="bg-green-600 hover:bg-green-700 text-white h-9 px-3 rounded-md text-sm font-medium transition-colors"
               >
                 OK
-              </Button>
+              </button>
             </div>
           )}
 
@@ -286,14 +283,13 @@ export default function AssignmentModal({
                   <p className="text-xs mt-1">{warningMessage}</p>
                 </div>
               </div>
-              <Button
+              <button
                 type="button"
-                size="sm"
                 onClick={handleDismissMessage}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white flex-shrink-0"
+                className="bg-yellow-600 hover:bg-yellow-700 text-white h-9 px-3 rounded-md text-sm font-medium transition-colors flex-shrink-0"
               >
                 OK
-              </Button>
+              </button>
             </div>
           )}
 

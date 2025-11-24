@@ -2,9 +2,10 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 23, 2025  
+**Last Updated:** November 24, 2025  
 **Branch:** `main`  
-**Status:** Active Development
+**Status:** Active Development  
+**Latest Release:** v1.3.0 (November 24, 2025)
 
 ---
 
@@ -12,13 +13,13 @@
 
 1. [TODO Management Instructions](#-todo-management-instructions)
 2. [🔴 CRITICAL & BLOCKED](#-critical--blocked)
-   - [Testing & Quality Assurance](#-testing--quality-assurance--highest-priority)
-   - [Submission.tsx Refactor (Blocked)](#-submissiontsx-refactor-blocked)
+   - *None*
 3. [⭐⭐⭐ HIGH PRIORITY (Next Up)](#-high-priority-next-up)
-   - [Assignment Modal Remaining Items](#-assignment-modal-remaining-items)
    - [Class Period Organization](#-class-period-organization)
    - [Clean Text Feature](#-clean-text-feature)
    - [Dashboard Enhancements](#-dashboard-enhancements)
+   - [Book Report / Source Text Feature](#-book-report--source-text-feature)
+   - [Rubric Document Upload & Extraction](#-rubric-document-upload--extraction)
    - [Submission Form Improvements](#-submission-form-improvements)
    - [High Priority User Feedback](#-high-priority-user-feedback)
 4. [⭐⭐ MEDIUM PRIORITY](#-medium-priority)
@@ -59,134 +60,11 @@
 
 ## 🔴 CRITICAL & BLOCKED
 
-### 🧪 TESTING & QUALITY ASSURANCE ⭐⭐⭐ HIGHEST PRIORITY
-
-#### Test Suite Implementation
-**Goal:** Achieve 75%+ test coverage with automated unit, integration, and E2E tests
-
-**Status:** 🟢 **100% PASSING TESTS!** 🎉  
-**Coverage:** ~59% current → 75%+ target  
-**Tests:** 572 passing / 0 failing / 4 skipped (576 total)  
-**Pass Rate:** 100% (was 92.5%)  
-**Recent Work:** Fixed 40 test failures (Nov 23, 2025)
-
-#### ✅ Recent Fixes (Nov 23, 2025)
-- [x] **Fixed normalizer.test.ts** - Updated invalid annotation categories (19/19 passing)
-- [x] **Fixed print.test.ts** - Updated to bulletproof feedback structure (34/34 passing)
-- [x] **Fixed Help.test.tsx** - Added AuthProvider wrapper + text updates (11/11 passing)
-- [x] **Fixed SettingsModal.test.tsx** - Removed duplicate tab + updated expectations (23/23 passing)
-- [x] **Fixed CreateAssignmentModal.test.tsx** - Added OK button click after success (23/23 passing)
-
-#### ✅ Completed Tests (14/40)
-- [x] **Auth Utils** (25 tests)
-- [x] **BridgeManager** (18 tests)
-- [x] **Annotation Normalizer** (19 tests) ✨ **FIXED**
-- [x] **PII Guard** (32 tests)
-- [x] **Line Number Utilities** (37 tests)
-- [x] **CSV Export** (17 tests)
-- [x] **Rubric Parser** (19 tests)
-- [x] **Rubric Builder** (36 tests)
-- [x] **DOCX Parser** (16 tests)
-- [x] **Document Types** (27 tests)
-- [x] **Print Utilities** (34 tests) ✨ **FIXED**
-- [x] **Help Page** (11 tests) ✨ **FIXED**
-- [x] **Settings Modal** (23 tests) ✨ **FIXED**
-- [x] **Create Assignment Modal** (23 tests) ✨ **FIXED**
-
-#### 🔴 Priority 1: Unit Tests (Critical Functions - 90%+ coverage goal)
-
-**Authentication & Security:**
-- [ ] Password reset token generation - `netlify/functions/lib/password-reset.test.ts`
-- [x] ✅ PII Guard validation - `src/lib/api/piiGuard.test.ts` (32/32 passing)
-
-**Core Utilities:**
-- [x] ✅ BulletProof Calculator
-- [x] ✅ Annotation Normalizer ✨ **FIXED**
-- [x] ✅ Line Number Utilities
-- [x] ✅ CSV Parser
-- [x] ✅ Rubric Parser
-- [x] ✅ Rubric Builder
-- [x] ✅ DOCX Parser
-- [x] ✅ Document Types
-- [x] ✅ Print Utilities ✨ **FIXED**
-- [x] ✅ OCR Handler
-
-**React Components (70%+ coverage goal):** ✅ **COMPLETE!**
-- [x] ✅ GradePanel
-- [x] ✅ AnnotatedTextViewer
-- [x] ✅ AnnotationViewer
-- [x] ✅ FileDrop
-- [x] ✅ StudentSelector
-- [x] ✅ CreateAssignmentModal
-- [x] ✅ SettingsModal
-- [x] ✅ VerbatimViewer
-
-**Pages:** ✅ **5/7 COMPLETE!**
-- [x] ✅ Login
-- [x] ✅ Register
-- [x] ✅ ForgotPassword
-- [x] ✅ Help
-- [x] ✅ Dashboard (Partial)
-- [x] ✅ Submission (Partial)
-
-#### 🟡 Priority 2: Integration Tests (15% of codebase)
-- [ ] Submission Flow
-- [ ] Authentication Flow
-- [ ] Password Reset Flow
-- [ ] Annotations Workflow
-
-#### 🟢 Priority 3: E2E Tests (Critical User Flows)
-- [ ] Complete Grading Flow
-- [ ] Password Reset Flow
-- [ ] File Upload Flow
-
----
-
-### 🔴 Submission.tsx Refactor (BLOCKED)
-
-**Priority:** ⭐⭐⭐ HIGH PRIORITY  
-**Status:** 🔴 **BLOCKED** - Need to follow lessons learned from failed attempt  
-**Previous Attempt:** Failed - Lost inline annotation feature (see `REFACTOR_LESSONS_LEARNED.md`)
-
-**Goal:** Refactor the 697-line `Submission.tsx` file into smaller, maintainable components WITHOUT losing any features.
-
-**Critical Success Factors:**
-1. **Feature Parity is NON-NEGOTIABLE**
-2. **Incremental approach**
-3. **Test against production**
-4. **Document existing features FIRST**
-
-**Refactoring Plan:**
-1. Document Current State
-2. Extract State Hook
-3. Extract Actions Hook
-4. Extract Components One at a Time
-5. Integration & Testing
-6. Verification
+*No critical blocking items at this time.*
 
 ---
 
 ## ⭐⭐⭐ HIGH PRIORITY (Next Up)
-
-### Assignment Modal Remaining Items
-
-**Estimated Time:** 1-2 hours  
-**Plan File:** `OldPlans/PLAN_assignment_modal_confirmation.md`  
-**Status:** Most features complete - Minor items remaining
-
-**Remaining Tasks:**
-- [ ] **Fix OK Button Not Closing Modal** (LOW PRIORITY)
-  - Status: DEFERRED - Use X button workaround for now
-  - Problem: Success/warning message displays, OK button click detected, but modal doesn't close
-  - Workaround: Use X button in top-right to close modal
-  - Files: `CreateAssignmentModal.tsx`, `Dashboard.tsx`
-
-- [ ] **Testing & Deployment**
-  - Run through all test cases
-  - Deploy to production
-  - Get user confirmation that fix works
-
----
 
 ### Class Period Organization
 
@@ -240,6 +118,155 @@
 - [ ] Add date range picker component
 - [ ] Implement filter logic
 - [ ] Add presets: "Last 7 days", "Last 30 days", "All time"
+
+---
+
+### Book Report / Source Text Feature
+
+**Status:** 🆕 **NEW FEATURE REQUEST** (November 24, 2025)  
+**Priority:** ⭐⭐⭐ HIGH PRIORITY  
+**Estimated Time:** 4-6 hours
+
+**Goal:** Allow teachers to upload source texts (books, articles, passages) that students write about, and include this context in the grading process.
+
+**Use Case:** 
+- Teacher uploads a book chapter or article to blob storage
+- Teacher provides a writing prompt (e.g., "Analyze the theme of courage in Chapter 3")
+- When grading student essays, the LLM receives both the source text and prompt for context-aware grading
+- Enables grading of book reports, literary analysis, and source-based writing
+
+**Database Schema Changes:**
+- [ ] Add `source_texts` table:
+  - `source_text_id` (UUID, primary key)
+  - `teacher_id` (UUID, foreign key to users)
+  - `title` (text, e.g., "To Kill a Mockingbird - Chapter 3")
+  - `blob_url` (text, Netlify Blobs storage URL)
+  - `writing_prompt` (text, the assignment prompt)
+  - `created_at` (timestamptz)
+  - `updated_at` (timestamptz)
+- [ ] Add `source_text_id` column to `assignments` table (optional foreign key)
+- [ ] Create migration script
+
+**Backend Implementation:**
+- [ ] Create `upload-source-text` Netlify function
+  - Accept file upload (PDF, DOCX, TXT)
+  - Extract text content using existing parsers
+  - Store in Netlify Blobs
+  - Save metadata to database
+  - Return source_text_id
+- [ ] Update `grade-submission` function
+  - Check if assignment has associated source_text_id
+  - Fetch source text from blob storage
+  - Include source text + prompt in LLM context
+  - Update prompt template to handle source-based grading
+- [ ] Create `get-source-texts` function (list teacher's source texts)
+- [ ] Create `delete-source-text` function (cleanup blob + database)
+
+**Frontend Implementation:**
+- [ ] Add "Source Text" section to CreateAssignmentModal
+  - File upload component (reuse existing FileDrop)
+  - Writing prompt textarea
+  - "Upload Source Text" button
+  - Display uploaded source texts in dropdown
+  - Option to link existing source text to assignment
+- [ ] Update Assignment form to show source text info
+- [ ] Add source text indicator on Dashboard (badge/icon)
+- [ ] Create SourceTextManager page/modal
+  - List all uploaded source texts
+  - Preview/download source text
+  - Edit writing prompt
+  - Delete source text
+  - View assignments using each source text
+
+**LLM Integration:**
+- [ ] Update grading prompt template
+  - Add section for source text context
+  - Add section for writing prompt
+  - Adjust rubric evaluation to consider source-based requirements
+- [ ] Test with sample book report assignments
+- [ ] Validate that source text improves grading accuracy
+
+**Testing:**
+- [ ] Unit tests for source text upload/retrieval
+- [ ] Integration tests for grading with source text
+- [ ] Test with various file formats (PDF, DOCX, TXT)
+- [ ] Test with large source texts (full book chapters)
+
+---
+
+### Rubric Document Upload & Extraction
+
+**Status:** 🆕 **NEW FEATURE REQUEST** (November 24, 2025)  
+**Priority:** ⭐⭐⭐ HIGH PRIORITY  
+**Estimated Time:** 3-4 hours
+
+**Goal:** Allow teachers to upload rubric documents (PDF, DOCX) and automatically extract the rubric structure for use in grading.
+
+**Use Case:**
+- Teacher has district-provided rubric in PDF/Word format
+- Upload document and AI extracts criteria, levels, and point values
+- Rubric is parsed into the application's rubric format
+- Teacher can review/edit extracted rubric before saving
+
+**Backend Implementation:**
+- [ ] Create `extract-rubric` Netlify function
+  - Accept file upload (PDF, DOCX)
+  - Extract text using existing parsers (DOCX, PDF)
+  - Send to LLM with rubric extraction prompt
+  - Parse LLM response into rubric JSON structure
+  - Return structured rubric data
+- [ ] Design rubric extraction prompt
+  - Identify criteria/categories
+  - Extract performance levels (Exemplary, Proficient, etc.)
+  - Extract point values for each level
+  - Extract descriptions for each level
+  - Handle various rubric formats (table, list, narrative)
+- [ ] Add validation for extracted rubric structure
+  - Ensure all required fields present
+  - Validate point values are numeric
+  - Check for reasonable criteria count (2-10)
+
+**Frontend Implementation:**
+- [ ] Add "Upload Rubric" button to CreateAssignmentModal
+  - File upload component
+  - Show loading state during extraction
+  - Display extracted rubric in preview
+  - Allow editing extracted rubric
+  - "Use This Rubric" button to populate form
+- [ ] Create RubricPreview component
+  - Display extracted criteria in table format
+  - Show point values and levels
+  - Highlight any extraction issues
+  - Allow inline editing before accepting
+- [ ] Add rubric extraction to SettingsModal
+  - Upload default rubric for all assignments
+  - Save to teacher preferences
+
+**LLM Prompt Design:**
+- [ ] Create rubric extraction prompt template
+  - Handle various rubric formats
+  - Extract structured data (JSON)
+  - Handle edge cases (missing points, unclear criteria)
+  - Provide confidence scores for extractions
+- [ ] Test with sample rubrics from different districts
+- [ ] Refine prompt based on extraction accuracy
+
+**Error Handling:**
+- [ ] Handle unreadable documents
+- [ ] Handle non-rubric documents
+- [ ] Handle ambiguous rubric structures
+- [ ] Provide helpful error messages
+- [ ] Allow manual rubric entry as fallback
+
+**Testing:**
+- [ ] Test with various rubric formats
+  - Table-based rubrics
+  - List-based rubrics
+  - Narrative rubrics
+  - Multi-page rubrics
+- [ ] Test with district-provided rubrics
+- [ ] Validate extraction accuracy
+- [ ] Test error handling
 
 ---
 
@@ -391,6 +418,10 @@
   - Fix blob store initialization in `netlify/functions/upload-file.ts`
 
 ### Low
+- [ ] **Assignment OK Button Not Closing Modal** (Deferred)
+  - Issue: Clicking "OK" on success message does not consistently close the modal
+  - Workaround: Use the "X" button in the top-right corner
+  - Note: Fix attempted on 11/24/25 but unsuccessful. Logic was aligned with X button but issue persists.
 - [ ] Mobile optimization needed (separate branch)
 - [ ] Dark mode inconsistencies
 
