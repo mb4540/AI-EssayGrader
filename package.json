@@ -12,6 +12,10 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest watch --config vitest.integration.config.ts",
+    "test:integration:ui": "vitest --ui --config vitest.integration.config.ts",
+    "test:integration:coverage": "vitest run --coverage --config vitest.integration.config.ts",
     "postinstall": "mkdir -p public/assets && cp node_modules/pdfjs-dist/build/pdf.worker.min.mjs public/assets/",
     "migrate:auth": "node scripts/run-auth-migration.js",
     "check:user": "node scripts/check-test-user.js"
@@ -66,6 +70,7 @@
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^4.0.3",
     "@vitest/ui": "^4.0.3",
     "autoprefixer": "^10.4.16",
     "eslint": "^8.55.0",

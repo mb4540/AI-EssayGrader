@@ -210,7 +210,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <TabsTrigger value="ocr">OCR Cleanup</TabsTrigger>
               <TabsTrigger value="rubric">Rubric Enhancement</TabsTrigger>
               <TabsTrigger value="doctypes">Document Types</TabsTrigger>
-              <TabsTrigger value="doctypes">Document Types</TabsTrigger>
             </TabsList>
 
             {/* LLM Provider Tab */}

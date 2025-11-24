@@ -19,7 +19,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test essay',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Consider a more specific title',
           severity: 'info',
         },
@@ -36,7 +36,7 @@ This sentence has a spelling eror in it.`;
       const annotation = result.normalized[0];
       expect(annotation.submission_id).toBe(submissionId);
       expect(annotation.quote).toBe('test essay');
-      expect(annotation.category).toBe('Style');
+      expect(annotation.category).toBe('Clarity');
       expect(annotation.suggestion).toBe('Consider a more specific title');
       expect(annotation.severity).toBe('info');
       expect(annotation.status).toBe('ai_suggested');
@@ -50,7 +50,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test essay',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Be more specific',
         },
         {
@@ -73,13 +73,13 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test essay',
-          category: 'style', // lowercase
+          category: 'clarity', // lowercase
           suggestion: 'Test',
         },
         {
           line: 1,
           quote: 'literature',
-          category: 'GRAMMAR', // uppercase
+          category: 'MECHANICS', // uppercase
           suggestion: 'Test',
         },
       ];
@@ -87,8 +87,8 @@ This sentence has a spelling eror in it.`;
       const result = normalizeAnnotations(rawAnnotations, sampleText, submissionId);
 
       expect(result.normalized).toHaveLength(2);
-      expect(result.normalized[0].category).toBe('Style');
-      expect(result.normalized[1].category).toBe('Grammar');
+      expect(result.normalized[0].category).toBe('Clarity');
+      expect(result.normalized[1].category).toBe('Mechanics');
     });
 
     it('should mark annotation as unresolved if category is invalid', () => {
@@ -113,7 +113,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'nonexistent text that does not appear',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
         },
       ];
@@ -130,21 +130,21 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Info test',
           severity: 'info',
         },
         {
           line: 2,
           quote: 'contains',
-          category: 'Grammar',
+          category: 'Mechanics',
           suggestion: 'Warning test',
           severity: 'warning',
         },
         {
           line: 3,
           quote: 'quick',
-          category: 'Spelling',
+          category: 'Mechanics',
           suggestion: 'Error test',
           severity: 'error',
         },
@@ -163,7 +163,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
           severity: 'invalid-severity' as any,
         },
@@ -180,7 +180,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
           // severity omitted
         },
@@ -197,7 +197,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test essay',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
           severity: 'info',
         },
@@ -223,7 +223,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
         },
       ];
@@ -241,7 +241,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: '"quotes"',
-          category: 'Punctuation',
+          category: 'Mechanics',
           suggestion: 'Use smart quotes',
         },
       ];
@@ -257,19 +257,19 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test essay',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Valid 1',
         },
         {
           line: 1,
           quote: 'nonexistent',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Invalid - not found',
         },
         {
           line: 2,
           quote: 'contains',
-          category: 'Grammar',
+          category: 'Mechanics',
           suggestion: 'Valid 2',
         },
         {
@@ -295,7 +295,7 @@ This sentence has a spelling eror in it.`;
       const raw: RawAnnotation = {
         line: 1,
         quote: 'nonexistent text',
-        category: 'Style',
+        category: 'Clarity',
         suggestion: 'This is a suggestion',
         severity: 'warning',
       };
@@ -307,7 +307,7 @@ This sentence has a spelling eror in it.`;
       expect(annotation.start_offset).toBe(-1);
       expect(annotation.end_offset).toBe(-1);
       expect(annotation.quote).toBe('nonexistent text');
-      expect(annotation.category).toBe('Style');
+      expect(annotation.category).toBe('Clarity');
       expect(annotation.suggestion).toContain('[Unmatched: Text not found]');
       expect(annotation.suggestion).toContain('This is a suggestion');
       expect(annotation.severity).toBe('warning');
@@ -331,7 +331,7 @@ This sentence has a spelling eror in it.`;
       const raw: RawAnnotation = {
         line: 1,
         quote: 'test',
-        category: 'Style',
+        category: 'Clarity',
         suggestion: 'Test',
       };
 
@@ -348,7 +348,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: longQuote,
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Break into shorter sentences',
         },
       ];
@@ -364,7 +364,7 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: '  test essay  ',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
         },
       ];
@@ -379,12 +379,12 @@ This sentence has a spelling eror in it.`;
       const multiLineText = `Line one has text.
 Line two has more text.
 Line three continues.`;
-      
+
       const rawAnnotations: RawAnnotation[] = [
         {
           line: 2,
           quote: 'Line two',
-          category: 'Style',
+          category: 'Clarity',
           suggestion: 'Test',
         },
       ];

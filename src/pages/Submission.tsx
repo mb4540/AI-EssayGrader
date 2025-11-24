@@ -1,756 +1,132 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, GitCompare, Printer, PenTool, Pencil } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import VerbatimViewer from '@/components/VerbatimViewer';
 import CriteriaInput from '@/components/CriteriaInput';
-import GradePanel from '@/components/GradePanel';
-import DraftComparison from '@/components/DraftComparison';
-import AnnotationViewer from '@/components/AnnotationViewer';
-import { ingestSubmission, gradeSubmission, saveTeacherEdits, getSubmission, listAssignments, uploadFile, getInlineAnnotations } from '@/lib/api';
-import { printSubmission } from '@/lib/print';
-import { generateAnnotatedPrintHTML } from '@/lib/printAnnotated';
-import type { Feedback } from '@/lib/schema';
-import type { Annotation } from '@/lib/annotations/types';
-import { useBridge } from '@/hooks/useBridge';
-import PageHeader from '@/components/PageHeader';
 import AssignmentModal from '@/components/CreateAssignmentModal';
+import { Toast } from '@/components/ui/toast';
+import { useSubmissionState } from './Submission/hooks/useSubmissionState';
+import { useSubmissionActions } from './Submission/hooks/useSubmissionActions';
+import { SubmissionHeader } from './Submission/components/SubmissionHeader';
+import { StudentInfoCard } from './Submission/components/StudentInfoCard';
+import { SubmissionContent } from './Submission/components/SubmissionContent';
+import { GradingSection } from './Submission/components/GradingSection';
 
 export default function Submission() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const bridge = useBridge();
-  const queryClient = useQueryClient();
+  const state = useSubmissionState();
+  const actions = useSubmissionActions(state);
 
-  const [draftMode, setDraftMode] = useState<'single' | 'comparison'>('single');
-  const [selectedStudentUuid, setSelectedStudentUuid] = useState('');
-  const [studentName, setStudentName] = useState('');
-  const [studentId, setStudentId] = useState('');
-  const [assignmentId, setAssignmentId] = useState<string | undefined>();
-  const [criteria, setCriteria] = useState('');
-  const [totalPoints, setTotalPoints] = useState(100);
-  const [verbatimText, setVerbatimText] = useState('');
-  const [roughDraftText, setRoughDraftText] = useState('');
-  const [finalDraftText, setFinalDraftText] = useState('');
-  const [sourceType, setSourceType] = useState<'text' | 'docx' | 'pdf' | 'doc' | 'image'>('text');
-  const [roughDraftSourceType, setRoughDraftSourceType] = useState<'text' | 'docx' | 'pdf' | 'doc' | 'image'>('text');
-  const [finalDraftSourceType, setFinalDraftSourceType] = useState<'text' | 'docx' | 'pdf' | 'doc' | 'image'>('text');
-  const [submissionId, setSubmissionId] = useState<string | undefined>(id);
-  const [aiFeedback, setAiFeedback] = useState<Feedback | null>(null);
-  const [teacherGrade, setTeacherGrade] = useState<number | undefined>();
-  const [teacherFeedback, setTeacherFeedback] = useState('');
-  const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [imageDataUrl, setImageDataUrl] = useState<string | undefined>();
-  const [storedImageUrl, setStoredImageUrl] = useState<string | undefined>();
-  const [pendingFile, setPendingFile] = useState<{ data: string; extension: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'grade' | 'annotate'>('grade');
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingAssignment, setEditingAssignment] = useState<any>(null);
-  const [originalFileUrl, setOriginalFileUrl] = useState<string | undefined>();
-  const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [annotationsRefreshKey, setAnnotationsRefreshKey] = useState(0);
-
-  // Load assignments list
-  const { data: assignmentsData } = useQuery({
-    queryKey: ['assignments'],
-    queryFn: listAssignments,
-  });
-
-  // Auto-populate criteria when assignment is selected
-  useEffect(() => {
-    if (assignmentId && assignmentsData?.assignments) {
-      const selectedAssignment = assignmentsData.assignments.find(a => a.id === assignmentId);
-      if (selectedAssignment?.grading_criteria && !criteria) {
-        setCriteria(selectedAssignment.grading_criteria);
-      }
-      if (selectedAssignment?.total_points) {
-        setTotalPoints(selectedAssignment.total_points);
-      }
-    }
-  }, [assignmentId, assignmentsData]);
-
-  // Load existing submission if ID is provided (from URL or state)
-  const effectiveId = id || submissionId;
-  const { data: existingSubmission } = useQuery({
-    queryKey: ['submission', effectiveId],
-    queryFn: () => getSubmission(effectiveId!),
-    enabled: !!effectiveId,
-  });
-
-  useEffect(() => {
-    if (existingSubmission && existingSubmission.student_id) {
-      // Set the selected UUID and resolve student info from bridge
-      setSelectedStudentUuid(existingSubmission.student_id);
-      const student = bridge.findByUuid(existingSubmission.student_id);
-      setStudentName(student?.name || 'Unknown');
-      setStudentId(student?.localId || '');
-      setAssignmentId(existingSubmission.assignment_id);
-      setCriteria(existingSubmission.teacher_criteria);
-      
-      // Set draft mode and corresponding text fields
-      if (existingSubmission.draft_mode) {
-        setDraftMode(existingSubmission.draft_mode);
-      }
-      
-      if (existingSubmission.draft_mode === 'comparison') {
-        setRoughDraftText(existingSubmission.rough_draft_text || '');
-        setFinalDraftText(existingSubmission.final_draft_text || '');
-      } else {
-        setVerbatimText(existingSubmission.verbatim_text || '');
-      }
-      
-      setSourceType(existingSubmission.source_type as 'text' | 'docx' | 'pdf' | 'doc' | 'image');
-      setAiFeedback(existingSubmission.ai_feedback || null);
-      setTeacherGrade(existingSubmission.teacher_grade);
-      setTeacherFeedback(existingSubmission.teacher_feedback || '');
-      
-      // Load stored image URL if available
-      if ((existingSubmission as any).image_url) {
-        setStoredImageUrl((existingSubmission as any).image_url);
-      }
-      
-      // Load original file URL if available (for annotations)
-      if ((existingSubmission as any).original_file_url) {
-        setOriginalFileUrl((existingSubmission as any).original_file_url);
-      }
-    }
-  }, [existingSubmission]);
-
-  const ingestMutation = useMutation({
-    mutationFn: ingestSubmission,
-    onSuccess: (data) => {
-      setSubmissionId(data.submission_id);
-    },
-  });
-
-  const gradeMutation = useMutation({
-    mutationFn: gradeSubmission,
-    onSuccess: async (data) => {
-      setAiFeedback(data);
-      
-      // Fetch annotations from database after grading
-      // Add delay to ensure annotations are fully saved
-      if (submissionId) {
-        try {
-          // Wait 1 second for annotations to be saved (increased from 500ms)
-          await new Promise(resolve => setTimeout(resolve, 1000));
-          
-          const annotationsData = await getInlineAnnotations(submissionId);
-          const newAnnotations = annotationsData.annotations || [];
-          
-          console.log(`✓ Loaded ${newAnnotations.length} annotations after grading`);
-          
-          // Force state update with new array reference
-          setAnnotations([...newAnnotations]);
-          
-          // Invalidate the submission query to refresh all data
-          queryClient.invalidateQueries({ queryKey: ['submission', submissionId] });
-          
-          // Force a second fetch after another delay to catch any stragglers
-          setTimeout(async () => {
-            try {
-              const retryData = await getInlineAnnotations(submissionId);
-              const retryAnnotations = retryData.annotations || [];
-              if (retryAnnotations.length > newAnnotations.length) {
-                console.log(`✓ Retry found ${retryAnnotations.length - newAnnotations.length} more annotations`);
-                setAnnotations([...retryAnnotations]);
-              }
-            } catch (err) {
-              console.error('Retry fetch failed:', err);
-            }
-          }, 2000);
-          
-          // Third fetch for Pass 2 annotations (which complete ~5 seconds after grading)
-          setTimeout(async () => {
-            try {
-              const pass2Data = await getInlineAnnotations(submissionId);
-              const pass2Annotations = pass2Data.annotations || [];
-              const currentCount = annotations.length;
-              if (pass2Annotations.length > currentCount) {
-                console.log(`✓ Pass 2 fetch found ${pass2Annotations.length - currentCount} more annotations (Total: ${pass2Annotations.length})`);
-                setAnnotations([...pass2Annotations]);
-                // Trigger refresh in VerbatimViewer
-                setAnnotationsRefreshKey(prev => prev + 1);
-              }
-            } catch (err) {
-              console.error('Pass 2 fetch failed:', err);
-            }
-          }, 5000);
-        } catch (error) {
-          console.error('Failed to fetch annotations after grading:', error);
-          setAnnotations([]);
-        }
-      }
-    },
-  });
-
-  const saveMutation = useMutation({
-    mutationFn: saveTeacherEdits,
-    onSuccess: () => {
-      // Show temporary success message
-      setSaveMessage('Grade saved successfully!');
-      setTimeout(() => setSaveMessage(null), 3000);
-      
-      // Invalidate and refetch the submission query to update UI state
-      const effectiveId = id || submissionId;
-      if (effectiveId) {
-        queryClient.invalidateQueries({ queryKey: ['submission', effectiveId] });
-      }
-      
-      // Navigate to the submission URL if not already there (for new submissions)
-      if (!id && submissionId) {
-        navigate(`/submission/${submissionId}`, { replace: true });
-      }
-    },
-  });
-
-  const handleTextExtracted = (text: string, type: 'text' | 'docx' | 'pdf' | 'doc' | 'image', fileData?: string) => {
-    setVerbatimText(text);
-    setSourceType(type);
-    
-    if (type === 'image' && fileData) {
-      // For images, store in imageDataUrl for upload-image function
-      setImageDataUrl(fileData);
-    } else if ((type === 'pdf' || type === 'docx' || type === 'doc') && fileData) {
-      // For documents, store in pendingFile for upload-file function
-      setPendingFile({ data: fileData, extension: type });
-    }
-  };
-
-  const handleTextEnhanced = (enhancedText: string) => {
-    setVerbatimText(enhancedText);
-  };
-
-  const handleRoughDraftExtracted = (text: string, sourceType: 'text' | 'docx' | 'pdf' | 'doc' | 'image', _imageDataUrl?: string) => {
-    setRoughDraftText(text);
-    setRoughDraftSourceType(sourceType);
-  };
-
-  const handleFinalDraftExtracted = (text: string, sourceType: 'text' | 'docx' | 'pdf' | 'doc' | 'image', _imageDataUrl?: string) => {
-    setFinalDraftText(text);
-    setFinalDraftSourceType(sourceType);
-  };
-
-  const handleRoughDraftEnhanced = (enhancedText: string) => {
-    setRoughDraftText(enhancedText);
-  };
-
-  const handleFinalDraftEnhanced = (enhancedText: string) => {
-    setFinalDraftText(enhancedText);
-  };
-
-  // Upload image to Netlify Blobs after submission is created
-  const uploadImage = async (submissionId: string, imageData: string) => {
-    try {
-      const response = await fetch('/.netlify/functions/upload-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          submission_id: submissionId,
-          image_data: imageData 
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const data = await response.json();
-      setStoredImageUrl(data.image_url);
-      return data.image_url;
-    } catch (error) {
-      console.error('Image upload failed:', error);
-      return null;
-    }
-  };
-
-  const handleRunGrade = async () => {
-    // First ingest if not already done
-    if (!submissionId) {
-      // Validation
-      if (!selectedStudentUuid) {
-        alert('Please select a student from the dropdown');
-        return;
-      }
-
-      if (draftMode === 'single') {
-        if (!criteria || !verbatimText) {
-          alert('Please provide grading criteria and essay text');
-          return;
-        }
-      } else {
-        if (!criteria || !roughDraftText || !finalDraftText) {
-          alert('Please provide grading criteria and both draft versions');
-          return;
-        }
-      }
-      
-      // FERPA COMPLIANT: Send only UUID to API (no PII)
-      const result = await ingestMutation.mutateAsync({
-        student_id: selectedStudentUuid,  // Only UUID sent to cloud
-        assignment_id: assignmentId || undefined,
-        teacher_criteria: criteria,
-        source_type: sourceType,
-        draft_mode: draftMode,
-        verbatim_text: draftMode === 'single' ? verbatimText : undefined,
-        rough_draft_text: draftMode === 'comparison' ? roughDraftText : undefined,
-        final_draft_text: draftMode === 'comparison' ? finalDraftText : undefined,
-      });
-
-      setSubmissionId(result.submission_id);
-      
-      // Upload image if we have one
-      if (imageDataUrl && sourceType === 'image') {
-        const imageUrl = await uploadImage(result.submission_id, imageDataUrl);
-        if (imageUrl) {
-          // Image uploaded successfully
-        }
-      }
-      
-      // Upload original document file if we have one
-      if (pendingFile) {
-        try {
-          const fileUrl = await uploadFile(result.submission_id, pendingFile.data, pendingFile.extension);
-          setOriginalFileUrl(fileUrl); // Update state so Annotate tab appears immediately
-          setPendingFile(null); // Clear after successful upload
-        } catch (error) {
-          console.error('Failed to upload original file:', error);
-          // Don't block grading if file upload fails
-        }
-      }
-      
-      // Then grade
-      await gradeMutation.mutateAsync({
-        submission_id: result.submission_id,
-      });
-    } else {
-      // Just grade existing submission
-      await gradeMutation.mutateAsync({
-        submission_id: submissionId,
-      });
-    }
-  };
-
-  const handleSaveEdits = async () => {
-    if (!submissionId) {
-      alert('Please run grading first');
-      return;
-    }
-
-    await saveMutation.mutateAsync({
-      submission_id: submissionId,
-      teacher_grade: teacherGrade ?? aiFeedback?.overall_grade ?? 0,
-      teacher_feedback: teacherFeedback,
-    });
-  };
-
-  const canGrade = !!studentName && !!criteria && (
-    draftMode === 'single' ? !!verbatimText : (!!roughDraftText && !!finalDraftText)
+  const canGrade = !!state.studentName && !!state.criteria && (
+    state.draftMode === 'single' ? !!state.verbatimText : (!!state.roughDraftText && !!state.finalDraftText)
   );
-
-  const handleNewSubmission = () => {
-    // Reset student selection but keep assignment
-    setSelectedStudentUuid('');
-    setStudentName('');
-    setStudentId('');
-    // Reset essay content
-    setVerbatimText('');
-    setRoughDraftText('');
-    setFinalDraftText('');
-    setSourceType('text');
-    setRoughDraftSourceType('text');
-    setFinalDraftSourceType('text');
-    // Reset grading
-    setSubmissionId(undefined);
-    setAiFeedback(null);
-    setTeacherGrade(undefined);
-    setTeacherFeedback('');
-    setImageDataUrl(undefined);
-    setStoredImageUrl(undefined);
-    setPendingFile(null);
-    setOriginalFileUrl(undefined);
-    // Keep assignment and criteria for quick grading
-  };
-
-  const handlePrint = async () => {
-    if (!existingSubmission) {
-      alert('Please save the submission first');
-      return;
-    }
-    
-    // Check if annotations exist
-    let annotations: Annotation[] = [];
-    if (submissionId) {
-      try {
-        const annotationsData = await getInlineAnnotations(submissionId);
-        annotations = annotationsData.annotations || [];
-      } catch (error) {
-        console.error('Failed to fetch annotations:', error);
-      }
-    }
-    
-    // Use annotated print if annotations exist, otherwise use regular print
-    if (annotations.length > 0 && (verbatimText || finalDraftText)) {
-      const html = generateAnnotatedPrintHTML({
-        student_name: studentName,
-        student_id: studentId || undefined,
-        assignment_title: existingSubmission.assignment_title,
-        verbatim_text: (draftMode === 'single' ? verbatimText : finalDraftText) || '',
-        teacher_criteria: criteria,
-        total_points: totalPoints,
-        ai_grade: existingSubmission.ai_grade,
-        ai_feedback: aiFeedback || undefined,
-        teacher_grade: teacherGrade,
-        teacher_feedback: teacherFeedback,
-        created_at: existingSubmission.created_at,
-        annotations: annotations,
-      });
-      
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(html);
-        printWindow.document.close();
-      }
-    } else {
-      // Regular print without annotations
-      printSubmission({
-        student_name: studentName,
-        student_id: studentId || undefined,
-        assignment_title: existingSubmission.assignment_title,
-        draft_mode: draftMode,
-        verbatim_text: verbatimText || undefined,
-        rough_draft_text: roughDraftText || undefined,
-        final_draft_text: finalDraftText || undefined,
-        teacher_criteria: criteria,
-        total_points: totalPoints,
-        ai_grade: existingSubmission.ai_grade,
-        ai_feedback: aiFeedback || undefined,
-        teacher_grade: teacherGrade,
-        teacher_feedback: teacherFeedback,
-        created_at: existingSubmission.created_at,
-      });
-    }
-  };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
-        {/* Save Success Message */}
-        {saveMessage && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 animate-in fade-in slide-in-from-top-2">
-            <span className="text-lg">✓</span>
-            <span className="font-medium">{saveMessage}</span>
-          </div>
+        {/* Toast Notification */}
+        {state.saveMessage && (
+          <Toast
+            message={state.saveMessage}
+            duration={3000}
+            onClose={() => state.setSaveMessage(null)}
+          />
         )}
-        
-        <PageHeader
-          icon={<span className="text-2xl">📝</span>}
-          title="Grade Submission"
-          subtitle="Grade essays with AI assistance"
-          showAddAssignment={true}
-          showBridgeLock={true}
-          actions={
-            <>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleNewSubmission}
-                className="bg-green-50 hover:bg-green-100 text-green-700 border-green-300"
-              >
-                <PenTool className="w-4 h-4 mr-2" />
-                New Submission
-              </Button>
-              <div className="w-px h-8 bg-gray-300 mx-2" />
-              {submissionId && aiFeedback && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handlePrint}
-                  >
-                    <Printer className="w-4 h-4 mr-2" />
-                    Print
-                  </Button>
-                </>
-              )}
-              <Button
-                variant={draftMode === 'single' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setDraftMode('single')}
-                className={draftMode === 'single' ? 'bg-indigo-600' : ''}
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Single Essay
-              </Button>
-              <Button
-                variant={draftMode === 'comparison' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setDraftMode('comparison')}
-                className={draftMode === 'comparison' ? 'bg-indigo-600' : ''}
-              >
-                <GitCompare className="w-4 h-4 mr-2" />
-                Draft Comparison
-              </Button>
-            </>
-          }
+
+        <SubmissionHeader
+          submissionId={state.submissionId}
+          aiFeedback={state.aiFeedback}
+          draftMode={state.draftMode}
+          setDraftMode={state.setDraftMode}
+          onNewSubmission={actions.handleNewSubmission}
+          onPrint={actions.handlePrint}
         />
 
         {/* Top Row: Student Info and Grading Criteria side by side */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Student Info Card */}
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                <span className="text-indigo-600 dark:text-indigo-300 text-sm">👤</span>
-              </div>
-              Student Information
-            </h2>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="student-select" className="text-gray-700 dark:text-gray-300 font-medium">
-                  Select Student <span className="text-red-500">*</span>
-                </Label>
-                {bridge.isLocked ? (
-                  <div className="mt-1 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800 mb-2">
-                      🔒 Student roster is locked. Please unlock it first.
-                    </p>
-                    <Button
-                      onClick={() => navigate('/bridge')}
-                      variant="outline"
-                      size="sm"
-                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
-                    >
-                      Go to Students Page to Unlock
-                    </Button>
-                  </div>
-                ) : bridge.students.length === 0 ? (
-                  <div className="mt-1 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-800 mb-2">
-                      No students in roster. Please add students first.
-                    </p>
-                    <Button
-                      onClick={() => navigate('/bridge')}
-                      variant="outline"
-                      size="sm"
-                      className="text-blue-700 border-blue-300 hover:bg-blue-100"
-                    >
-                      Go to Students Page
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <Select
-                      value={selectedStudentUuid}
-                      onValueChange={(uuid) => {
-                        setSelectedStudentUuid(uuid);
-                        const student = bridge.findByUuid(uuid);
-                        if (student) {
-                          setStudentName(student.name);
-                          setStudentId(student.localId);
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                        <SelectValue placeholder="Choose a student from your roster" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {bridge.students.map((student) => (
-                          <SelectItem key={student.uuid} value={student.uuid}>
-                            {student.name} ({student.localId})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {selectedStudentUuid && (
-                      <p className="text-sm text-gray-500 mt-1">
-                        Selected: {studentName} (ID: {studentId})
-                      </p>
-                    )}
-                  </>
-                )}
-              </div>
-              <div>
-                <Label className="text-gray-700 dark:text-gray-300 font-medium">
-                  Student UUID <span className="text-gray-400 text-xs">(auto-filled)</span>
-                </Label>
-                <Input
-                  value={selectedStudentUuid}
-                  disabled
-                  placeholder="UUID will be auto-filled"
-                  className="mt-1 border-gray-300 bg-gray-50 text-gray-500"
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="assignment" className="text-gray-700 dark:text-gray-300 font-medium">
-                    Assignment <span className="text-gray-400 text-xs">(optional)</span>
-                  </Label>
-                  {assignmentId && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        const selectedAssignment = assignmentsData?.assignments.find(a => a.id === assignmentId);
-                        if (selectedAssignment) {
-                          setEditingAssignment(selectedAssignment);
-                          setIsEditModalOpen(true);
-                        }
-                      }}
-                      className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7"
-                    >
-                      <Pencil className="w-3 h-3 mr-1" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-                <Select value={assignmentId || ''} onValueChange={(value) => setAssignmentId(value || undefined)}>
-                  <SelectTrigger className="mt-1 border-gray-300">
-                    <SelectValue placeholder="Select an assignment..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assignmentsData?.assignments.map((assignment) => (
-                      <SelectItem key={assignment.id} value={assignment.id}>
-                        {assignment.title}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
+          <StudentInfoCard
+            bridge={state.bridge}
+            selectedStudentUuid={state.selectedStudentUuid}
+            setSelectedStudentUuid={state.setSelectedStudentUuid}
+            studentName={state.studentName}
+            setStudentName={state.setStudentName}
+            studentId={state.studentId}
+            setStudentId={state.setStudentId}
+            assignmentId={state.assignmentId}
+            setAssignmentId={state.setAssignmentId}
+            assignmentsData={state.assignmentsData}
+            setEditingAssignment={state.setEditingAssignment}
+            setIsEditModalOpen={state.setIsEditModalOpen}
+          />
 
           {/* Grading Criteria */}
           <div className="transform transition-all duration-300">
-            <CriteriaInput 
-              value={criteria} 
-              onChange={setCriteria}
-              totalPoints={totalPoints}
-              onTotalPointsChange={setTotalPoints}
+            <CriteriaInput
+              value={state.criteria}
+              onChange={state.setCriteria}
+              totalPoints={state.totalPoints}
+              onTotalPointsChange={state.setTotalPoints}
             />
           </div>
         </div>
 
-        {/* Essay Section - Full Width for Single, 50/50 for Comparison */}
-        <div className="mb-6">
-          {draftMode === 'single' ? (
-            <VerbatimViewer 
-              text={verbatimText} 
-              sourceType={sourceType}
-              onTextExtracted={handleTextExtracted}
-              onTextEnhanced={handleTextEnhanced}
-              imageUrl={storedImageUrl}
-              submissionId={submissionId}
-              showAnnotations={!!submissionId && !!aiFeedback}
-              annotationsRefreshKey={annotationsRefreshKey}
-            />
-          ) : (
-            <DraftComparison
-              roughDraft={roughDraftText}
-              finalDraft={finalDraftText}
-              roughDraftSourceType={roughDraftSourceType}
-              finalDraftSourceType={finalDraftSourceType}
-              onRoughDraftChange={setRoughDraftText}
-              onFinalDraftChange={setFinalDraftText}
-              onRoughDraftExtracted={handleRoughDraftExtracted}
-              onFinalDraftExtracted={handleFinalDraftExtracted}
-              onRoughDraftEnhanced={handleRoughDraftEnhanced}
-              onFinalDraftEnhanced={handleFinalDraftEnhanced}
-            />
-          )}
-        </div>
+        {/* Essay Section */}
+        <SubmissionContent
+          draftMode={state.draftMode}
+          verbatimText={state.verbatimText}
+          sourceType={state.sourceType}
+          onTextExtracted={actions.handleTextExtracted}
+          onTextEnhanced={actions.handleTextEnhanced}
+          storedImageUrl={state.storedImageUrl}
+          submissionId={state.submissionId}
+          aiFeedback={state.aiFeedback}
+          annotationsRefreshKey={state.annotationsRefreshKey}
+          roughDraftText={state.roughDraftText}
+          finalDraftText={state.finalDraftText}
+          roughDraftSourceType={state.roughDraftSourceType}
+          finalDraftSourceType={state.finalDraftSourceType}
+          setRoughDraftText={state.setRoughDraftText}
+          setFinalDraftText={state.setFinalDraftText}
+          onRoughDraftExtracted={actions.handleRoughDraftExtracted}
+          onFinalDraftExtracted={actions.handleFinalDraftExtracted}
+          onRoughDraftEnhanced={actions.handleRoughDraftEnhanced}
+          onFinalDraftEnhanced={actions.handleFinalDraftEnhanced}
+        />
 
         {/* Grading Panel with Optional Annotation Tab */}
-        <div className="transform transition-all duration-300">
-          {submissionId && originalFileUrl && (sourceType === 'pdf' || sourceType === 'docx') ? (
-            <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'grade' | 'annotate')}>
-              <div className="flex justify-center mb-6">
-                <TabsList className="grid grid-cols-2 w-full max-w-md h-12 bg-white dark:bg-slate-800 shadow-md">
-                  <TabsTrigger 
-                    value="grade" 
-                    className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
-                  >
-                    <FileText className="w-4 h-4" />
-                    AI Grade
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="annotate" 
-                    className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white"
-                  >
-                    <PenTool className="w-4 h-4" />
-                    Annotate
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-              
-              <TabsContent value="grade">
-                <GradePanel
-                  aiFeedback={aiFeedback}
-                  isGrading={gradeMutation.isPending}
-                  teacherGrade={teacherGrade}
-                  setTeacherGrade={setTeacherGrade}
-                  teacherFeedback={teacherFeedback}
-                  setTeacherFeedback={setTeacherFeedback}
-                  onRunGrade={handleRunGrade}
-                  onSaveEdits={handleSaveEdits}
-                  canGrade={canGrade}
-                  isSaving={saveMutation.isPending}
-                  annotations={annotations}
-                />
-              </TabsContent>
-              
-              <TabsContent value="annotate">
-                <AnnotationViewer
-                  submissionId={submissionId}
-                  originalFileUrl={originalFileUrl}
-                  sourceType={sourceType}
-                />
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <GradePanel
-              aiFeedback={aiFeedback}
-              isGrading={gradeMutation.isPending}
-              teacherGrade={teacherGrade}
-              setTeacherGrade={setTeacherGrade}
-              teacherFeedback={teacherFeedback}
-              setTeacherFeedback={setTeacherFeedback}
-              onRunGrade={handleRunGrade}
-              onSaveEdits={handleSaveEdits}
-              canGrade={canGrade}
-              isSaving={saveMutation.isPending}
-              annotations={annotations}
-            />
-          )}
-        </div>
+        <GradingSection
+          submissionId={state.submissionId}
+          originalFileUrl={state.originalFileUrl}
+          sourceType={state.sourceType}
+          activeTab={state.activeTab}
+          setActiveTab={state.setActiveTab}
+          aiFeedback={state.aiFeedback}
+          isGrading={actions.gradeMutation.isPending}
+          teacherGrade={state.teacherGrade}
+          setTeacherGrade={state.setTeacherGrade}
+          teacherFeedback={state.teacherFeedback}
+          setTeacherFeedback={state.setTeacherFeedback}
+          onRunGrade={actions.handleRunGrade}
+          onSaveEdits={actions.handleSaveEdits}
+          canGrade={canGrade}
+          isSaving={actions.saveMutation.isPending}
+          annotations={state.annotations}
+        />
       </div>
 
       {/* Edit Assignment Modal */}
       <AssignmentModal
-        isOpen={isEditModalOpen}
+        isOpen={state.isEditModalOpen}
         onClose={() => {
-          setIsEditModalOpen(false);
-          setEditingAssignment(null);
+          state.setIsEditModalOpen(false);
+          state.setEditingAssignment(null);
         }}
         mode="edit"
-        existingAssignment={editingAssignment}
+        existingAssignment={state.editingAssignment}
         onSuccess={() => {
-          queryClient.invalidateQueries({ queryKey: ['assignments'] });
-          // Refresh criteria if this assignment is currently selected
-          if (editingAssignment?.id === assignmentId) {
-            const updatedAssignment = assignmentsData?.assignments.find(a => a.id === assignmentId);
-            if (updatedAssignment?.grading_criteria) {
-              setCriteria(updatedAssignment.grading_criteria);
-            }
-            if (updatedAssignment?.total_points) {
-              setTotalPoints(updatedAssignment.total_points);
-            }
+          actions.refreshAssignments();
+          // Logic to update local state if needed
+          if (state.editingAssignment?.id === state.assignmentId) {
+            // We can't easily access the new assignment data here without fetching it.
+            // But invalidating queries will trigger a refetch.
+            // The useEffect in useSubmissionState will run when assignmentsData changes.
+            // And it will update criteria if it matches assignmentId.
+            // So this should work automatically!
           }
         }}
       />

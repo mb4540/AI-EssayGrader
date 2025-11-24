@@ -24,12 +24,12 @@ export interface UseBridgeReturn {
   students: BridgeEntry[];
   hasFileHandle: boolean;
   supportsFileSystem: boolean;
-  
+
   // Operations
   createNew: (passphrase: string, metadata: { district?: string; school?: string; teacherName?: string }) => Promise<void>;
   unlock: (passphrase: string, file?: EncryptedBridgeFile) => Promise<void>;
   lock: () => void;
-  
+
   // Student operations
   addStudent: (name: string, localId: string) => BridgeEntry;
   updateStudent: (uuid: string, updates: { name?: string; localId?: string }) => BridgeEntry;
@@ -37,13 +37,13 @@ export interface UseBridgeReturn {
   findByUuid: (uuid: string) => BridgeEntry | null;
   findByLocalId: (localId: string) => BridgeEntry | null;
   findByName: (name: string) => BridgeEntry[];
-  
+
   // File operations
   save: () => Promise<void>;
   exportFile: () => Promise<void>;
   importFile: () => Promise<void>;
   importCsv: (csvText: string) => Promise<ImportResult>;
-  
+
   // Loading state
   loading: boolean;
   error: string | null;
@@ -59,7 +59,7 @@ export function useBridge(): UseBridgeReturn {
 
   const store = getBridgeStore();
   const supportsFileSystem = isFileSystemAccessSupported();
-  
+
   // CRITICAL: Require user_id for FERPA compliance
   const userId = user?.user_id;
   if (!userId) {
@@ -102,7 +102,7 @@ export function useBridge(): UseBridgeReturn {
     try {
       await store.createNew(passphrase, metadata);
       refreshStudents();
-      
+
       // Auto-save to storage (user-specific)
       if (!userId) {
         throw new Error('User ID required for bridge storage (FERPA compliance)');
@@ -221,7 +221,7 @@ export function useBridge(): UseBridgeReturn {
         throw new Error('User ID required for bridge storage (FERPA compliance)');
       }
       const encrypted = await store.export();
-      
+
       if (supportsFileSystem && fileHandle) {
         await writeBridgeFile(fileHandle, encrypted);
       } else {
@@ -241,7 +241,7 @@ export function useBridge(): UseBridgeReturn {
     setError(null);
     try {
       const encrypted = await store.export();
-      
+
       if (supportsFileSystem) {
         const handle = await saveBridgeFile(encrypted);
         if (handle) {
@@ -311,12 +311,12 @@ export function useBridge(): UseBridgeReturn {
     students,
     hasFileHandle: !!fileHandle,
     supportsFileSystem,
-    
+
     // Operations
     createNew,
     unlock,
     lock,
-    
+
     // Student operations
     addStudent,
     updateStudent,
@@ -324,15 +324,32 @@ export function useBridge(): UseBridgeReturn {
     findByUuid,
     findByLocalId,
     findByName,
-    
+
     // File operations
     save,
     exportFile,
     importFile,
     importCsv,
-    
+
     // Loading state
     loading,
     error,
   };
+}
+
+import React, { createContext, useContext, ReactNode } from 'react';
+
+const BridgeContext = createContext<UseBridgeReturn | null>(null);
+
+export function BridgeProvider({ children }: { children: ReactNode }) {
+  const bridge = useBridge();
+  return React.createElement(BridgeContext.Provider, { value: bridge }, children);
+}
+
+export function useBridgeContext() {
+  const context = useContext(BridgeContext);
+  if (!context) {
+    throw new Error('useBridgeContext must be used within a BridgeProvider');
+  }
+  return context;
 }

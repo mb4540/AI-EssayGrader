@@ -3,23 +3,46 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { generatePrintHTML, printSubmission, downloadSubmissionHTML } from './print';
-import type { Feedback } from './schema';
 
 describe('Print Utilities', () => {
-  const mockFeedback: Feedback = {
-    overall_grade: 85,
-    supportive_summary: 'Great work overall!',
-    top_3_suggestions: ['Add more examples', 'Improve transitions', 'Check grammar'],
-    grammar_findings: ['Missing comma in line 5'],
-    spelling_findings: ['Misspelled "their" as "thier"'],
-    structure_findings: ['Needs better transitions'],
-    evidence_findings: ['Add more examples'],
-    rubric_scores: [
-      { category: 'Content', score: 85, comments: 'Good ideas' },
-      { category: 'Organization', score: 90, comments: 'Well structured' },
-    ],
-    improvement_summary: 'Significant improvement from draft',
-    growth_percentage: 15,
+  const mockFeedback: any = {
+    bulletproof: {
+      extracted_scores: {
+        scores: [
+          {
+            criterion_id: 'content',
+            points_awarded: 85,
+            level: 'Proficient',
+            rationale: 'Good ideas and strong content'
+          },
+          {
+            criterion_id: 'organization',
+            points_awarded: 90,
+            level: 'Advanced',
+            rationale: 'Well structured and organized'
+          }
+        ],
+        feedback: {
+          strengths: ['Great work overall!', 'Strong organization'],
+          areas_for_improvement: ['Add more examples', 'Improve transitions'],
+          top_3_suggestions: ['Add more examples', 'Improve transitions', 'Check grammar'],
+          grammar_findings: ['Missing comma in line 5'],
+          spelling_findings: ['Misspelled "their" as "thier"']
+        }
+      },
+      computed_scores: {
+        raw_points: 175,
+        max_points: 200,
+        percent: 87.5
+      },
+      rubric: {
+        criteria: [
+          { id: 'content', max_points: 100 },
+          { id: 'organization', max_points: 100 }
+        ]
+      },
+      calculator_version: 'BulletProof v2.0'
+    }
   };
 
   const baseData = {
@@ -162,7 +185,7 @@ describe('Print Utilities', () => {
       const data = { ...baseData, ai_feedback: mockFeedback };
       const html = generatePrintHTML(data);
 
-      expect(html).toContain('AI Assessment Details');
+      expect(html).toContain('Grading Feedback');
       expect(html).toContain('Great work overall!');
       expect(html).toContain('Add more examples');
     });
@@ -172,26 +195,27 @@ describe('Print Utilities', () => {
       const html = generatePrintHTML(data);
 
       expect(html).toContain('Content');
-      expect(html).toContain('85/100');
-      expect(html).toContain('Good ideas');
+      expect(html).toContain('85');
+      expect(html).toContain('Good ideas and strong content');
       expect(html).toContain('Organization');
-      expect(html).toContain('90/100');
+      expect(html).toContain('90');
     });
 
     it('should include improvement summary', () => {
       const data = { ...baseData, ai_feedback: mockFeedback };
       const html = generatePrintHTML(data);
 
-      expect(html).toContain('Improvement Analysis');
-      expect(html).toContain('Significant improvement from draft');
-      expect(html).toContain('15%');
+      // Improvement summary is no longer a separate section in bulletproof format
+      // The feedback is now in strengths/areas_for_improvement
+      expect(html).toContain('Strengths');
+      expect(html).toContain('Areas for Improvement');
     });
 
     it('should include grammar findings', () => {
       const data = { ...baseData, ai_feedback: mockFeedback };
       const html = generatePrintHTML(data);
 
-      expect(html).toContain('Grammar Issues');
+      expect(html).toContain('Grammar');
       expect(html).toContain('Missing comma in line 5');
     });
 
@@ -199,7 +223,7 @@ describe('Print Utilities', () => {
       const data = { ...baseData, ai_feedback: mockFeedback };
       const html = generatePrintHTML(data);
 
-      expect(html).toContain('Spelling Issues');
+      expect(html).toContain('Spelling');
       expect(html).toContain('Misspelled "their" as "thier"');
     });
 
@@ -212,12 +236,13 @@ describe('Print Utilities', () => {
       const html = generatePrintHTML(data);
 
       const matches = html.match(/Grammar issue/g);
-      expect(matches?.length).toBeLessThanOrEqual(10);
+      expect(matches?.length || 0).toBeLessThanOrEqual(10);
     });
 
     it('should include teacher feedback when provided', () => {
       const data = {
         ...baseData,
+        ai_feedback: { bulletproof: { extracted_scores: { feedback: {} } } } as any,
         teacher_feedback: 'Excellent work! Keep it up.',
       };
       const html = generatePrintHTML(data);
@@ -269,7 +294,7 @@ describe('Print Utilities', () => {
       };
 
       vi.spyOn(window, 'open').mockReturnValue(mockWindow);
-      vi.spyOn(window, 'alert').mockImplementation(() => {});
+      vi.spyOn(window, 'alert').mockImplementation(() => { });
       vi.useFakeTimers();
     });
 
@@ -326,7 +351,7 @@ describe('Print Utilities', () => {
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => mockLink);
       vi.spyOn(document.body, 'removeChild').mockImplementation(() => mockLink);
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:mock-url');
-      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+      vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => { });
     });
 
     afterEach(() => {

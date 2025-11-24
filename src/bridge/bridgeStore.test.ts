@@ -109,9 +109,9 @@ describe('BridgeStore', () => {
     });
 
     it('should update student name', async () => {
-      // Wait 1ms to ensure timestamp difference
-      await new Promise(resolve => setTimeout(resolve, 1));
-      
+      // Wait 10ms to ensure timestamp difference
+      await new Promise(resolve => setTimeout(resolve, 10));
+
       const updated = store.updateStudent(studentUuid, { name: 'New Name' });
 
       expect(updated.name).toBe('New Name');
