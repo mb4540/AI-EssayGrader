@@ -15,6 +15,7 @@
 2. [🔴 CRITICAL & BLOCKED](#-critical--blocked)
    - *None*
 3. [⭐⭐⭐ HIGH PRIORITY (Next Up)](#-high-priority-next-up)
+   - [Token Usage Tracking & Pricing Tiers](#token-usage-tracking--pricing-tiers)
    - [Clean Text Feature](#-clean-text-feature)
    - [Book Report / Source Text Feature](#-book-report--source-text-feature)
    - [Rubric Document Upload & Extraction](#-rubric-document-upload--extraction)
@@ -63,6 +64,138 @@
 ---
 
 ## ⭐⭐⭐ HIGH PRIORITY (Next Up)
+
+### Token Usage Tracking & Pricing Tiers
+
+**Status:** 🆕 **NEW FEATURE REQUEST** (November 24, 2025)  
+**Priority:** ⭐⭐⭐ HIGH PRIORITY  
+**Estimated Time:** 6-8 hours  
+**Business Critical:** Required for monetization strategy
+
+**Goal:** Track OpenAI token usage per submission and per tenant to enable tiered pricing model and ensure profitability.
+
+**Business Requirements:**
+
+**Pricing Tiers to Support:**
+1. **Free Tier** (No credit card)
+   - Limited submissions per month (e.g., 5-10 submissions)
+   - Try before you buy
+   - No payment processing
+   
+2. **Basic Tier** ($5-10/month)
+   - Need to calculate: How many submissions can we offer while maintaining profit?
+   - Must track costs to set sustainable limits
+   - Target: Small classroom use (1-2 classes)
+   
+3. **Pro Tier** ($20-30/month)
+   - Larger bucket of submissions
+   - Must still cap to maintain profitability
+   - Target: Multiple classes or full-time teacher
+   
+4. **Pay-As-You-Go** (Optional)
+   - Per-submission pricing with small profit margin
+   - No monthly cap
+   - For occasional users or large one-time needs
+
+**Database Schema Changes:**
+- [ ] Create `token_usage` table:
+  - `usage_id` (UUID, primary key)
+  - `tenant_id` (UUID, foreign key to tenants)
+  - `submission_id` (UUID, foreign key to submissions, nullable)
+  - `function_name` (text: 'grade', 'enhance-text', 'enhance-rubric', etc.)
+  - `model` (text: 'gpt-4o', 'gpt-4o-mini', etc.)
+  - `input_tokens` (integer)
+  - `output_tokens` (integer)
+  - `total_tokens` (integer)
+  - `estimated_cost_usd` (numeric(10,4))
+  - `created_at` (timestamptz)
+  - Index on `tenant_id`, `created_at`
+  - Index on `submission_id`
+
+- [ ] Add to `tenants` table:
+  - `subscription_tier` (text: 'free', 'basic', 'pro', 'payg')
+  - `monthly_submission_limit` (integer, nullable)
+  - `submissions_used_this_month` (integer, default 0)
+  - `billing_period_start` (timestamptz)
+  - `billing_period_end` (timestamptz)
+
+**Backend Implementation:**
+- [ ] Create `track-token-usage` utility function
+  - Called after every LLM API call
+  - Captures input/output tokens from OpenAI response
+  - Calculates cost based on model pricing
+  - Stores in `token_usage` table
+  - Updates tenant's `submissions_used_this_month`
+
+- [ ] Update all LLM-calling functions:
+  - `grade.ts` - Track grading tokens
+  - `grade-bulletproof.ts` - Track BulletProof grading tokens
+  - `enhance-text.ts` - Track text enhancement tokens
+  - `enhance-rubric.ts` - Track rubric enhancement tokens
+  - Any other functions using OpenAI API
+
+- [ ] Create `get-token-usage-stats` function
+  - Query token usage by tenant
+  - Aggregate by date range (daily, monthly, all-time)
+  - Calculate total costs
+  - Return usage breakdown by function/model
+
+- [ ] Create `check-submission-limit` function
+  - Check if tenant has reached monthly limit
+  - Return remaining submissions
+  - Block submission if limit exceeded (for free/basic/pro tiers)
+
+- [ ] Create `reset-monthly-usage` scheduled function
+  - Runs on 1st of each month
+  - Resets `submissions_used_this_month` to 0
+  - Updates `billing_period_start` and `billing_period_end`
+
+**Frontend Implementation:**
+- [ ] Add usage dashboard/widget
+  - Show current month's submissions used
+  - Show remaining submissions in current tier
+  - Show estimated costs (admin view)
+  - Progress bar for usage limits
+
+- [ ] Update submission flow
+  - Check limit before allowing submission
+  - Show "Limit Reached" modal with upgrade options
+  - Display remaining submissions count
+
+- [ ] Create admin analytics page (future)
+  - Token usage charts by tenant
+  - Cost analysis by model
+  - Profitability calculations
+  - Usage trends over time
+
+**Cost Calculation Reference:**
+- GPT-4o: $2.50 per 1M input tokens, $10.00 per 1M output tokens
+- GPT-4o-mini: $0.150 per 1M input tokens, $0.600 per 1M output tokens
+- Average essay grading: ~2,000-5,000 tokens total
+- Need to track actual usage to set tier limits
+
+**Profitability Analysis (To Be Calculated):**
+- [ ] Measure average tokens per submission (by document type)
+- [ ] Calculate cost per submission
+- [ ] Determine break-even points for each tier
+- [ ] Set submission limits with 30-40% profit margin
+- [ ] Document pricing strategy in separate file
+
+**Testing:**
+- [ ] Test token tracking with various submission types
+- [ ] Verify cost calculations match OpenAI billing
+- [ ] Test limit enforcement (free tier)
+- [ ] Test monthly reset logic
+- [ ] Load test with high-volume usage
+
+**Future Enhancements:**
+- [ ] Stripe integration for payment processing
+- [ ] Upgrade/downgrade tier functionality
+- [ ] Usage alerts (80%, 90%, 100% of limit)
+- [ ] Overage charges for pay-as-you-go
+- [ ] Annual billing discount option
+
+---
 
 ### Clean Text Feature
 
