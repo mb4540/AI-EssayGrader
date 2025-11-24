@@ -29,6 +29,9 @@ export function useDashboardFilters() {
   const initialSort = loadSortPreferences();
   const [sortField, setSortFieldState] = useState<SortField>(initialSort.field);
   const [sortDirection, setSortDirectionState] = useState<SortDirection>(initialSort.direction);
+  
+  const [startDate, setStartDateState] = useState<string | null>(null);
+  const [endDate, setEndDateState] = useState<string | null>(null);
 
   // Save sort preferences to localStorage whenever they change
   useEffect(() => {
@@ -48,6 +51,8 @@ export function useDashboardFilters() {
     page,
     sortField,
     sortDirection,
+    startDate,
+    endDate,
   };
 
   const setSortField = (field: SortField) => {
@@ -64,10 +69,53 @@ export function useDashboardFilters() {
     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
   };
 
+  const setStartDate = (date: string | null) => {
+    setStartDateState(date);
+    setPage(0); // Reset to first page when date changes
+  };
+
+  const setEndDate = (date: string | null) => {
+    setEndDateState(date);
+    setPage(0); // Reset to first page when date changes
+  };
+
+  const setDatePreset = (preset: 'last7' | 'last30' | 'all') => {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    
+    switch (preset) {
+      case 'last7':
+        const last7 = new Date(today);
+        last7.setDate(last7.getDate() - 7);
+        last7.setHours(0, 0, 0, 0);
+        setStartDate(last7.toISOString().split('T')[0]);
+        setEndDate(today.toISOString().split('T')[0]);
+        break;
+      case 'last30':
+        const last30 = new Date(today);
+        last30.setDate(last30.getDate() - 30);
+        last30.setHours(0, 0, 0, 0);
+        setStartDate(last30.toISOString().split('T')[0]);
+        setEndDate(today.toISOString().split('T')[0]);
+        break;
+      case 'all':
+        setStartDate(null);
+        setEndDate(null);
+        break;
+    }
+  };
+
+  const clearDateRange = () => {
+    setStartDate(null);
+    setEndDate(null);
+  };
+
   const resetFilters = () => {
     setSearchQuery('');
     setClassPeriodFilter('');
     setPage(0);
+    setStartDate(null);
+    setEndDate(null);
     // Note: We don't reset sort preferences as they're user preferences
   };
 
@@ -79,6 +127,8 @@ export function useDashboardFilters() {
     page,
     sortField,
     sortDirection,
+    startDate,
+    endDate,
     
     // Setters
     setSearchQuery,
@@ -87,6 +137,10 @@ export function useDashboardFilters() {
     setSortField,
     setSortDirection,
     toggleSortDirection,
+    setStartDate,
+    setEndDate,
+    setDatePreset,
+    clearDateRange,
     
     // Actions
     resetFilters,

@@ -19,7 +19,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
 import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions, useDashboardStats } from './Dashboard/hooks';
-import { DashboardHeader, DashboardFilters, DeleteConfirmModal, DashboardStats } from './Dashboard/components';
+import { DashboardHeader, DashboardFilters, DeleteConfirmModal, DashboardStats, DateRangeFilter } from './Dashboard/components';
 import { ByStudentView, ByAssignmentView, ByClassView } from './Dashboard/components/views';
 import type { ViewMode } from './Dashboard/types';
 
@@ -30,7 +30,7 @@ export default function Dashboard() {
   
   // Custom hooks for data, filters, grouping, and actions
   const filterHook = useDashboardFilters();
-  const { filters, searchQuery, classPeriodFilter, sortField, sortDirection, setSearchQuery, setClassPeriodFilter, setPage, setSortField, toggleSortDirection } = filterHook;
+  const { filters, searchQuery, classPeriodFilter, sortField, sortDirection, startDate, endDate, setSearchQuery, setClassPeriodFilter, setPage, setSortField, toggleSortDirection, setStartDate, setEndDate, setDatePreset, clearDateRange } = filterHook;
   
   const dataHook = useDashboardData(filters);
   const { submissions, assignments, isLoading, deleteSubmission: deleteSubmissionMutation, deleteAssignment: deleteAssignmentMutation, isDeleting } = dataHook;
@@ -106,6 +106,16 @@ export default function Dashboard() {
           }}
           classPeriods={bridge.getClassPeriods()}
           showClassFilter={!bridge.isLocked && bridge.getClassPeriods().length > 0}
+        />
+
+        {/* Date Range Filter */}
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onPresetClick={setDatePreset}
+          onClear={clearDateRange}
         />
 
         {/* Statistics Summary */}

@@ -12,6 +12,8 @@ export interface DashboardFilters {
   page: number;
   sortField: SortField;
   sortDirection: SortDirection;
+  startDate: string | null;
+  endDate: string | null;
 }
 
 export interface StudentGroup {
