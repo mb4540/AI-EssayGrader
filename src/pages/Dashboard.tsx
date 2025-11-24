@@ -18,8 +18,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
-import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions } from './Dashboard/hooks';
-import { DashboardHeader, DashboardFilters, DeleteConfirmModal } from './Dashboard/components';
+import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions, useDashboardStats } from './Dashboard/hooks';
+import { DashboardHeader, DashboardFilters, DeleteConfirmModal, DashboardStats } from './Dashboard/components';
 import { ByStudentView, ByAssignmentView, ByClassView } from './Dashboard/components/views';
 import type { ViewMode } from './Dashboard/types';
 
@@ -37,6 +37,8 @@ export default function Dashboard() {
   
   const groupingHook = useDashboardGrouping(submissions, bridge, sortField, sortDirection);
   const { groupedByStudent, groupedByAssignment, groupedByClass } = groupingHook;
+  
+  const stats = useDashboardStats(submissions);
   
   const actionsHook = useDashboardActions();
   const {
@@ -105,6 +107,9 @@ export default function Dashboard() {
           classPeriods={bridge.getClassPeriods()}
           showClassFilter={!bridge.isLocked && bridge.getClassPeriods().length > 0}
         />
+
+        {/* Statistics Summary */}
+        <DashboardStats stats={stats} />
 
         {/* Submissions Content Card */}
         <Card className="shadow-xl bg-white">
