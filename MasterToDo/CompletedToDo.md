@@ -2,7 +2,7 @@
 ## FastAI Grader - Archive of Finished Work
 
 **Created:** November 2, 2025  
-**Last Updated:** November 24, 2025 - 6:55 AM  
+**Last Updated:** November 24, 2025 - 1:10 PM  
 **Purpose:** Archive of all completed features and fixes
 
 ---
@@ -25,6 +25,99 @@
 ---
 
 ## ✅ COMPLETED - November 24, 2025
+
+### Dashboard Enhancements ⭐⭐⭐
+**Priority:** HIGH PRIORITY  
+**Status:** ✅ **FULLY IMPLEMENTED**  
+**Branch:** `feature/dashboard-enhancements`  
+**Release:** v1.5.0  
+**Completed:** November 24, 2025 - 1:10 PM
+
+**Goal:** Make Dashboard more useful for teachers with sorting, statistics, and filtering
+
+**Features Implemented:**
+
+**A. Sorting Options** ✅
+- ✅ Sort by student name (A-Z / Z-A)
+- ✅ Toggle button with arrow icons
+- ✅ Persist sort preference in localStorage
+- ✅ Integrated into date range filter container
+- ✅ Note: Removed multi-field sort dropdown (simplified to student name only per user feedback)
+
+**B. Statistics Summary** ✅
+- ✅ Created `DashboardStats` component with card grid
+- ✅ Four stat cards:
+  - Total Assignments (green, FolderOpen icon)
+  - Total Submissions (blue, FileText icon)
+  - Pending Review (yellow, Clock icon) with percentage
+  - Graded Today (purple, CheckCircle icon)
+- ✅ Visual indicators with color-coded backgrounds
+- ✅ Responsive grid layout (1 col mobile, 2 col tablet, 4 col desktop)
+- ✅ Real-time calculations via `useDashboardStats` hook
+
+**C. Date Range Filter** ✅
+- ✅ Created `DateRangeFilter` component
+- ✅ Custom date range with start/end date pickers
+- ✅ Quick presets: "Last 7 days", "Last 30 days", "All time"
+- ✅ Clear button to reset filters
+- ✅ Client-side filtering for performance
+- ✅ Integrated sort toggle with divider
+- ✅ Responsive layout (stacks on mobile)
+
+**Security Fixes (Critical):**
+- 🔒 Fixed tenant isolation for assignments endpoint
+- 🔒 Added `authenticateRequest` to all assignment operations
+- 🔒 Removed hardcoded `PUBLIC_TENANT_ID` constant
+- 🔒 All assignments now properly scoped to authenticated user's tenant
+- 🔒 Added CORS headers and 401 error handling
+
+**Bug Fixes:**
+- 🐛 Fixed submission view routing from `/grade/:id` to `/submission/:id`
+- 🐛 Improved date filtering performance with `useMemo`
+
+**Technical Architecture:**
+- Modular hook architecture:
+  - `useDashboardFilters` - Search, class period, sort, date range state
+  - `useDashboardData` - API calls and client-side date filtering
+  - `useDashboardGrouping` - Sort and group submissions
+  - `useDashboardStats` - Calculate statistics
+  - `useDashboardActions` - Navigation and mutations
+- Component organization:
+  - `DashboardHeader` - View mode and export
+  - `DashboardFilters` - Search and class period
+  - `DateRangeFilter` - Date range and sort toggle
+  - `DashboardStats` - Statistics cards
+- Type safety with TypeScript interfaces
+
+**Files Created:**
+- `src/pages/Dashboard/components/DashboardStats.tsx`
+- `src/pages/Dashboard/components/DateRangeFilter.tsx`
+- `src/pages/Dashboard/components/SortDropdown.tsx` (later removed)
+- `src/pages/Dashboard/hooks/useDashboardStats.ts`
+- `MasterToDo/PLAN_dashboard_enhancements.md`
+
+**Files Modified:**
+- `netlify/functions/assignments.ts` - Added authentication
+- `src/pages/Dashboard.tsx` - Integrated new components
+- `src/pages/Dashboard/components/DashboardHeader.tsx` - Removed sort dropdown
+- `src/pages/Dashboard/hooks/useDashboardFilters.ts` - Added date range state
+- `src/pages/Dashboard/hooks/useDashboardData.ts` - Added client-side filtering
+- `src/pages/Dashboard/hooks/useDashboardGrouping.ts` - Added sort logic
+- `src/pages/Dashboard/hooks/useDashboardActions.ts` - Fixed navigation
+- `src/pages/Dashboard/types.ts` - Added date range types
+
+**Commits:**
+- `feat(dashboard): Phase 1 - Sorting options`
+- `feat(dashboard): Phase 2 - Statistics summary`
+- `feat(dashboard): Phase 3 - Date range filter`
+- `fix(dashboard): Correct navigation route for viewing submissions`
+- `refactor(ui): Simplify dashboard controls - move sort to date range`
+- `fix(security): Add tenant authentication to assignments endpoint`
+
+**Release Tag:** `v1.5.0`  
+**Deployed:** https://ai-essaygrader.netlify.app
+
+---
 
 ### Class Period Organization ⭐⭐⭐
 **Priority:** 🔴 **CRITICAL**  

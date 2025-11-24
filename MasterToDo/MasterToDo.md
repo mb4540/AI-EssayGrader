@@ -5,7 +5,7 @@
 **Last Updated:** November 24, 2025  
 **Branch:** `main`  
 **Status:** Active Development  
-**Latest Release:** v1.3.0 (November 24, 2025)
+**Latest Release:** v1.5.0 (November 24, 2025)
 
 ---
 
@@ -15,9 +15,7 @@
 2. [🔴 CRITICAL & BLOCKED](#-critical--blocked)
    - *None*
 3. [⭐⭐⭐ HIGH PRIORITY (Next Up)](#-high-priority-next-up)
-   - [Class Period Organization](#-class-period-organization)
    - [Clean Text Feature](#-clean-text-feature)
-   - [Dashboard Enhancements](#-dashboard-enhancements)
    - [Book Report / Source Text Feature](#-book-report--source-text-feature)
    - [Rubric Document Upload & Extraction](#-rubric-document-upload--extraction)
    - [Submission Form Improvements](#-submission-form-improvements)
@@ -198,27 +196,6 @@
 - [ ] Integration with Google Classroom file structure
 - [ ] Batch grading after batch upload
 - [ ] Email notifications when batch complete
-
----
-
-### Dashboard Enhancements
-
-**Goal:** Make Dashboard more useful for teachers
-
-**A. Add Sorting Options**
-- [ ] Add sort dropdown to dashboard header
-- [ ] Implement sort by: Date, Student name, AI grade, Teacher grade
-- [ ] Persist sort preference in localStorage
-
-**B. Add Statistics Summary**
-- [ ] Create stats card component
-- [ ] Display: Total submissions, Average grades, Pending review, Graded today
-- [ ] Add visual indicators
-
-**C. Add Date Range Filter**
-- [ ] Add date range picker component
-- [ ] Implement filter logic
-- [ ] Add presets: "Last 7 days", "Last 30 days", "All time"
 
 ---
 
