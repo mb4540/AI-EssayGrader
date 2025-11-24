@@ -1,5 +1,6 @@
 import CriteriaInput from '@/components/CriteriaInput';
 import AssignmentModal from '@/components/CreateAssignmentModal';
+import { Toast } from '@/components/ui/toast';
 import { useSubmissionState } from './Submission/hooks/useSubmissionState';
 import { useSubmissionActions } from './Submission/hooks/useSubmissionActions';
 import { SubmissionHeader } from './Submission/components/SubmissionHeader';
@@ -18,12 +19,13 @@ export default function Submission() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
-        {/* Save Success Message */}
+        {/* Toast Notification */}
         {state.saveMessage && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-800 animate-in fade-in slide-in-from-top-2">
-            <span className="text-lg">✓</span>
-            <span className="font-medium">{state.saveMessage}</span>
-          </div>
+          <Toast
+            message={state.saveMessage}
+            duration={3000}
+            onClose={() => state.setSaveMessage(null)}
+          />
         )}
 
         <SubmissionHeader

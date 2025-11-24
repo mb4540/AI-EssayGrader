@@ -111,9 +111,8 @@ export function useSubmissionActions(state: SubmissionState) {
     const saveMutation = useMutation({
         mutationFn: saveTeacherEdits,
         onSuccess: () => {
-            // Show temporary success message
-            setSaveMessage('Grade saved successfully!');
-            setTimeout(() => setSaveMessage(null), 3000);
+            // Show success toast notification (auto-closes after 3 seconds)
+            setSaveMessage('Grade Saved');
 
             // Invalidate and refetch the submission query to update UI state
             const effectiveId = state.id || submissionId;

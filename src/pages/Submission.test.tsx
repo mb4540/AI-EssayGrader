@@ -1,4 +1,4 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import React from 'react';
 
 // Polyfill DOMMatrix for pdfjs-dist
