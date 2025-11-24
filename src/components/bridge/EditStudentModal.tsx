@@ -8,8 +8,9 @@ interface EditStudentModalProps {
   isOpen: boolean;
   student: BridgeEntry | null;
   onClose: () => void;
-  onUpdate: (uuid: string, updates: { name?: string; localId?: string }) => BridgeEntry;
+  onUpdate: (uuid: string, updates: { name?: string; localId?: string; classPeriod?: string }) => BridgeEntry;
   onDelete: (uuid: string) => void;
+  classPeriods: string[];
 }
 
 export default function EditStudentModal({
@@ -18,9 +19,11 @@ export default function EditStudentModal({
   onClose,
   onUpdate,
   onDelete,
+  classPeriods,
 }: EditStudentModalProps) {
   const [name, setName] = useState('');
   const [localId, setLocalId] = useState('');
+  const [classPeriod, setClassPeriod] = useState('');
   const [error, setError] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
@@ -28,6 +31,7 @@ export default function EditStudentModal({
     if (student) {
       setName(student.name);
       setLocalId(student.localId);
+      setClassPeriod(student.classPeriod || '');
     }
   }, [student]);
 
@@ -38,7 +42,7 @@ export default function EditStudentModal({
     setError('');
 
     try {
-      const updates: { name?: string; localId?: string } = {};
+      const updates: { name?: string; localId?: string; classPeriod?: string } = {};
       
       if (name.trim() !== student.name) {
         updates.name = name.trim();
@@ -46,6 +50,10 @@ export default function EditStudentModal({
       
       if (localId.trim() !== student.localId) {
         updates.localId = localId.trim();
+      }
+
+      if (classPeriod !== (student.classPeriod || '')) {
+        updates.classPeriod = classPeriod || undefined;
       }
 
       if (Object.keys(updates).length === 0) {
@@ -72,6 +80,7 @@ export default function EditStudentModal({
   const handleClose = () => {
     setName('');
     setLocalId('');
+    setClassPeriod('');
     setError('');
     setShowDeleteConfirm(false);
     onClose();
@@ -163,6 +172,27 @@ export default function EditStudentModal({
                   placeholder="e.g., S123456"
                   required
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Class Period (Optional)
+                </label>
+                <select
+                  value={classPeriod}
+                  onChange={(e) => setClassPeriod(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">-- No Class Period --</option>
+                  {classPeriods.map((period) => (
+                    <option key={period} value={period}>
+                      {period}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Assign student to a class period for organization
+                </p>
               </div>
 
               {error && (

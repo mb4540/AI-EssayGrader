@@ -1,6 +1,6 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** November 14, 2025 - 12:15 PM UTC-06:00  
+**Last Updated:** November 24, 2025 - 6:00 AM UTC-06:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
@@ -8,6 +8,13 @@
 > Always reference this file before making database changes.
 
 ## 📝 Recent Migrations
+
+### November 24, 2025 - Class Period Organization
+**Migration:** `migrations/add_class_period_to_students.sql`
+- Added `class_period` column to `grader.students` table
+- Added index on `class_period` for filtering performance
+- Enables teachers to organize students by class period/section
+- Non-PII field (e.g., "Period 1", "Block A")
 
 ### November 14, 2025 - Background Tasks Table
 **Migration:** `migrations/add_background_tasks.sql`
@@ -170,6 +177,7 @@
 | student_id | uuid | NO | gen_random_uuid() | PRIMARY KEY |
 | created_at | timestamptz | NO | now() | |
 | tenant_id | uuid | NO | null | FK → tenants |
+| **class_period** | **text** | **YES** | **null** | |
 
 **Row Count:** 5  
 **Size:** 48 KB
@@ -179,10 +187,12 @@
 - NO district IDs stored
 - Only anonymous UUIDs
 - Student names stored in encrypted local bridge file
+- `class_period` is non-PII (e.g., "Period 1", "Block A")
 
 **Indexes:**
 - `students_pkey` - PRIMARY KEY (student_id)
 - `idx_students_tenant` - (tenant_id)
+- `idx_students_class_period` - (class_period)
 
 **Foreign Keys:**
 - `tenant_id` → `tenants.tenant_id` (ON DELETE RESTRICT)

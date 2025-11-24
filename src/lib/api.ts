@@ -168,6 +168,7 @@ export async function listSubmissions(params: ListRequest) {
   if (params.assignment_id) queryParams.set('assignment_id', params.assignment_id);
   if (params.student_id) queryParams.set('student_id', params.student_id);
   if (params.search) queryParams.set('search', params.search);
+  if (params.class_period) queryParams.set('class_period', params.class_period);
   queryParams.set('page', params.page?.toString() || '1');
   queryParams.set('limit', params.limit?.toString() || '20');
 
@@ -452,4 +453,31 @@ export async function updateInlineAnnotation(
   });
 
   return handleResponse<{ success: boolean }>(response);
+}
+
+// ============================================================================
+// Student Management API
+// ============================================================================
+
+/**
+ * Update student non-PII fields (e.g., class_period)
+ */
+export async function updateStudent(
+  studentId: string,
+  data: { class_period?: string | null }
+) {
+  const response = await fetch(`${API_BASE}/update-student`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ student_id: studentId, ...data }),
+  });
+
+  return handleResponse<{
+    success: boolean;
+    student: {
+      student_id: string;
+      class_period: string | null;
+      created_at: string;
+    };
+  }>(response);
 }

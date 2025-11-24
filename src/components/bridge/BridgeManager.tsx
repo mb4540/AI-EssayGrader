@@ -10,6 +10,7 @@ import AddStudentModal from './AddStudentModal';
 import ImportCsvModal from './ImportCsvModal';
 import EditStudentModal from './EditStudentModal';
 import { BridgeEntry } from '../../bridge/bridgeTypes';
+import { updateStudent } from '../../lib/api';
 
 export default function BridgeManager() {
   const bridge = useBridge();
@@ -27,6 +28,12 @@ export default function BridgeManager() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<BridgeEntry | null>(null);
+
+  // Class period management
+  const [newClassPeriod, setNewClassPeriod] = useState('');
+  const [classError, setClassError] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<{ success: number; failed: number; total: number } | null>(null);
 
   // Handle unlock
   const handleUnlock = async (e: React.FormEvent) => {
@@ -62,6 +69,69 @@ export default function BridgeManager() {
     if (confirm('Lock bridge? You will need your passphrase to unlock it again.')) {
       bridge.lock();
     }
+  };
+
+  // Handle add class period
+  const handleAddClassPeriod = (e: React.FormEvent) => {
+    e.preventDefault();
+    setClassError('');
+    
+    if (!newClassPeriod.trim()) {
+      setClassError('Class period name is required');
+      return;
+    }
+
+    try {
+      bridge.addClassPeriod(newClassPeriod.trim());
+      setNewClassPeriod('');
+      bridge.save().catch(console.error); // Auto-save after adding
+    } catch (err) {
+      setClassError(err instanceof Error ? err.message : 'Failed to add class period');
+    }
+  };
+
+  // Handle remove class period
+  const handleRemoveClassPeriod = (name: string) => {
+    if (confirm(`Remove class period "${name}"? Students assigned to this class will not be affected.`)) {
+      try {
+        bridge.removeClassPeriod(name);
+        bridge.save().catch(console.error); // Auto-save after removing
+      } catch (err) {
+        console.error('Failed to remove class period:', err);
+      }
+    }
+  };
+
+  // Handle sync all students to database
+  const handleSyncAll = async () => {
+    if (!confirm('Sync all students\' class periods to the database? This will update the database with current Bridge data.')) {
+      return;
+    }
+
+    setIsSyncing(true);
+    setSyncStatus(null);
+    
+    let success = 0;
+    let failed = 0;
+    const total = bridge.students.length;
+
+    for (const student of bridge.students) {
+      try {
+        await updateStudent(student.uuid, { 
+          class_period: student.classPeriod || null 
+        });
+        success++;
+      } catch (err) {
+        console.error(`Failed to sync student ${student.uuid}:`, err);
+        failed++;
+      }
+    }
+
+    setSyncStatus({ success, failed, total });
+    setIsSyncing(false);
+
+    // Clear status after 5 seconds
+    setTimeout(() => setSyncStatus(null), 5000);
   };
 
   // If locked, show unlock/create interface
@@ -317,6 +387,93 @@ export default function BridgeManager() {
           </CardHeader>
         </Card>
 
+        {/* Manage Classes Card */}
+        <Card className="shadow-xl bg-white mb-6">
+          <CardHeader className="py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg text-gray-900">Manage Class Periods</CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  Create class periods to organize your students
+                </p>
+              </div>
+              <Button
+                onClick={handleSyncAll}
+                disabled={isSyncing || bridge.students.length === 0}
+                variant="outline"
+                size="sm"
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                {isSyncing ? 'Syncing...' : 'Sync All to Database'}
+              </Button>
+            </div>
+          </CardHeader>
+          <div className="p-6">
+            {/* Add Class Period Form */}
+            <form onSubmit={handleAddClassPeriod} className="mb-4">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newClassPeriod}
+                  onChange={(e) => setNewClassPeriod(e.target.value)}
+                  placeholder="e.g., Period 1, Block A, 3rd Hour"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <Button
+                  type="submit"
+                  variant="default"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Class
+                </Button>
+              </div>
+              {classError && (
+                <p className="text-sm text-red-600 mt-2">{classError}</p>
+              )}
+            </form>
+
+            {/* Sync Status */}
+            {syncStatus && (
+              <div className={`p-3 rounded-md mb-4 ${
+                syncStatus.failed === 0 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'
+              }`}>
+                <p className={`text-sm font-medium ${
+                  syncStatus.failed === 0 ? 'text-green-800' : 'text-yellow-800'
+                }`}>
+                  ✓ Synced {syncStatus.success} of {syncStatus.total} students to database
+                  {syncStatus.failed > 0 && ` (${syncStatus.failed} failed)`}
+                </p>
+              </div>
+            )}
+
+            {/* Class Periods List */}
+            {bridge.getClassPeriods().length === 0 ? (
+              <div className="text-center py-6 text-gray-500">
+                <p className="text-sm">No class periods yet. Add one above to get started.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {bridge.getClassPeriods().map((period) => (
+                  <div
+                    key={period}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200"
+                  >
+                    <span className="text-sm font-medium text-gray-900">{period}</span>
+                    <button
+                      onClick={() => handleRemoveClassPeriod(period)}
+                      className="text-sm text-red-600 hover:text-red-800 hover:underline"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </Card>
+
         {/* Roster Table Card */}
         <Card className="shadow-xl bg-white">
           <table className="w-full">
@@ -329,6 +486,9 @@ export default function BridgeManager() {
                   Student Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Class
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   UUID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -339,7 +499,7 @@ export default function BridgeManager() {
             <tbody className="bg-white divide-y divide-gray-200">
               {bridge.students.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
                     <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
                     <p className="text-lg font-medium">No students yet</p>
                     <p className="text-sm">Add students individually or import from CSV</p>
@@ -353,6 +513,9 @@ export default function BridgeManager() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {student.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      {student.classPeriod || <span className="text-gray-400 italic">—</span>}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
                       {student.uuid.slice(0, 8)}...
@@ -380,11 +543,19 @@ export default function BridgeManager() {
         <AddStudentModal
           isOpen={showAddModal}
           onClose={() => setShowAddModal(false)}
-          onAdd={(name, localId) => {
-            const student = bridge.addStudent(name, localId);
+          onAdd={(name, localId, classPeriod) => {
+            const student = bridge.addStudent(name, localId, classPeriod);
             bridge.save().catch(console.error); // Auto-save after adding
+            
+            // Sync class_period to database if provided
+            if (classPeriod) {
+              updateStudent(student.uuid, { class_period: classPeriod })
+                .catch(err => console.error('Failed to sync class period to database:', err));
+            }
+            
             return student;
           }}
+          classPeriods={bridge.getClassPeriods()}
         />
 
         <ImportCsvModal
@@ -407,12 +578,20 @@ export default function BridgeManager() {
           onUpdate={(uuid, updates) => {
             const student = bridge.updateStudent(uuid, updates);
             bridge.save().catch(console.error); // Auto-save after update
+            
+            // Sync class_period to database if it changed
+            if (updates.classPeriod !== undefined) {
+              updateStudent(uuid, { class_period: updates.classPeriod || null })
+                .catch(err => console.error('Failed to sync class period to database:', err));
+            }
+            
             return student;
           }}
           onDelete={(uuid) => {
             bridge.deleteStudent(uuid);
             bridge.save().catch(console.error); // Auto-save after delete
           }}
+          classPeriods={bridge.getClassPeriods()}
         />
       </div>
     </div>

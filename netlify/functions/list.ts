@@ -40,6 +40,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       assignment_id: params.assignment_id,
       student_id: params.student_id,
       search: params.search,
+      class_period: params.class_period,
       page: params.page ? parseInt(params.page) : undefined,
       limit: params.limit ? parseInt(params.limit) : undefined,
     });
@@ -54,14 +55,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       };
     }
 
-    const { assignment_id, student_id, search, page = 1, limit = 20 } = validation.data;
+    const { assignment_id, student_id, search, class_period, page = 1, limit = 20 } = validation.data;
     const offset = (page - 1) * limit;
 
     // Build query with filters
     let countResult;
     let submissions;
 
-    if (!assignment_id && !student_id && !search) {
+    if (!assignment_id && !student_id && !search && !class_period) {
       // No filters - simple query (filtered by tenant)
       countResult = await sql`
         SELECT COUNT(*) as total
@@ -83,7 +84,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           s.created_at,
           s.updated_at,
           a.title as assignment_title,
-          a.assignment_id as assignment_id
+          a.assignment_id as assignment_id,
+          st.class_period
         FROM grader.submissions s
         LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
         JOIN grader.students st ON s.student_id = st.student_id
@@ -104,6 +106,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             AND s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -111,13 +114,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -129,6 +134,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           WHERE st.tenant_id = ${tenant_id}
             AND s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -136,13 +142,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND s.assignment_id = ${assignment_id}
             AND st.student_id = ${student_id}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -154,6 +162,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           WHERE st.tenant_id = ${tenant_id}
             AND s.assignment_id = ${assignment_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -161,13 +170,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND s.assignment_id = ${assignment_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -179,6 +190,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -186,13 +198,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -203,6 +217,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
             AND s.assignment_id = ${assignment_id}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -210,12 +225,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND s.assignment_id = ${assignment_id}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -226,6 +243,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -233,12 +251,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND st.student_id = ${student_id}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;
@@ -249,6 +269,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           JOIN grader.students st ON s.student_id = st.student_id
           WHERE st.tenant_id = ${tenant_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
         `;
         submissions = await sql`
           SELECT 
@@ -256,12 +277,39 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
             s.ai_grade, s.teacher_grade, s.teacher_feedback,
             s.created_at, s.updated_at,
             s.student_id,
-            a.title as assignment_title, a.assignment_id as assignment_id
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
           FROM grader.submissions s
           JOIN grader.students st ON s.student_id = st.student_id
           LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
           WHERE st.tenant_id = ${tenant_id}
             AND s.verbatim_text ILIKE ${searchPattern}
+            ${class_period ? sql`AND st.class_period = ${class_period}` : sql``}
+          ORDER BY s.created_at DESC
+          LIMIT ${limit} OFFSET ${offset}
+        `;
+      } else if (class_period) {
+        // Class period only filter
+        countResult = await sql`
+          SELECT COUNT(*) as total
+          FROM grader.submissions s
+          JOIN grader.students st ON s.student_id = st.student_id
+          WHERE st.tenant_id = ${tenant_id}
+            AND st.class_period = ${class_period}
+        `;
+        submissions = await sql`
+          SELECT 
+            s.submission_id as id, s.source_type, s.verbatim_text, s.teacher_criteria,
+            s.ai_grade, s.teacher_grade, s.teacher_feedback,
+            s.created_at, s.updated_at,
+            s.student_id,
+            a.title as assignment_title, a.assignment_id as assignment_id,
+            st.class_period
+          FROM grader.submissions s
+          JOIN grader.students st ON s.student_id = st.student_id
+          LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
+          WHERE st.tenant_id = ${tenant_id}
+            AND st.class_period = ${class_period}
           ORDER BY s.created_at DESC
           LIMIT ${limit} OFFSET ${offset}
         `;

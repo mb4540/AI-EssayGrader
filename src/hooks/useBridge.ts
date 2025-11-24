@@ -31,12 +31,17 @@ export interface UseBridgeReturn {
   lock: () => void;
 
   // Student operations
-  addStudent: (name: string, localId: string) => BridgeEntry;
-  updateStudent: (uuid: string, updates: { name?: string; localId?: string }) => BridgeEntry;
+  addStudent: (name: string, localId: string, classPeriod?: string) => BridgeEntry;
+  updateStudent: (uuid: string, updates: { name?: string; localId?: string; classPeriod?: string }) => BridgeEntry;
   deleteStudent: (uuid: string) => void;
   findByUuid: (uuid: string) => BridgeEntry | null;
   findByLocalId: (localId: string) => BridgeEntry | null;
   findByName: (name: string) => BridgeEntry[];
+
+  // Class period operations
+  getClassPeriods: () => string[];
+  addClassPeriod: (name: string) => void;
+  removeClassPeriod: (name: string) => void;
 
   // File operations
   save: () => Promise<void>;
@@ -173,9 +178,9 @@ export function useBridge(): UseBridgeReturn {
   }, [store, refreshStudents]);
 
   // Add student
-  const addStudent = useCallback((name: string, localId: string): BridgeEntry => {
+  const addStudent = useCallback((name: string, localId: string, classPeriod?: string): BridgeEntry => {
     try {
-      const entry = store.addStudent(name, localId);
+      const entry = store.addStudent(name, localId, classPeriod);
       refreshStudents();
       return entry;
     } catch (err) {
@@ -185,7 +190,7 @@ export function useBridge(): UseBridgeReturn {
   }, [store, refreshStudents]);
 
   // Update student
-  const updateStudent = useCallback((uuid: string, updates: { name?: string; localId?: string }): BridgeEntry => {
+  const updateStudent = useCallback((uuid: string, updates: { name?: string; localId?: string; classPeriod?: string }): BridgeEntry => {
     try {
       const entry = store.updateStudent(uuid, updates);
       refreshStudents();
@@ -305,6 +310,33 @@ export function useBridge(): UseBridgeReturn {
     }
   }, [store, refreshStudents]);
 
+  // Get class periods
+  const getClassPeriods = useCallback((): string[] => {
+    return store.getClassPeriods();
+  }, [store]);
+
+  // Add class period
+  const addClassPeriod = useCallback((name: string): void => {
+    try {
+      store.addClassPeriod(name);
+      refreshStudents(); // Trigger re-render
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add class period');
+      throw err;
+    }
+  }, [store, refreshStudents]);
+
+  // Remove class period
+  const removeClassPeriod = useCallback((name: string): void => {
+    try {
+      store.removeClassPeriod(name);
+      refreshStudents(); // Trigger re-render
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove class period');
+      throw err;
+    }
+  }, [store, refreshStudents]);
+
   return {
     // State
     isLocked,
@@ -324,6 +356,11 @@ export function useBridge(): UseBridgeReturn {
     findByUuid,
     findByLocalId,
     findByName,
+
+    // Class period operations
+    getClassPeriods,
+    addClassPeriod,
+    removeClassPeriod,
 
     // File operations
     save,

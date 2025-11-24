@@ -123,7 +123,7 @@ export class BridgeStore {
   /**
    * Add a student to the roster
    */
-  addStudent(name: string, localId: string): BridgeEntry {
+  addStudent(name: string, localId: string, classPeriod?: string): BridgeEntry {
     if (this.locked || !this.payload) {
       throw new Error('Bridge is locked');
     }
@@ -142,6 +142,7 @@ export class BridgeStore {
       uuid: newUuid(),
       localId,
       name,
+      classPeriod,
       createdAt: now,
       updatedAt: now,
     };
@@ -153,7 +154,7 @@ export class BridgeStore {
   /**
    * Update a student
    */
-  updateStudent(uuid: string, updates: { name?: string; localId?: string }): BridgeEntry {
+  updateStudent(uuid: string, updates: { name?: string; localId?: string; classPeriod?: string }): BridgeEntry {
     if (this.locked || !this.payload) {
       throw new Error('Bridge is locked');
     }
@@ -175,6 +176,7 @@ export class BridgeStore {
 
     if (updates.name) entry.name = updates.name;
     if (updates.localId) entry.localId = updates.localId;
+    if (updates.classPeriod !== undefined) entry.classPeriod = updates.classPeriod;
     entry.updatedAt = new Date().toISOString();
 
     return entry;
@@ -307,6 +309,52 @@ export class BridgeStore {
     }
 
     this.passphrase = newPassphrase;
+  }
+
+  /**
+   * Get all class periods
+   */
+  getClassPeriods(): string[] {
+    if (this.locked || !this.payload) return [];
+    return this.payload.classPeriods || [];
+  }
+
+  /**
+   * Add a class period
+   */
+  addClassPeriod(name: string): void {
+    if (this.locked || !this.payload) {
+      throw new Error('Bridge is locked');
+    }
+
+    if (!this.payload.classPeriods) {
+      this.payload.classPeriods = [];
+    }
+
+    // Check for duplicates
+    if (this.payload.classPeriods.includes(name)) {
+      throw new Error(`Class period "${name}" already exists`);
+    }
+
+    this.payload.classPeriods.push(name);
+  }
+
+  /**
+   * Remove a class period
+   */
+  removeClassPeriod(name: string): void {
+    if (this.locked || !this.payload) {
+      throw new Error('Bridge is locked');
+    }
+
+    if (!this.payload.classPeriods) {
+      return;
+    }
+
+    const index = this.payload.classPeriods.indexOf(name);
+    if (index > -1) {
+      this.payload.classPeriods.splice(index, 1);
+    }
   }
 }
 

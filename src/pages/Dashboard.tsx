@@ -22,6 +22,7 @@ export default function Dashboard() {
   
   // State management
   const [searchQuery, setSearchQuery] = useState('');
+  const [classPeriodFilter, setClassPeriodFilter] = useState<string>('');
   const [page, setPage] = useState(0);
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -30,7 +31,7 @@ export default function Dashboard() {
   const [sortDirection] = useState<SortDirection>('desc'); // setSortDirection unused - for future sorting
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteAssignmentTitle, setDeleteAssignmentTitle] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grouped' | 'assignments'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grouped' | 'class'>('list');
   const pageSize = 20;
   
   // Refs for scroll synchronization (unused - was for flat table view)
@@ -46,9 +47,10 @@ export default function Dashboard() {
 
   // Fetch submissions data
   const { data, isLoading } = useQuery({
-    queryKey: ['submissions', searchQuery, page],
+    queryKey: ['submissions', searchQuery, classPeriodFilter, page],
     queryFn: () => listSubmissions({
       search: searchQuery || undefined,
+      class_period: classPeriodFilter || undefined,
       page: page + 1,
       limit: pageSize,
     }),
@@ -183,6 +185,26 @@ export default function Dashboard() {
     return acc;
   }, {} as Record<string, { studentId: string; submissions: typeof sortedSubmissions }>);
 
+  // Group submissions by class period → student → assignments
+  const groupedByClass = sortedSubmissions.reduce((acc, submission) => {
+    const student = submission.student_id ? bridge.findByUuid(submission.student_id) : null;
+    // Use class_period from database (submission) instead of Bridge
+    const classPeriod = (submission as any).class_period || 'No Class Assigned';
+    const studentName = student?.name || 'Unknown';
+    
+    if (!acc[classPeriod]) {
+      acc[classPeriod] = {};
+    }
+    if (!acc[classPeriod][studentName]) {
+      acc[classPeriod][studentName] = {
+        studentId: student?.localId || '',
+        submissions: []
+      };
+    }
+    acc[classPeriod][studentName].submissions.push(submission);
+    return acc;
+  }, {} as Record<string, Record<string, { studentId: string; submissions: typeof sortedSubmissions }>>);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
@@ -224,13 +246,24 @@ export default function Dashboard() {
                 <FolderOpen className="w-4 h-4 mr-2" />
                 Assignments
               </Button>
+              {!bridge.isLocked && bridge.getClassPeriods().length > 0 && (
+                <Button
+                  variant={viewMode === 'class' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('class')}
+                  className={viewMode === 'class' ? 'bg-indigo-600' : ''}
+                >
+                  <FolderOpen className="w-4 h-4 mr-2" />
+                  By Class
+                </Button>
+              )}
             </>
           }
         />
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
+        {/* Search and Filter Bar */}
+        <div className="mb-6 flex gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
               placeholder="Search by student name or ID..."
@@ -242,6 +275,25 @@ export default function Dashboard() {
               className="pl-10 border-2 focus:border-indigo-500 bg-white"
             />
           </div>
+          
+          {/* Class Period Filter */}
+          {!bridge.isLocked && bridge.getClassPeriods().length > 0 && (
+            <select
+              value={classPeriodFilter}
+              onChange={(e) => {
+                setClassPeriodFilter(e.target.value);
+                setPage(0);
+              }}
+              className="px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-white min-w-[200px]"
+            >
+              <option value="">All Classes</option>
+              {bridge.getClassPeriods().map((period) => (
+                <option key={period} value={period}>
+                  {period}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Submissions Content Card */}
@@ -341,6 +393,124 @@ export default function Dashboard() {
                     </AccordionContent>
                   </AccordionItem>
                 ))}
+              </Accordion>
+            ) : viewMode === 'class' ? (
+              /* By Class View - Accordion by Class Period → Student → Assignments */
+              <Accordion type="multiple" className="w-full">
+                {Object.entries(groupedByClass).map(([classPeriod, students]) => {
+                  const totalSubmissions = Object.values(students).reduce((sum, student) => sum + student.submissions.length, 0);
+                  return (
+                    <AccordionItem key={classPeriod} value={classPeriod} className="border-b">
+                      <AccordionTrigger className="hover:no-underline px-4 py-4 bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100">
+                        <div className="flex items-center justify-between gap-3 flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                              <FolderOpen className="w-4 h-4 text-purple-600" />
+                            </div>
+                            <div className="text-left">
+                              <div className="font-semibold text-lg text-gray-900">
+                                {classPeriod}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {Object.keys(students).length} student{Object.keys(students).length !== 1 ? 's' : ''} • {totalSubmissions} submission{totalSubmissions !== 1 ? 's' : ''}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        {/* Nested Accordion for Students */}
+                        <Accordion type="multiple" className="w-full pl-4">
+                          {Object.entries(students).map(([studentName, studentData]) => (
+                            <AccordionItem key={studentName} value={studentName} className="border-b">
+                              <AccordionTrigger className="hover:no-underline px-4 py-3 bg-gradient-to-r from-slate-50 to-blue-50 hover:from-slate-100 hover:to-blue-100">
+                                <div className="flex items-center justify-between gap-3 flex-1">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center">
+                                      <User className="w-3.5 h-3.5 text-indigo-600" />
+                                    </div>
+                                    <div className="text-left">
+                                      <div className="font-semibold text-base text-gray-900">
+                                        {studentName}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {studentData.submissions.length} submission{studentData.submissions.length !== 1 ? 's' : ''}
+                                        {studentData.studentId && ` • ID: ${studentData.studentId}`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent>
+                                <div className="overflow-x-auto">
+                                  <table className="w-full">
+                                    <thead className="bg-slate-100">
+                                      <tr>
+                                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Assignment</th>
+                                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">AI Grade</th>
+                                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Teacher Grade</th>
+                                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Date</th>
+                                        <th className="py-3 px-4 text-left text-sm font-semibold text-gray-700">Actions</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {studentData.submissions.map((submission) => (
+                                        <tr key={submission.id} className="border-b hover:bg-slate-50">
+                                          <td className="py-3 px-4">
+                                            <div className="font-medium text-gray-900">
+                                              {submission.assignment_title || '-'}
+                                            </div>
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            <span className="font-semibold text-gray-900">
+                                              {submission.ai_grade ? `${submission.ai_grade}/100` : '-'}
+                                            </span>
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            {submission.teacher_grade ? (
+                                              <span className="font-semibold text-blue-600">
+                                                {submission.teacher_grade}/100
+                                              </span>
+                                            ) : (
+                                              <span className="text-gray-400">-</span>
+                                            )}
+                                          </td>
+                                          <td className="py-3 px-4 text-gray-600 text-sm">
+                                            {new Date(submission.created_at).toLocaleDateString()}
+                                          </td>
+                                          <td className="py-3 px-4">
+                                            <div className="flex items-center gap-2">
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => navigate(`/submission/${submission.id}`)}
+                                                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                              >
+                                                View
+                                              </Button>
+                                              <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDelete(submission.id)}
+                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                              >
+                                                <Trash2 className="w-4 h-4" />
+                                              </Button>
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
               </Accordion>
             ) : (
               /* Assignments View - Shows all assignments with submission counts */

@@ -73,6 +73,7 @@ export const ListRequestSchema = z.object({
   assignment_id: z.string().uuid().optional(),
   student_id: z.string().optional(),
   search: z.string().optional(),
+  class_period: z.string().optional(),
   page: z.number().min(1).default(1),
   limit: z.number().min(1).max(100).default(20),
 });

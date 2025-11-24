@@ -5,6 +5,7 @@ export type BridgeEntry = {
   uuid: string;           // student_id from grader.students
   localId: string;        // district_student_id (teacher's local ID)
   name: string;           // student_name (never sent to cloud)
+  classPeriod?: string;   // Optional: Class period/section (e.g. "1st Period", "Block A")
   createdAt: string;      // ISO timestamp
   updatedAt: string;      // ISO timestamp
 };
@@ -13,6 +14,7 @@ export type BridgePayload = {
   district?: string;      // e.g., "Mansfield ISD"
   school?: string;        // e.g., "Asa Low Intermediate"
   teacherName?: string;   // Optional: teacher who created bridge
+  classPeriods?: string[]; // Available class periods (e.g., ["Period 1", "Period 2"])
   roster: BridgeEntry[];  // Array of student mappings
 };
 

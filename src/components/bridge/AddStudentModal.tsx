@@ -7,12 +7,14 @@ import { BridgeEntry } from '../../bridge/bridgeTypes';
 interface AddStudentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (name: string, localId: string) => BridgeEntry;
+  onAdd: (name: string, localId: string, classPeriod?: string) => BridgeEntry;
+  classPeriods: string[];
 }
 
-export default function AddStudentModal({ isOpen, onClose, onAdd }: AddStudentModalProps) {
+export default function AddStudentModal({ isOpen, onClose, onAdd, classPeriods }: AddStudentModalProps) {
   const [name, setName] = useState('');
   const [localId, setLocalId] = useState('');
+  const [classPeriod, setClassPeriod] = useState('');
   const [error, setError] = useState('');
   const [addedStudent, setAddedStudent] = useState<BridgeEntry | null>(null);
   const [copied, setCopied] = useState(false);
@@ -24,10 +26,11 @@ export default function AddStudentModal({ isOpen, onClose, onAdd }: AddStudentMo
     setError('');
 
     try {
-      const student = onAdd(name.trim(), localId.trim());
+      const student = onAdd(name.trim(), localId.trim(), classPeriod || undefined);
       setAddedStudent(student);
       setName('');
       setLocalId('');
+      setClassPeriod('');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add student');
     }
@@ -44,6 +47,7 @@ export default function AddStudentModal({ isOpen, onClose, onAdd }: AddStudentMo
   const handleClose = () => {
     setName('');
     setLocalId('');
+    setClassPeriod('');
     setError('');
     setAddedStudent(null);
     setCopied(false);
@@ -155,6 +159,27 @@ export default function AddStudentModal({ isOpen, onClose, onAdd }: AddStudentMo
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Your district's student ID or any unique identifier
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Class Period (Optional)
+                </label>
+                <select
+                  value={classPeriod}
+                  onChange={(e) => setClassPeriod(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">-- No Class Period --</option>
+                  {classPeriods.map((period) => (
+                    <option key={period} value={period}>
+                      {period}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Assign student to a class period for organization
                 </p>
               </div>
 
