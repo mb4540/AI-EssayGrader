@@ -8,6 +8,7 @@ import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { createAssignment, updateAssignment } from '@/lib/api';
 import CriteriaInput from './CriteriaInput';
+import SourceTextSelector from './SourceTextSelector';
 import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
 
 interface Assignment {
@@ -17,6 +18,7 @@ interface Assignment {
   grading_criteria?: string;
   document_type?: string;
   total_points?: number;
+  source_text_id?: string | null;
 }
 
 interface AssignmentModalProps {
@@ -39,6 +41,7 @@ export default function AssignmentModal({
   const [criteria, setCriteria] = useState('');
   const [totalPoints, setTotalPoints] = useState(100);
   const [documentType, setDocumentType] = useState('personal_narrative');
+  const [sourceTextId, setSourceTextId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -54,6 +57,7 @@ export default function AssignmentModal({
       setDescription(existingAssignment.description || '');
       setCriteria(existingAssignment.grading_criteria || '');
       setDocumentType(existingAssignment.document_type || 'personal_narrative');
+      setSourceTextId(existingAssignment.source_text_id || null);
       
       // Ensure totalPoints is a number
       const points = existingAssignment.total_points 
@@ -121,6 +125,7 @@ export default function AssignmentModal({
     setCriteria('');
     setTotalPoints(100);
     setDocumentType('personal_narrative');
+    setSourceTextId(null);
     setWarningMessage(null);
     setSuccessMessage(null);
   };
@@ -147,13 +152,14 @@ export default function AssignmentModal({
       return;
     }
     
-    console.log('📝 Creating assignment:', { title: title.trim(), document_type: documentType, has_criteria: !!criteria.trim() });
+    console.log('📝 Creating assignment:', { title: title.trim(), document_type: documentType, has_criteria: !!criteria.trim(), source_text_id: sourceTextId });
     createMutation.mutate({ 
       title: title.trim(), 
       description: description.trim() || undefined,
       grading_criteria: criteria.trim() || undefined,
       document_type: documentType,
       total_points: totalPoints,
+      source_text_id: sourceTextId || undefined,
     });
   };
 
@@ -228,6 +234,12 @@ export default function AssignmentModal({
               Helps AI provide more relevant feedback
             </p>
           </div>
+
+          <SourceTextSelector
+            value={sourceTextId}
+            onChange={setSourceTextId}
+            disabled={createMutation.isPending}
+          />
 
           <div>
             <Label htmlFor="assignment-description" className="text-gray-700 dark:text-gray-300 font-medium">

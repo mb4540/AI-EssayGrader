@@ -31,7 +31,12 @@ export function buildExtractorPrompt(
   essayText: string,
   submissionId: string,
   customGradingPrompt?: string,
-  documentType?: string
+  documentType?: string,
+  sourceTextContext?: {
+    title: string;
+    writing_prompt?: string;
+    extracted_text?: string;
+  }
 ): string {
   // Build criterion descriptions for the prompt
   const criteriaDescriptions = rubric.criteria
@@ -59,11 +64,34 @@ ${levelsDesc}`;
   // Use generic annotation categories that work for any subject
   const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
 
+  // Build source text context section if provided
+  const sourceTextSection = sourceTextContext 
+    ? `
+SOURCE TEXT CONTEXT:
+This is a source-based writing assignment. The student was asked to write about the following source text:
+
+Title: "${sourceTextContext.title}"
+${sourceTextContext.writing_prompt ? `Writing Prompt: "${sourceTextContext.writing_prompt}"` : ''}
+
+${sourceTextContext.extracted_text ? `Source Text Content:
+<<<
+${sourceTextContext.extracted_text}
+>>>
+
+IMPORTANT: When grading, consider:
+- How well the student understood and analyzed the source text
+- Whether they accurately referenced or cited the source material
+- How effectively they responded to the writing prompt
+- The quality of their interpretation and critical thinking about the source
+` : 'Note: Source text file was provided but content extraction is not yet available for this file type.'}
+`
+    : '';
+
   return `${gradingPhilosophy}
 
 RUBRIC: "${rubric.title}"
 ${documentTypeGuidance}
-
+${sourceTextSection}
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
 
@@ -274,7 +302,12 @@ export function buildComparisonExtractorPrompt(
   finalDraft: string,
   submissionId: string,
   customGradingPrompt?: string,
-  documentType?: string
+  documentType?: string,
+  sourceTextContext?: {
+    title: string;
+    writing_prompt?: string;
+    extracted_text?: string;
+  }
 ): string {
   const criteriaDescriptions = rubric.criteria
     .map((c) => {
@@ -301,11 +334,34 @@ ${levelsDesc}`;
   // Use generic annotation categories that work for any subject
   const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
 
+  // Build source text context section if provided
+  const sourceTextSection = sourceTextContext 
+    ? `
+SOURCE TEXT CONTEXT:
+This is a source-based writing assignment. The student was asked to write about the following source text:
+
+Title: "${sourceTextContext.title}"
+${sourceTextContext.writing_prompt ? `Writing Prompt: "${sourceTextContext.writing_prompt}"` : ''}
+
+${sourceTextContext.extracted_text ? `Source Text Content:
+<<<
+${sourceTextContext.extracted_text}
+>>>
+
+IMPORTANT: When grading, consider:
+- How well the student understood and analyzed the source text
+- Whether they accurately referenced or cited the source material
+- How effectively they responded to the writing prompt
+- The quality of their interpretation and critical thinking about the source
+` : 'Note: Source text file was provided but content extraction is not yet available for this file type.'}
+`
+    : '';
+
   return `${gradingPhilosophy}
 
 RUBRIC: "${rubric.title}"
 ${documentTypeGuidance}
-
+${sourceTextSection}
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
 

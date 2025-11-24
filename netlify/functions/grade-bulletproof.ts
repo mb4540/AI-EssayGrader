@@ -7,6 +7,7 @@
 
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { OpenAI } from 'openai';
+import { getStore } from '@netlify/blobs';
 import { sql } from './db';
 import { GradeRequestSchema } from '../../src/lib/schema';
 import { authenticateRequest } from './lib/auth';
@@ -72,7 +73,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     const { submission_id } = validation.data;
 
-    // Fetch submission with assignment rubric
+    // Fetch submission with assignment rubric and source text
     const submission = await sql`
       SELECT 
         s.submission_id, 
@@ -87,9 +88,15 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         a.total_points,
         a.rounding_mode,
         a.rounding_decimals,
-        a.document_type
+        a.document_type,
+        a.source_text_id,
+        st_src.title as source_text_title,
+        st_src.writing_prompt as source_text_prompt,
+        st_src.blob_key as source_text_blob_key,
+        st_src.file_type as source_text_file_type
       FROM grader.submissions s
       LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
+      LEFT JOIN grader.source_texts st_src ON a.source_text_id = st_src.source_text_id
       JOIN grader.students st ON s.student_id = st.student_id
       WHERE s.submission_id = ${submission_id}
       AND st.tenant_id = ${tenant_id}
@@ -116,7 +123,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       total_points,
       rounding_mode,
       rounding_decimals,
-      document_type
+      document_type,
+      source_text_id,
+      source_text_title,
+      source_text_prompt,
+      source_text_blob_key,
+      source_text_file_type
     } = submission[0];
 
     // Get or create rubric
@@ -195,6 +207,37 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Get custom grading prompt from request body
     const customGradingPrompt = body.grading_prompt;
 
+    // Fetch source text content if available
+    let sourceTextContext: { title: string; writing_prompt?: string; extracted_text?: string } | undefined;
+    if (source_text_id && source_text_title) {
+      sourceTextContext = {
+        title: source_text_title,
+        writing_prompt: source_text_prompt || undefined,
+      };
+
+      // Try to fetch and extract text content (only for TXT files for now)
+      if (source_text_blob_key && source_text_file_type === 'txt') {
+        try {
+          const store = getStore({
+            name: 'source-texts',
+            siteID: process.env.NETLIFY_SITE_ID,
+            token: process.env.NETLIFY_AUTH_TOKEN,
+          });
+
+          const blob = await store.get(source_text_blob_key, { type: 'arrayBuffer' });
+          if (blob) {
+            sourceTextContext.extracted_text = Buffer.from(blob as ArrayBuffer).toString('utf-8');
+            console.log(`✅ Fetched source text: ${source_text_title} (${sourceTextContext.extracted_text.length} chars)`);
+          }
+        } catch (error) {
+          console.warn('Failed to fetch source text content:', error);
+          // Continue without source text content
+        }
+      } else if (source_text_file_type) {
+        console.log(`ℹ️ Source text is ${source_text_file_type.toUpperCase()} - text extraction not yet implemented`);
+      }
+    }
+
     // Build extractor prompt based on draft mode
     const essayText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
     const extractorPrompt = draft_mode === 'comparison'
@@ -204,14 +247,16 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           final_draft_text, 
           submission_id,
           customGradingPrompt,  // ✅ Pass custom prompt
-          document_type  // ✅ Pass document type
+          document_type,  // ✅ Pass document type
+          sourceTextContext  // ✅ Pass source text context
         )
       : buildExtractorPrompt(
           rubric, 
           essayText, 
           submission_id,
           customGradingPrompt,  // ✅ Pass custom prompt
-          document_type  // ✅ Pass document type
+          document_type,  // ✅ Pass document type
+          sourceTextContext  // ✅ Pass source text context
         );
     const response = await openai.chat.completions.create({
       model,

@@ -1,6 +1,6 @@
 # Database Reference - AI-EssayGrader
 
-**Last Updated:** November 24, 2025 - 6:00 AM UTC-06:00  
+**Last Updated:** November 24, 2025 - 1:54 PM UTC-06:00  
 **Database:** Neon Postgres  
 **Schema:** `grader`
 
@@ -8,6 +8,16 @@
 > Always reference this file before making database changes.
 
 ## 📝 Recent Migrations
+
+### November 24, 2025 - Source Texts for Book Reports
+**Migration:** `migrations/add_source_texts.sql`
+- Added `grader.source_texts` table for source-based writing assignments
+- Added `source_text_id` column to `grader.assignments` table
+- Enables teachers to upload source texts (books, articles, passages)
+- Supports context-aware AI grading for book reports and literary analysis
+- 3 indexes on source_texts table for performance
+- 1 partial index on assignments.source_text_id
+- Auto-update timestamp trigger
 
 ### November 24, 2025 - Class Period Organization
 **Migration:** `migrations/add_class_period_to_students.sql`
@@ -57,9 +67,9 @@
 
 ## 📊 Database Statistics
 
-- **Total Tables:** 11
+- **Total Tables:** 12
 - **Total Records:** 25+ rows
-- **Total Size:** ~544 KB
+- **Total Size:** ~552 KB
 - **Schema:** `grader`
 
 ---
@@ -84,6 +94,7 @@
 | **rounding_mode** | **text** | **YES** | **'HALF_UP'** | |
 | **rounding_decimals** | **integer** | **YES** | **2** | |
 | **document_type** | **text** | **YES** | **null** | |
+| **source_text_id** | **uuid** | **YES** | **null** | **FK → source_texts** |
 
 **Row Count:** 1  
 **Size:** 48 KB
@@ -95,15 +106,18 @@
 - `rounding_mode` - Rounding mode for calculator: HALF_UP, HALF_EVEN, or HALF_DOWN
 - `rounding_decimals` - Number of decimal places for rounding (0-4)
 - `document_type` - Type of document (e.g., personal_narrative, argumentative) - helps AI provide relevant feedback
+- `source_text_id` - Optional link to source text for book reports and source-based writing
 
 **Indexes:**
 - `assignments_pkey` - PRIMARY KEY (assignment_id)
 - `idx_assignments_tenant` - (tenant_id)
 - `idx_assignments_scale_mode` - (scale_mode)
 - `idx_assignments_document_type` - (document_type)
+- `idx_assignments_source_text` - (source_text_id) WHERE source_text_id IS NOT NULL
 
 **Foreign Keys:**
 - `tenant_id` → `tenants.tenant_id` (ON DELETE RESTRICT)
+- `source_text_id` → `source_texts.source_text_id` (ON DELETE SET NULL)
 
 **Constraints:**
 - `chk_total_points_required` - Ensures total_points is set and > 0 when scale_mode='points'
@@ -512,6 +526,56 @@
 
 ---
 
+### 12. source_texts
+
+**Purpose:** Store source texts (books, articles, passages) for source-based writing assignments
+
+| Column | Type | Nullable | Default | Key |
+|--------|------|----------|---------|-----|
+| source_text_id | uuid | NO | gen_random_uuid() | PRIMARY KEY |
+| tenant_id | uuid | NO | null | FK → tenants |
+| teacher_id | uuid | NO | null | FK → users |
+| title | text | NO | null | |
+| blob_key | text | NO | null | |
+| writing_prompt | text | YES | null | |
+| file_type | text | NO | null | CHECK |
+| file_size_bytes | integer | YES | null | |
+| created_at | timestamptz | NO | now() | |
+| updated_at | timestamptz | NO | now() | |
+
+**Row Count:** 0 (new table)  
+**Size:** ~8 KB
+
+**Purpose:**
+- Enables context-aware grading for book reports and literary analysis
+- Teachers upload source texts (PDF, DOCX, TXT) that students write about
+- LLM receives source text context during grading for better evaluation
+- Supports writing prompts specific to each source text
+
+**Storage:**
+- Files stored in Netlify Blobs (store: 'source-texts')
+- Blob key format: `{tenant_id}/{source_text_id}.{ext}`
+- Supports PDF, DOCX, and TXT file types
+- Maximum file size: 10MB
+
+**Indexes:**
+- `source_texts_pkey` - PRIMARY KEY (source_text_id)
+- `idx_source_texts_tenant` - (tenant_id)
+- `idx_source_texts_teacher` - (teacher_id)
+- `idx_source_texts_created` - (created_at DESC)
+
+**Foreign Keys:**
+- `tenant_id` → `tenants.tenant_id` (ON DELETE RESTRICT)
+- `teacher_id` → `users.user_id` (ON DELETE RESTRICT)
+
+**Constraints:**
+- `file_type` must be one of: 'pdf', 'docx', 'txt'
+
+**Related Tables:**
+- `assignments.source_text_id` - Links assignments to source texts (ON DELETE SET NULL)
+
+---
+
 ## 🔗 Relationship Diagram
 
 ```
@@ -523,7 +587,10 @@ tenants (3 rows)
   │           │     └─→ annotation_events (0 rows) [CASCADE]
   │           └─→ assignments (1 row) [SET NULL]
   ├─→ assignments (1 row) [RESTRICT]
+  │     └─→ source_texts (0 rows) [SET NULL]
+  ├─→ source_texts (0 rows) [RESTRICT]
   └─→ users (2 rows) [RESTRICT]
+        ├─→ source_texts.teacher_id [RESTRICT]
         ├─→ annotations.created_by [SET NULL]
         ├─→ annotation_events.created_by [SET NULL]
         ├─→ password_reset_tokens (0 rows) [CASCADE]
@@ -539,7 +606,7 @@ tenants (3 rows)
 
 ## 🔍 Indexes Summary
 
-**Total Indexes:** 36
+**Total Indexes:** 41
 
 **Performance Optimizations:**
 - ✅ All primary keys indexed
@@ -551,7 +618,9 @@ tenants (3 rows)
 - ✅ Partial indexes on active records (users, tenants)
 - ✅ Partial indexes on annotation creators (created_by IS NOT NULL)
 - ✅ Partial index on unused password reset tokens (used_at IS NULL)
+- ✅ Partial index on assignments with source texts (source_text_id IS NOT NULL)
 - ✅ Token hash indexed for fast password reset lookups
+- ✅ Source texts indexed by tenant, teacher, and creation date
 - ✅ No duplicate indexes - database optimized
 
 ---
@@ -566,6 +635,7 @@ tenants (3 rows)
 
 ### Enum Validation
 - `submissions.source_type`: 'text', 'docx', 'image', 'pdf'
+- `source_texts.file_type`: 'pdf', 'docx', 'txt'
 - `tenants.tenant_type`: 'district', 'school', 'individual'
 - `users.role`: 'admin', 'teacher'
 
