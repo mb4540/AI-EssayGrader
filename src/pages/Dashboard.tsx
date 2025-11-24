@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Download, Search, Trash2, User, FolderOpen, Pencil } from 'lucide-react';
+import { Trash2, User, FolderOpen, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
-import PageHeader from '@/components/PageHeader';
 import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions } from './Dashboard/hooks';
+import { DashboardHeader, DashboardFilters, DeleteConfirmModal } from './Dashboard/components';
 import type { ViewMode } from './Dashboard/types';
 
 export default function Dashboard() {
@@ -66,92 +65,29 @@ export default function Dashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-4 py-6">
         {/* Dashboard Header */}
-        <PageHeader
-          icon={<span className="text-2xl">📚</span>}
-          title="Dashboard"
-          subtitle="View and manage all submissions"
-          showAddAssignment={true}
-          showBridgeLock={true}
-          actions={
-            <>
-              <Button 
-                onClick={handleExportClick} 
-                variant="outline"
-                size="sm"
-                disabled={!submissions.length}
-                className="text-gray-700"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-              </Button>
-              <div className="w-px h-8 bg-gray-300 mx-2" />
-              <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('list')}
-                className={viewMode === 'list' ? 'bg-indigo-600' : ''}
-              >
-                <User className="w-4 h-4 mr-2" />
-                By Student
-              </Button>
-              <Button
-                variant={viewMode === 'grouped' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setViewMode('grouped')}
-                className={viewMode === 'grouped' ? 'bg-indigo-600' : ''}
-              >
-                <FolderOpen className="w-4 h-4 mr-2" />
-                Assignments
-              </Button>
-              {!bridge.isLocked && bridge.getClassPeriods().length > 0 && (
-                <Button
-                  variant={viewMode === 'class' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setViewMode('class')}
-                  className={viewMode === 'class' ? 'bg-indigo-600' : ''}
-                >
-                  <FolderOpen className="w-4 h-4 mr-2" />
-                  By Class
-                </Button>
-              )}
-            </>
-          }
+        <DashboardHeader
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onExport={handleExportClick}
+          hasClassPeriods={!bridge.isLocked && bridge.getClassPeriods().length > 0}
+          submissionCount={submissions.length}
         />
 
         {/* Search and Filter Bar */}
-        <div className="mb-6 flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search by student name or ID..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(0);
-              }}
-              className="pl-10 border-2 focus:border-indigo-500 bg-white"
-            />
-          </div>
-          
-          {/* Class Period Filter */}
-          {!bridge.isLocked && bridge.getClassPeriods().length > 0 && (
-            <select
-              value={classPeriodFilter}
-              onChange={(e) => {
-                setClassPeriodFilter(e.target.value);
-                setPage(0);
-              }}
-              className="px-4 py-2 border-2 border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-white min-w-[200px]"
-            >
-              <option value="">All Classes</option>
-              {bridge.getClassPeriods().map((period) => (
-                <option key={period} value={period}>
-                  {period}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+        <DashboardFilters
+          searchQuery={searchQuery}
+          onSearchChange={(query) => {
+            setSearchQuery(query);
+            setPage(0);
+          }}
+          classPeriodFilter={classPeriodFilter}
+          onClassPeriodChange={(period) => {
+            setClassPeriodFilter(period);
+            setPage(0);
+          }}
+          classPeriods={bridge.getClassPeriods()}
+          showClassFilter={!bridge.isLocked && bridge.getClassPeriods().length > 0}
+        />
 
         {/* Submissions Content Card */}
         <Card className="shadow-xl bg-white">
@@ -513,74 +449,24 @@ export default function Dashboard() {
         }}
       />
 
-      {/* Delete Assignment Confirmation Modal */}
-      {deleteAssignmentTitle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 border-2 border-red-200">
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-xl">
-              <h2 className="text-2xl font-bold text-white">Delete Assignment?</h2>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-700 mb-2 font-semibold">
-                Assignment: <span className="text-red-600">{deleteAssignmentTitle}</span>
-              </p>
-              <p className="text-gray-700 mb-6">
-                This will permanently delete this assignment and <strong>ALL {groupedByAssignment[deleteAssignmentTitle]?.length || 0} submission(s)</strong> associated with it. This action cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={cancelDelete}
-                  disabled={isDeleting}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={confirmDeleteAssignment}
-                  disabled={isDeleting}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete All'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Delete Modals */}
+      <DeleteConfirmModal
+        isOpen={!!deleteAssignmentTitle}
+        type="assignment"
+        onConfirm={confirmDeleteAssignment}
+        onCancel={cancelDelete}
+        isDeleting={isDeleting}
+        itemName={deleteAssignmentTitle || undefined}
+        submissionCount={deleteAssignmentTitle ? (groupedByAssignment[deleteAssignmentTitle]?.length || 0) : 0}
+      />
 
-      {/* Delete Submission Confirmation Modal */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-md mx-4 border-2 border-red-200">
-            <div className="bg-gradient-to-r from-red-500 to-red-600 p-6 rounded-t-xl">
-              <h2 className="text-2xl font-bold text-white">Delete Submission?</h2>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-700 mb-6">
-                Are you sure you want to delete this submission? This action cannot be undone.
-              </p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  onClick={cancelDelete}
-                  disabled={isDeleting}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={confirmDelete}
-                  disabled={isDeleting}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmModal
+        isOpen={!!deleteId}
+        type="submission"
+        onConfirm={confirmDelete}
+        onCancel={cancelDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }
