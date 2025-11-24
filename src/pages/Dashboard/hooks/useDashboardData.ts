@@ -1,0 +1,75 @@
+/**
+ * Dashboard Data Hook
+ * Handles all data fetching, caching, and mutations
+ */
+
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { listSubmissions, deleteSubmission, listAssignments } from '@/lib/api';
+import type { DashboardFilters } from '../types';
+
+const PAGE_SIZE = 20;
+
+export function useDashboardData(filters: DashboardFilters) {
+  const queryClient = useQueryClient();
+
+  // Fetch submissions with filters
+  const {
+    data: submissionsData,
+    isLoading: isLoadingSubmissions,
+  } = useQuery({
+    queryKey: ['submissions', filters.searchQuery, filters.classPeriodFilter, filters.page],
+    queryFn: () => listSubmissions({
+      search: filters.searchQuery || undefined,
+      class_period: filters.classPeriodFilter || undefined,
+      page: filters.page + 1,
+      limit: PAGE_SIZE,
+    }),
+  });
+
+  // Fetch assignments list
+  const { data: assignmentsData } = useQuery({
+    queryKey: ['assignments'],
+    queryFn: listAssignments,
+  });
+
+  // Delete submission mutation
+  const deleteSubmissionMutation = useMutation({
+    mutationFn: deleteSubmission,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['submissions'] });
+    },
+  });
+
+  // Delete assignment mutation (bulk delete submissions)
+  const deleteAssignmentMutation = useMutation({
+    mutationFn: async (assignmentTitle: string) => {
+      const submissions = submissionsData?.submissions || [];
+      const toDelete = submissions.filter(
+        (s: any) => s.assignment_title === assignmentTitle
+      );
+      
+      await Promise.all(
+        toDelete.map((s: any) => deleteSubmission(s.submission_id))
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['submissions'] });
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+    },
+  });
+
+  return {
+    // Data
+    submissions: submissionsData?.submissions || [],
+    totalSubmissions: submissionsData?.pagination?.total || 0,
+    assignments: assignmentsData?.assignments || [],
+    
+    // Loading states
+    isLoading: isLoadingSubmissions,
+    isDeleting: deleteSubmissionMutation.isPending || deleteAssignmentMutation.isPending,
+    
+    // Actions
+    deleteSubmission: (id: string) => deleteSubmissionMutation.mutate(id),
+    deleteAssignment: (title: string) => deleteAssignmentMutation.mutate(title),
+  };
+}

@@ -1,209 +1,66 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Download, Search, Trash2, User, FolderOpen, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { listSubmissions, deleteSubmission, listAssignments } from '@/lib/api';
-import { exportToCSV } from '@/lib/csv';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
 import PageHeader from '@/components/PageHeader';
-
-type SortField = 'student_name' | 'assignment_title' | 'ai_grade' | 'teacher_grade' | 'created_at';
-type SortDirection = 'asc' | 'desc';
+import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions } from './Dashboard/hooks';
+import type { ViewMode } from './Dashboard/types';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const bridge = useBridge();
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   
-  // State management
-  const [searchQuery, setSearchQuery] = useState('');
-  const [classPeriodFilter, setClassPeriodFilter] = useState<string>('');
-  const [page, setPage] = useState(0);
-  const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false);
-  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
-  const [editingAssignment, setEditingAssignment] = useState<any>(null);
-  const [sortField] = useState<SortField>('created_at'); // setSortField unused - for future sorting
-  const [sortDirection] = useState<SortDirection>('desc'); // setSortDirection unused - for future sorting
-  const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [deleteAssignmentTitle, setDeleteAssignmentTitle] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grouped' | 'class'>('list');
-  const pageSize = 20;
+  // Custom hooks for data, filters, grouping, and actions
+  const filterHook = useDashboardFilters();
+  const { filters, searchQuery, classPeriodFilter, setSearchQuery, setClassPeriodFilter, setPage } = filterHook;
   
-  // Refs for scroll synchronization (unused - was for flat table view)
-  // const headerScrollRef = useRef<HTMLDivElement>(null);
-  // const bodyScrollRef = useRef<HTMLDivElement>(null);
-
-  // Listen for assignment modal trigger from navigation
-  useEffect(() => {
-    const handleOpenModal = () => setIsAssignmentModalOpen(true);
-    window.addEventListener('openAssignmentModal', handleOpenModal);
-    return () => window.removeEventListener('openAssignmentModal', handleOpenModal);
-  }, []);
-
-  // Fetch submissions data
-  const { data, isLoading } = useQuery({
-    queryKey: ['submissions', searchQuery, classPeriodFilter, page],
-    queryFn: () => listSubmissions({
-      search: searchQuery || undefined,
-      class_period: classPeriodFilter || undefined,
-      page: page + 1,
-      limit: pageSize,
-    }),
-  });
-
-  // Fetch assignments list for edit functionality
-  const { data: assignmentsData } = useQuery({
-    queryKey: ['assignments'],
-    queryFn: listAssignments,
-  });
-
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: deleteSubmission,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['submissions'] });
-      setDeleteId(null);
-    },
-  });
-
-  // Handle sorting (currently unused - can be re-enabled for future sorting features)
-  // const handleSort = (field: SortField) => {
-  //   if (sortField === field) {
-  //     setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-  //   } else {
-  //     setSortField(field);
-  //     setSortDirection('asc');
-  //   }
-  // };
-
-  // Handle delete operations
-  const handleDelete = (id: string) => {
-    setDeleteId(id);
-  };
-
-  const handleDeleteAssignment = (assignmentTitle: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setDeleteAssignmentTitle(assignmentTitle);
-  };
-
+  const dataHook = useDashboardData(filters);
+  const { submissions, assignments, isLoading, deleteSubmission: deleteSubmissionMutation, deleteAssignment: deleteAssignmentMutation, isDeleting } = dataHook;
+  
+  const groupingHook = useDashboardGrouping(submissions, bridge);
+  const { groupedByStudent, groupedByAssignment, groupedByClass } = groupingHook;
+  
+  const actionsHook = useDashboardActions();
+  const {
+    isAssignmentModalOpen,
+    modalMode,
+    editingAssignment,
+    closeAssignmentModal,
+    setEditMode,
+    deleteId,
+    deleteAssignmentTitle,
+    handleDelete,
+    handleDeleteAssignment,
+    cancelDelete,
+    handleExport: exportCSV,
+    handleViewSubmission,
+  } = actionsHook;
+  
+  // Confirm delete handlers
   const confirmDelete = () => {
     if (deleteId) {
-      deleteMutation.mutate(deleteId);
+      deleteSubmissionMutation(deleteId);
+      cancelDelete();
     }
   };
 
-  const confirmDeleteAssignment = async () => {
-    if (deleteAssignmentTitle && data?.submissions) {
-      const submissionsToDelete = data.submissions.filter(
-        s => (s.assignment_title || 'No Assignment') === deleteAssignmentTitle
-      );
-      
-      for (const submission of submissionsToDelete) {
-        await deleteMutation.mutateAsync(submission.id);
-      }
-      
-      setDeleteAssignmentTitle(null);
-      queryClient.invalidateQueries({ queryKey: ['submissions'] });
+  const confirmDeleteAssignment = () => {
+    if (deleteAssignmentTitle) {
+      deleteAssignmentMutation(deleteAssignmentTitle);
+      cancelDelete();
     }
   };
 
-  // Handle scrolling synchronization (currently unused - was for flat table view)
-  // const handleHeaderScroll = (e: React.UIEvent<HTMLDivElement>) => {
-  //   if (bodyScrollRef.current) {
-  //     bodyScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-  //   }
-  // };
-
-  // const handleBodyScroll = (e: React.UIEvent<HTMLDivElement>) => {
-  //   if (headerScrollRef.current) {
-  //     headerScrollRef.current.scrollLeft = e.currentTarget.scrollLeft;
-  //   }
-  // };
-
-  // Handle CSV export - resolve student names from bridge
-  const handleExport = () => {
-    if (data?.submissions) {
-      exportToCSV(
-        data.submissions.map(s => {
-          const student = s.student_id ? bridge.findByUuid(s.student_id) : null;
-          return {
-            student_name: student?.name || 'Unknown',
-            student_id: student?.localId || s.student_id || 'N/A',
-            assignment_title: s.assignment_title,
-            teacher_grade: s.teacher_grade,
-            ai_grade: s.ai_grade,
-            created_at: s.created_at,
-            updated_at: s.updated_at,
-          };
-        }),
-        `submissions-${new Date().toISOString().split('T')[0]}.csv`
-      );
-    }
+  // Export handler
+  const handleExportClick = () => {
+    exportCSV(submissions, bridge);
   };
-
-  // Sort submissions
-  const sortedSubmissions = data?.submissions ? [...data.submissions].sort((a, b) => {
-    const aVal = a[sortField];
-    const bVal = b[sortField];
-    
-    if (aVal === null || aVal === undefined) return 1;
-    if (bVal === null || bVal === undefined) return -1;
-    
-    if (sortDirection === 'asc') {
-      return aVal > bVal ? 1 : -1;
-    } else {
-      return aVal < bVal ? 1 : -1;
-    }
-  }) : [];
-
-  // Group submissions by assignment
-  const groupedSubmissions = sortedSubmissions.reduce((acc, submission) => {
-    const assignmentKey = submission.assignment_title || 'No Assignment';
-    if (!acc[assignmentKey]) {
-      acc[assignmentKey] = [];
-    }
-    acc[assignmentKey].push(submission);
-    return acc;
-  }, {} as Record<string, typeof sortedSubmissions>);
-
-  // Group submissions by student
-  const groupedByStudent = sortedSubmissions.reduce((acc, submission) => {
-    const student = submission.student_id ? bridge.findByUuid(submission.student_id) : null;
-    const studentKey = student?.name || 'Unknown';
-    if (!acc[studentKey]) {
-      acc[studentKey] = {
-        studentId: student?.localId || '',
-        submissions: []
-      };
-    }
-    acc[studentKey].submissions.push(submission);
-    return acc;
-  }, {} as Record<string, { studentId: string; submissions: typeof sortedSubmissions }>);
-
-  // Group submissions by class period → student → assignments
-  const groupedByClass = sortedSubmissions.reduce((acc, submission) => {
-    const student = submission.student_id ? bridge.findByUuid(submission.student_id) : null;
-    // Use class_period from database (submission) instead of Bridge
-    const classPeriod = (submission as any).class_period || 'No Class Assigned';
-    const studentName = student?.name || 'Unknown';
-    
-    if (!acc[classPeriod]) {
-      acc[classPeriod] = {};
-    }
-    if (!acc[classPeriod][studentName]) {
-      acc[classPeriod][studentName] = {
-        studentId: student?.localId || '',
-        submissions: []
-      };
-    }
-    acc[classPeriod][studentName].submissions.push(submission);
-    return acc;
-  }, {} as Record<string, Record<string, { studentId: string; submissions: typeof sortedSubmissions }>>);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -218,10 +75,10 @@ export default function Dashboard() {
           actions={
             <>
               <Button 
-                onClick={handleExport} 
+                onClick={handleExportClick} 
                 variant="outline"
                 size="sm"
-                disabled={!data?.submissions?.length}
+                disabled={!submissions.length}
                 className="text-gray-700"
               >
                 <Download className="w-4 h-4 mr-2" />
@@ -301,7 +158,7 @@ export default function Dashboard() {
           <CardContent className="p-0">
             {isLoading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : !data?.submissions?.length ? (
+            ) : !submissions.length ? (
               <div className="text-center py-8 text-muted-foreground">
                 No submissions found. Create your first submission to get started.
               </div>
@@ -370,7 +227,7 @@ export default function Dashboard() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => navigate(`/submission/${submission.id}`)}
+                                      onClick={() => handleViewSubmission(submission.id)}
                                       className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                     >
                                       View
@@ -483,7 +340,7 @@ export default function Dashboard() {
                                               <Button
                                                 variant="ghost"
                                                 size="sm"
-                                                onClick={() => navigate(`/submission/${submission.id}`)}
+                                                onClick={() => handleViewSubmission(submission.id)}
                                                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                               >
                                                 View
@@ -515,9 +372,9 @@ export default function Dashboard() {
             ) : (
               /* Assignments View - Shows all assignments with submission counts */
               <Accordion type="multiple" className="w-full">
-                {assignmentsData?.assignments && assignmentsData.assignments.length > 0 ? (
-                  assignmentsData.assignments.map((assignment) => {
-                    const submissions = groupedSubmissions[assignment.title] || [];
+                {assignments && assignments.length > 0 ? (
+                  assignments.map((assignment) => {
+                    const assignmentSubmissions = groupedByAssignment[assignment.title] || [];
                     return (
                   <AccordionItem key={assignment.id} value={assignment.id} className="border-b">
                     <AccordionTrigger className="hover:no-underline px-4 py-4 bg-gradient-to-r from-slate-50 to-blue-50 hover:from-slate-100 hover:to-blue-100">
@@ -531,7 +388,7 @@ export default function Dashboard() {
                               {assignment.title}
                             </div>
                             <div className="text-sm text-gray-500">
-                              {submissions.length} submission{submissions.length !== 1 ? 's' : ''}
+                              {assignmentSubmissions.length} submission{assignmentSubmissions.length !== 1 ? 's' : ''}
                             </div>
                           </div>
                         </div>
@@ -541,9 +398,7 @@ export default function Dashboard() {
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingAssignment(assignment);
-                              setModalMode('edit');
-                              setIsAssignmentModalOpen(true);
+                              setEditMode(assignment);
                             }}
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                             title="Edit assignment"
@@ -574,7 +429,7 @@ export default function Dashboard() {
                             </tr>
                           </thead>
                           <tbody>
-                            {submissions.map((submission) => {
+                            {assignmentSubmissions.map((submission) => {
                               const student = submission.student_id ? bridge.findByUuid(submission.student_id) : null;
                               return (
                               <tr key={submission.id} className="border-b hover:bg-muted/50">
@@ -612,7 +467,7 @@ export default function Dashboard() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => navigate(`/submission/${submission.id}`)}
+                                      onClick={() => handleViewSubmission(submission.id)}
                                     >
                                       View
                                     </Button>
@@ -650,11 +505,7 @@ export default function Dashboard() {
       {/* Modals */}
       <CreateAssignmentModal 
         isOpen={isAssignmentModalOpen} 
-        onClose={() => {
-          setIsAssignmentModalOpen(false);
-          setModalMode('create');
-          setEditingAssignment(null);
-        }}
+        onClose={closeAssignmentModal}
         mode={modalMode}
         existingAssignment={editingAssignment}
         onSuccess={() => {
@@ -674,23 +525,23 @@ export default function Dashboard() {
                 Assignment: <span className="text-red-600">{deleteAssignmentTitle}</span>
               </p>
               <p className="text-gray-700 mb-6">
-                This will permanently delete this assignment and <strong>ALL {groupedSubmissions[deleteAssignmentTitle]?.length || 0} submission(s)</strong> associated with it. This action cannot be undone.
+                This will permanently delete this assignment and <strong>ALL {groupedByAssignment[deleteAssignmentTitle]?.length || 0} submission(s)</strong> associated with it. This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setDeleteAssignmentTitle(null)}
-                  disabled={deleteMutation.isPending}
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
                   className="flex-1"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={confirmDeleteAssignment}
-                  disabled={deleteMutation.isPending}
+                  disabled={isDeleting}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  {deleteMutation.isPending ? 'Deleting...' : 'Delete All'}
+                  {isDeleting ? 'Deleting...' : 'Delete All'}
                 </Button>
               </div>
             </div>
@@ -712,18 +563,18 @@ export default function Dashboard() {
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  onClick={() => setDeleteId(null)}
-                  disabled={deleteMutation.isPending}
+                  onClick={cancelDelete}
+                  disabled={isDeleting}
                   className="flex-1"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={confirmDelete}
-                  disabled={deleteMutation.isPending}
+                  disabled={isDeleting}
                   className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                 >
-                  {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>
             </div>
