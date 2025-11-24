@@ -39,6 +39,9 @@ describe('StudentSelector Component', () => {
     exportFile: vi.fn(),
     importFile: vi.fn(),
     importCsv: vi.fn(),
+    getClassPeriods: vi.fn(() => []),
+    addClassPeriod: vi.fn(),
+    removeClassPeriod: vi.fn(),
     loading: false,
     error: null,
   };
