@@ -80,6 +80,127 @@
 
 ---
 
+### Batch Document Upload & Processing
+
+**Status:** 🆕 **NEW FEATURE REQUEST** (November 24, 2025)  
+**Priority:** ⭐⭐⭐ HIGH PRIORITY  
+**Estimated Time:** 8-12 hours  
+**FERPA Compliance:** CRITICAL
+
+**Goal:** Allow teachers to upload and process multiple student essays at once, with FERPA-compliant student identification.
+
+**Use Case:**
+- Teacher has 30 student essays as separate files
+- Upload all files at once instead of one-by-one
+- System processes them in batch
+- Each file correctly associated with the right student
+- No student names in cloud storage (FERPA compliant)
+
+**Implementation Approaches (Choose One):**
+
+**Option A: Filename Convention (Recommended - Fastest for Teachers)**
+- Teacher renames files using student IDs: `12345_essay1.docx`, `12345_essay2.pdf`
+- Bridge maps student_id → student name locally (client-side only)
+- Only student_id sent to cloud (FERPA compliant)
+- System auto-matches files to students
+- **Pros:** Fast, no manual mapping needed
+- **Cons:** Requires teacher to rename files first
+
+**Option B: Interactive Mapping UI**
+- Teacher uploads all files with any filenames
+- UI displays list of uploaded files
+- Teacher selects student from dropdown for each file
+- "Process Batch" button after all mapped
+- **Pros:** No file renaming needed
+- **Cons:** Manual work for large batches
+
+**Option C: Folder Structure**
+- Teacher organizes files in folders: `/Period1/12345_essay.docx`
+- System processes folder structure
+- Bridge handles ID → name mapping
+- **Pros:** Organized by class period
+- **Cons:** More complex folder setup
+
+**Technical Tasks:**
+
+**Phase 1: Frontend - File Upload**
+- [ ] Create `BatchUploadModal` component
+- [ ] Add multi-file drag-and-drop support
+- [ ] Display file list with status indicators
+- [ ] Add student mapping UI (if Option B)
+- [ ] Show upload progress for each file
+- [ ] Handle file validation (type, size)
+
+**Phase 2: Student Identification**
+- [ ] Implement filename parsing for student IDs (Option A)
+- [ ] Create student selector dropdown (Option B)
+- [ ] Validate student IDs against Bridge
+- [ ] Show warnings for unmatched files
+- [ ] Allow teacher to fix mismatches before processing
+
+**Phase 3: Backend - Batch Processing**
+- [ ] Create `netlify/functions/batch-ingest.ts` endpoint
+- [ ] Accept array of files + student mappings
+- [ ] Process files sequentially or in parallel (decide)
+- [ ] Handle partial failures gracefully
+- [ ] Return detailed status for each file
+- [ ] Store files in blob storage (if needed)
+
+**Phase 4: Processing & Feedback**
+- [ ] Extract text from each document (reuse existing logic)
+- [ ] Create submission records in database
+- [ ] Optionally: Auto-grade all submissions
+- [ ] Show real-time progress: "Processing 5 of 30..."
+- [ ] Display summary: "28 successful, 2 failed"
+- [ ] Allow retry for failed files
+
+**Phase 5: Error Handling**
+- [ ] Handle duplicate submissions (same student + assignment)
+- [ ] Handle invalid file formats
+- [ ] Handle missing student IDs
+- [ ] Handle network failures mid-batch
+- [ ] Provide clear error messages
+- [ ] Allow downloading error log
+
+**FERPA Compliance Checklist:**
+- [ ] Student names NEVER in filenames sent to cloud
+- [ ] Only student IDs transmitted to backend
+- [ ] Bridge handles all ID → name mapping locally
+- [ ] No PII in blob storage filenames
+- [ ] Audit log for batch uploads
+- [ ] Clear documentation for teachers
+
+**UI/UX Considerations:**
+- [ ] Clear instructions for teachers
+- [ ] Example filename format shown
+- [ ] Bulk rename helper tool (optional)
+- [ ] Preview before processing
+- [ ] Cancel batch operation
+- [ ] Navigate to dashboard after completion
+
+**Testing Requirements:**
+- [ ] Test with 1 file (edge case)
+- [ ] Test with 30+ files (typical class size)
+- [ ] Test with mixed file types (DOCX, PDF, TXT)
+- [ ] Test with invalid student IDs
+- [ ] Test with duplicate files
+- [ ] Test network interruption during batch
+- [ ] Test FERPA compliance (no PII leakage)
+
+**Success Metrics:**
+- Reduces teacher time from 5 min/submission to 30 seconds/batch
+- 95%+ auto-match rate for properly named files
+- Zero FERPA violations
+- Clear error messages for all failure cases
+
+**Future Enhancements:**
+- [ ] Auto-detect student names from file content (risky for FERPA)
+- [ ] Integration with Google Classroom file structure
+- [ ] Batch grading after batch upload
+- [ ] Email notifications when batch complete
+
+---
+
 ### Dashboard Enhancements
 
 **Goal:** Make Dashboard more useful for teachers
