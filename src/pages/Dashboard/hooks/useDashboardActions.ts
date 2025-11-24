@@ -90,7 +90,7 @@ export function useDashboardActions() {
 
   // Navigation
   const handleViewSubmission = (id: string) => {
-    navigate(`/grade/${id}`);
+    navigate(`/submission/${id}`);
   };
 
   return {

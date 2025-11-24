@@ -18,8 +18,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
 import CreateAssignmentModal from '@/components/CreateAssignmentModal';
 import { useBridge } from '@/hooks/useBridge';
-import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions } from './Dashboard/hooks';
-import { DashboardHeader, DashboardFilters, DeleteConfirmModal } from './Dashboard/components';
+import { useDashboardData, useDashboardFilters, useDashboardGrouping, useDashboardActions, useDashboardStats } from './Dashboard/hooks';
+import { DashboardHeader, DashboardFilters, DeleteConfirmModal, DashboardStats, DateRangeFilter } from './Dashboard/components';
 import { ByStudentView, ByAssignmentView, ByClassView } from './Dashboard/components/views';
 import type { ViewMode } from './Dashboard/types';
 
@@ -30,13 +30,15 @@ export default function Dashboard() {
   
   // Custom hooks for data, filters, grouping, and actions
   const filterHook = useDashboardFilters();
-  const { filters, searchQuery, classPeriodFilter, setSearchQuery, setClassPeriodFilter, setPage } = filterHook;
+  const { filters, searchQuery, classPeriodFilter, sortField, sortDirection, startDate, endDate, setSearchQuery, setClassPeriodFilter, setPage, toggleSortDirection, setStartDate, setEndDate, setDatePreset, clearDateRange } = filterHook;
   
   const dataHook = useDashboardData(filters);
   const { submissions, assignments, isLoading, deleteSubmission: deleteSubmissionMutation, deleteAssignment: deleteAssignmentMutation, isDeleting } = dataHook;
   
-  const groupingHook = useDashboardGrouping(submissions, bridge);
+  const groupingHook = useDashboardGrouping(submissions, bridge, sortField, sortDirection);
   const { groupedByStudent, groupedByAssignment, groupedByClass } = groupingHook;
+  
+  const stats = useDashboardStats(submissions);
   
   const actionsHook = useDashboardActions();
   const {
@@ -101,6 +103,21 @@ export default function Dashboard() {
           classPeriods={bridge.getClassPeriods()}
           showClassFilter={!bridge.isLocked && bridge.getClassPeriods().length > 0}
         />
+
+        {/* Date Range Filter */}
+        <DateRangeFilter
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+          onPresetClick={setDatePreset}
+          onClear={clearDateRange}
+          sortDirection={sortDirection}
+          onToggleSortDirection={toggleSortDirection}
+        />
+
+        {/* Statistics Summary */}
+        <DashboardStats stats={stats} totalAssignments={assignments.length} />
 
         {/* Submissions Content Card */}
         <Card className="shadow-xl bg-white">

@@ -1,6 +1,6 @@
 /**
  * Dashboard Header Component
- * Displays page header with view mode switcher and export button
+ * Displays page header with view mode switcher, sort controls, and export button
  */
 
 import { Download, User, FolderOpen } from 'lucide-react';
