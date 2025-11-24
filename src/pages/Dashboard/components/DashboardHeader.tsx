@@ -1,12 +1,13 @@
 /**
  * Dashboard Header Component
- * Displays page header with view mode switcher and export button
+ * Displays page header with view mode switcher, sort controls, and export button
  */
 
 import { Download, User, FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageHeader from '@/components/PageHeader';
-import type { ViewMode } from '../types';
+import SortDropdown from './SortDropdown';
+import type { ViewMode, SortField, SortDirection } from '../types';
 
 interface DashboardHeaderProps {
   viewMode: ViewMode;
@@ -14,6 +15,10 @@ interface DashboardHeaderProps {
   onExport: () => void;
   hasClassPeriods: boolean;
   submissionCount: number;
+  sortField: SortField;
+  sortDirection: SortDirection;
+  onSortFieldChange: (field: SortField) => void;
+  onToggleSortDirection: () => void;
 }
 
 export default function DashboardHeader({
@@ -22,6 +27,10 @@ export default function DashboardHeader({
   onExport,
   hasClassPeriods,
   submissionCount,
+  sortField,
+  sortDirection,
+  onSortFieldChange,
+  onToggleSortDirection,
 }: DashboardHeaderProps) {
   return (
     <PageHeader
@@ -32,6 +41,13 @@ export default function DashboardHeader({
       showBridgeLock={true}
       actions={
         <>
+          <SortDropdown
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onSortFieldChange={onSortFieldChange}
+            onToggleDirection={onToggleSortDirection}
+          />
+          <div className="w-px h-8 bg-gray-300 mx-2" />
           <Button 
             onClick={onExport} 
             variant="outline"

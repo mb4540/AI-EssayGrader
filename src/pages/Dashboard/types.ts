@@ -10,6 +10,8 @@ export interface DashboardFilters {
   searchQuery: string;
   classPeriodFilter: string;
   page: number;
+  sortField: SortField;
+  sortDirection: SortDirection;
 }
 
 export interface StudentGroup {

@@ -30,12 +30,12 @@ export default function Dashboard() {
   
   // Custom hooks for data, filters, grouping, and actions
   const filterHook = useDashboardFilters();
-  const { filters, searchQuery, classPeriodFilter, setSearchQuery, setClassPeriodFilter, setPage } = filterHook;
+  const { filters, searchQuery, classPeriodFilter, sortField, sortDirection, setSearchQuery, setClassPeriodFilter, setPage, setSortField, toggleSortDirection } = filterHook;
   
   const dataHook = useDashboardData(filters);
   const { submissions, assignments, isLoading, deleteSubmission: deleteSubmissionMutation, deleteAssignment: deleteAssignmentMutation, isDeleting } = dataHook;
   
-  const groupingHook = useDashboardGrouping(submissions, bridge);
+  const groupingHook = useDashboardGrouping(submissions, bridge, sortField, sortDirection);
   const { groupedByStudent, groupedByAssignment, groupedByClass } = groupingHook;
   
   const actionsHook = useDashboardActions();
@@ -84,6 +84,10 @@ export default function Dashboard() {
           onExport={handleExportClick}
           hasClassPeriods={!bridge.isLocked && bridge.getClassPeriods().length > 0}
           submissionCount={submissions.length}
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onSortFieldChange={setSortField}
+          onToggleSortDirection={toggleSortDirection}
         />
 
         {/* Search and Filter Bar */}
