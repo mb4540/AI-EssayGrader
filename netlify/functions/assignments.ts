@@ -2,15 +2,27 @@ import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { sql } from './db';
 import { parseTeacherRubric } from '../../src/lib/calculator/rubricParser';
 import { isValidRubric } from '../../src/lib/calculator/rubricBuilder';
+import { authenticateRequest } from './lib/auth';
 
-// Use the actual tenant UUID from your database
-const PUBLIC_TENANT_ID = '00000000-0000-0000-0000-000000000000'; // Default public tenant
+const headers = {
+  'Content-Type': 'application/json',
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+};
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+
   // GET: List all assignments
   if (event.httpMethod === 'GET') {
     try {
-      const tenant_id = PUBLIC_TENANT_ID; // TODO: Get from auth context
+      // Authenticate request
+      const auth = await authenticateRequest(event.headers.authorization);
+      const { tenant_id } = auth;
       
       const assignments = await sql`
         SELECT assignment_id as id, title, description, grading_criteria, total_points, created_at
@@ -21,13 +33,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ assignments }),
       };
     } catch (error) {
       console.error('List assignments error:', error);
       return {
-        statusCode: 500,
+        statusCode: error instanceof Error && error.message.includes('Authentication') ? 401 : 500,
+        headers,
         body: JSON.stringify({ 
           error: 'Failed to list assignments',
           message: error instanceof Error ? error.message : 'Unknown error'
@@ -39,7 +52,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   // POST: Create new assignment
   if (event.httpMethod === 'POST') {
     try {
-      const tenant_id = PUBLIC_TENANT_ID; // TODO: Get from auth context
+      // Authenticate request
+      const auth = await authenticateRequest(event.headers.authorization);
+      const { tenant_id } = auth;
       const { title, description, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
 
       if (!title || typeof title !== 'string' || title.trim().length === 0) {
@@ -98,7 +113,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
       return {
         statusCode: 201,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           assignment: result[0],
           parseWarning: parseWarning || null
@@ -107,7 +122,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     } catch (error) {
       console.error('Create assignment error:', error);
       return {
-        statusCode: 500,
+        statusCode: error instanceof Error && error.message.includes('Authentication') ? 401 : 500,
+        headers,
         body: JSON.stringify({ 
           error: 'Failed to create assignment',
           message: error instanceof Error ? error.message : 'Unknown error'
@@ -119,7 +135,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   // PUT: Update existing assignment
   if (event.httpMethod === 'PUT' || event.httpMethod === 'PATCH') {
     try {
-      const tenant_id = PUBLIC_TENANT_ID; // TODO: Get from auth context
+      // Authenticate request
+      const auth = await authenticateRequest(event.headers.authorization);
+      const { tenant_id } = auth;
       const { assignment_id, title, description, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
 
       if (!assignment_id) {
@@ -180,7 +198,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
       return {
         statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           assignment: result[0],
           parseWarning: parseWarning || null
@@ -189,7 +207,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     } catch (error) {
       console.error('Update assignment error:', error);
       return {
-        statusCode: 500,
+        statusCode: error instanceof Error && error.message.includes('Authentication') ? 401 : 500,
+        headers,
         body: JSON.stringify({ 
           error: 'Failed to update assignment',
           message: error instanceof Error ? error.message : 'Unknown error'
@@ -200,6 +219,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
   return {
     statusCode: 405,
+    headers,
     body: JSON.stringify({ error: 'Method not allowed' }),
   };
 };

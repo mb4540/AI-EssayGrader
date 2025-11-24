@@ -4,12 +4,13 @@
  * Displays key statistics in a card grid
  */
 
-import { FileText, TrendingUp, Clock, CheckCircle } from 'lucide-react';
+import { FileText, FolderOpen, Clock, CheckCircle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import type { DashboardStats as Stats } from '../hooks/useDashboardStats';
 
 interface DashboardStatsProps {
   stats: Stats;
+  totalAssignments: number;
 }
 
 interface StatCardProps {
@@ -46,18 +47,12 @@ function StatCard({ icon, label, value, subtext, color }: StatCardProps) {
   );
 }
 
-export default function DashboardStats({ stats }: DashboardStatsProps) {
+export default function DashboardStats({ stats, totalAssignments }: DashboardStatsProps) {
   const {
     totalSubmissions,
-    averageAiGrade,
-    averageTeacherGrade,
     pendingReview,
     gradedToday,
   } = stats;
-
-  // Format average grades
-  const aiGradeDisplay = averageAiGrade !== null ? `${averageAiGrade}%` : 'N/A';
-  const teacherGradeDisplay = averageTeacherGrade !== null ? `${averageTeacherGrade}%` : 'N/A';
   
   // Calculate percentage pending
   const pendingPercent = totalSubmissions > 0 
@@ -67,18 +62,17 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <StatCard
+        icon={<FolderOpen className="w-5 h-5" />}
+        label="Total Assignments"
+        value={totalAssignments}
+        color="green"
+      />
+      
+      <StatCard
         icon={<FileText className="w-5 h-5" />}
         label="Total Submissions"
         value={totalSubmissions}
         color="blue"
-      />
-      
-      <StatCard
-        icon={<TrendingUp className="w-5 h-5" />}
-        label="Average Grades"
-        value={teacherGradeDisplay}
-        subtext={`AI: ${aiGradeDisplay}`}
-        color="green"
       />
       
       <StatCard

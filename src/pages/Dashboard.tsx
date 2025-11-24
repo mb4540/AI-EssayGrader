@@ -117,7 +117,7 @@ export default function Dashboard() {
         />
 
         {/* Statistics Summary */}
-        <DashboardStats stats={stats} />
+        <DashboardStats stats={stats} totalAssignments={assignments.length} />
 
         {/* Submissions Content Card */}
         <Card className="shadow-xl bg-white">
