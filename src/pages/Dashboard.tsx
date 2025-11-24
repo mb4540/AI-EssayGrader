@@ -1,3 +1,18 @@
+/**
+ * Dashboard Page
+ * 
+ * Main dashboard for viewing and managing submissions.
+ * Supports three view modes:
+ * - By Student: Groups submissions by student
+ * - By Assignment: Groups submissions by assignment
+ * - By Class: Groups submissions by class period → student
+ * 
+ * Refactored into modular components and custom hooks for:
+ * - Better maintainability
+ * - Improved testability
+ * - Easier extensibility
+ */
+
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent } from '@/components/ui/card';
