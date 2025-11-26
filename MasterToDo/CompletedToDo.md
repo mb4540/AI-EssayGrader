@@ -2,7 +2,7 @@
 ## FastAI Grader - Archive of Finished Work
 
 **Created:** November 2, 2025  
-**Last Updated:** November 24, 2025 - 1:10 PM  
+**Last Updated:** November 26, 2025  
 **Purpose:** Archive of all completed features and fixes
 
 ---
@@ -21,6 +21,77 @@
 - **MasterToDo.md** = Open TODO items only
 - **CompletedToDo.md** = Archived completed items (this file)
 - **REFACTOR_LESSONS_LEARNED.md** = Lessons from failed attempts
+
+---
+
+## 🚫 ABANDONED - November 26, 2025
+
+### Book Report / Source Text Feature ⭐⭐⭐
+**Priority:** HIGH PRIORITY (Originally)  
+**Status:** ❌ **ABANDONED** - Too complex, cost concerns  
+**Branch:** `feature/book-report-source-text` (preserved on GitHub)  
+**Decision Date:** November 26, 2025
+
+**Original Goal:** 
+Allow teachers to upload source texts (books, articles, passages) that students write about, and include this context in the grading process.
+
+**What Was Implemented (Phases 1-4 Complete):**
+
+**Phase 1: Database Schema** ✅
+- Created `source_texts` table with full schema
+- Added `source_text_id` column to `assignments` table
+- Migration files created and tested
+- Updated `db_ref.md` documentation
+
+**Phase 2: Backend Functions** ✅
+- `upload-source-text.ts` - Upload PDF/DOCX/TXT files (max 10MB)
+- `get-source-text.ts` - Retrieve source text metadata and content
+- `list-source-texts.ts` - List all source texts with usage counts
+- `delete-source-text.ts` - Delete from database and blob storage
+- All functions use JWT authentication and multi-tenancy
+
+**Phase 3: Frontend UI** ✅
+- Created `src/lib/api/sourceTexts.ts` - API client
+- Created `src/components/SourceTextSelector.tsx` - React component
+- Integrated into `CreateAssignmentModal.tsx`
+- File validation, base64 encoding, React Query integration
+
+**Phase 4: LLM Integration** ✅
+- Updated `src/lib/prompts/extractor.ts` with source text context
+- Updated `netlify/functions/grade-bulletproof.ts` to fetch and include source text
+- TXT file extraction working
+- PDF/DOCX extraction TODO (parsers exist)
+
+**Phase 5-6: Not Started**
+- Testing and validation
+- Documentation updates
+
+**Why Abandoned:**
+- Added complexity to codebase
+- Increased LLM token costs (longer prompts)
+- Netlify Blobs storage costs
+- Feature not essential for MVP
+- Can revisit in future if needed
+
+**Branch Preserved:**
+- All work saved on `feature/book-report-source-text` branch
+- Can be retrieved if needed: `git checkout feature/book-report-source-text`
+
+**Files Created/Modified:**
+- Database: `migrations/add_source_texts.sql`, `db_ref.md`
+- Backend: 4 new Netlify functions
+- Frontend: `SourceTextSelector.tsx`, updated `CreateAssignmentModal.tsx`
+- Prompts: Updated `extractor.ts` and `grade-bulletproof.ts`
+- Docs: `BLOB_STORAGE_SETUP.md`, updated `.env.example`
+
+**Lessons Learned:**
+- Feature scope should be validated with users before implementation
+- Cost analysis should be done upfront
+- MVP features should be prioritized over nice-to-haves
+
+**Abandoned:** November 26, 2025  
+**Time Invested:** ~6 hours (Phases 1-4)  
+**Branch:** `feature/book-report-source-text` (preserved)
 
 ---
 

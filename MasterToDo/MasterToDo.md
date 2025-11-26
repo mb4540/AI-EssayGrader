@@ -2,7 +2,7 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 24, 2025  
+**Last Updated:** November 26, 2025  
 **Branch:** `main`  
 **Status:** Active Development  
 **Latest Release:** v1.5.0 (November 24, 2025)
@@ -16,7 +16,7 @@
    - *None*
 3. [⭐⭐⭐ HIGH PRIORITY (Next Up)](#-high-priority-next-up)
    - [Clean Text Feature](#-clean-text-feature)
-   - [Book Report / Source Text Feature](#-book-report--source-text-feature)
+   - [Batch Document Upload & Processing](#-batch-document-upload--processing)
    - [Rubric Document Upload & Extraction](#-rubric-document-upload--extraction)
    - [Submission Form Improvements](#-submission-form-improvements)
    - [High Priority User Feedback](#-high-priority-user-feedback)
@@ -196,79 +196,6 @@
 - [ ] Integration with Google Classroom file structure
 - [ ] Batch grading after batch upload
 - [ ] Email notifications when batch complete
-
----
-
-### Book Report / Source Text Feature
-
-**Status:** 🆕 **NEW FEATURE REQUEST** (November 24, 2025)  
-**Priority:** ⭐⭐⭐ HIGH PRIORITY  
-**Estimated Time:** 4-6 hours
-
-**Goal:** Allow teachers to upload source texts (books, articles, passages) that students write about, and include this context in the grading process.
-
-**Use Case:** 
-- Teacher uploads a book chapter or article to blob storage
-- Teacher provides a writing prompt (e.g., "Analyze the theme of courage in Chapter 3")
-- When grading student essays, the LLM receives both the source text and prompt for context-aware grading
-- Enables grading of book reports, literary analysis, and source-based writing
-
-**Database Schema Changes:**
-- [ ] Add `source_texts` table:
-  - `source_text_id` (UUID, primary key)
-  - `teacher_id` (UUID, foreign key to users)
-  - `title` (text, e.g., "To Kill a Mockingbird - Chapter 3")
-  - `blob_url` (text, Netlify Blobs storage URL)
-  - `writing_prompt` (text, the assignment prompt)
-  - `created_at` (timestamptz)
-  - `updated_at` (timestamptz)
-- [ ] Add `source_text_id` column to `assignments` table (optional foreign key)
-- [ ] Create migration script
-
-**Backend Implementation:**
-- [ ] Create `upload-source-text` Netlify function
-  - Accept file upload (PDF, DOCX, TXT)
-  - Extract text content using existing parsers
-  - Store in Netlify Blobs
-  - Save metadata to database
-  - Return source_text_id
-- [ ] Update `grade-submission` function
-  - Check if assignment has associated source_text_id
-  - Fetch source text from blob storage
-  - Include source text + prompt in LLM context
-  - Update prompt template to handle source-based grading
-- [ ] Create `get-source-texts` function (list teacher's source texts)
-- [ ] Create `delete-source-text` function (cleanup blob + database)
-
-**Frontend Implementation:**
-- [ ] Add "Source Text" section to CreateAssignmentModal
-  - File upload component (reuse existing FileDrop)
-  - Writing prompt textarea
-  - "Upload Source Text" button
-  - Display uploaded source texts in dropdown
-  - Option to link existing source text to assignment
-- [ ] Update Assignment form to show source text info
-- [ ] Add source text indicator on Dashboard (badge/icon)
-- [ ] Create SourceTextManager page/modal
-  - List all uploaded source texts
-  - Preview/download source text
-  - Edit writing prompt
-  - Delete source text
-  - View assignments using each source text
-
-**LLM Integration:**
-- [ ] Update grading prompt template
-  - Add section for source text context
-  - Add section for writing prompt
-  - Adjust rubric evaluation to consider source-based requirements
-- [ ] Test with sample book report assignments
-- [ ] Validate that source text improves grading accuracy
-
-**Testing:**
-- [ ] Unit tests for source text upload/retrieval
-- [ ] Integration tests for grading with source text
-- [ ] Test with various file formats (PDF, DOCX, TXT)
-- [ ] Test with large source texts (full book chapters)
 
 ---
 
@@ -496,11 +423,6 @@
   - Fix blob store initialization in `netlify/functions/upload-file.ts`
 
 ### Low
-- [x] **Assignment OK Button Not Closing Modal** ✅ FIXED (11/24/25)
-  - **Resolution:** Fixed as part of Dashboard refactoring (commit 0fc1439)
-  - Root cause: Modal state management was scattered across Dashboard.tsx
-  - Solution: Extracted to `useDashboardActions` hook with proper `closeAssignmentModal` handler
-  - Modal now closes correctly on both "OK" button and "X" button
 - [ ] Mobile optimization needed (separate branch)
 - [ ] Dark mode inconsistencies
 
