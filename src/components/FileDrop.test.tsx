@@ -6,7 +6,7 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import FileDrop from './FileDrop';
 
-// Mock the OCR and DOCX extraction modules
+// Mock the OCR, DOCX extraction, and API modules
 vi.mock('@/lib/ocr', () => ({
   extractTextFromImage: vi.fn(),
   extractTextFromPDF: vi.fn(),
@@ -16,8 +16,13 @@ vi.mock('@/lib/docx', () => ({
   extractTextFromDocx: vi.fn(),
 }));
 
+vi.mock('@/lib/api', () => ({
+  transcribeImage: vi.fn(),
+}));
+
 import { extractTextFromImage, extractTextFromPDF } from '@/lib/ocr';
 import { extractTextFromDocx } from '@/lib/docx';
+import { transcribeImage } from '@/lib/api';
 
 describe('FileDrop Component', () => {
   const mockOnTextExtracted = vi.fn();
@@ -88,9 +93,9 @@ describe('FileDrop Component', () => {
       expect(screen.getByText(/click to upload image/i)).toBeInTheDocument();
     });
 
-    it('should handle image upload successfully', async () => {
+    it('should handle image upload successfully (AI Vision)', async () => {
       const user = userEvent.setup();
-      vi.mocked(extractTextFromImage).mockResolvedValue('Extracted text from image');
+      vi.mocked(transcribeImage).mockResolvedValue({ text: 'Extracted text from AI' });
 
       render(<FileDrop onTextExtracted={mockOnTextExtracted} />);
 
@@ -103,8 +108,10 @@ describe('FileDrop Component', () => {
       await user.upload(input, file);
 
       await waitFor(() => {
-        expect(extractTextFromImage).toHaveBeenCalledWith(file, expect.any(Function));
-        expect(mockOnTextExtracted).toHaveBeenCalledWith('Extracted text from image', 'image');
+        expect(transcribeImage).toHaveBeenCalledWith(expect.objectContaining({
+          image: expect.any(String)
+        }));
+        expect(mockOnTextExtracted).toHaveBeenCalledWith('Extracted text from AI', 'image');
       });
     });
 
@@ -128,7 +135,7 @@ describe('FileDrop Component', () => {
       });
     });
 
-    it('should show progress during image processing', async () => {
+    it('should show progress during image processing (Legacy OCR)', async () => {
       const user = userEvent.setup();
 
       vi.mocked(extractTextFromImage).mockImplementation(async (_file, onProgress) => {
@@ -147,6 +154,10 @@ describe('FileDrop Component', () => {
       const imageTab = screen.getByRole('tab', { name: /image/i });
       await user.click(imageTab);
 
+      // Toggle AI Vision OFF to use Legacy OCR
+      const toggleButton = screen.getByRole('button', { name: /ai vision enabled/i });
+      await user.click(toggleButton);
+
       const file = new File(['image content'], 'test.png', { type: 'image/png' });
       const input = screen.getByLabelText(/click to upload image/i) as HTMLInputElement;
 
@@ -161,7 +172,7 @@ describe('FileDrop Component', () => {
     it('should handle image extraction error', async () => {
       const user = userEvent.setup();
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-      vi.mocked(extractTextFromImage).mockRejectedValue(new Error('OCR failed'));
+      vi.mocked(transcribeImage).mockRejectedValue(new Error('AI failed'));
 
       render(<FileDrop onTextExtracted={mockOnTextExtracted} />);
 
@@ -174,7 +185,7 @@ describe('FileDrop Component', () => {
       await user.upload(input, file);
 
       await waitFor(() => {
-        expect(alertSpy).toHaveBeenCalledWith('Failed to extract text from image. Please try again.');
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to extract text'));
       });
 
       alertSpy.mockRestore();
@@ -183,7 +194,7 @@ describe('FileDrop Component', () => {
     it('should display extracted text preview', async () => {
       const user = userEvent.setup();
       const longText = 'A'.repeat(300);
-      vi.mocked(extractTextFromImage).mockResolvedValue(longText);
+      vi.mocked(transcribeImage).mockResolvedValue({ text: longText });
 
       render(<FileDrop onTextExtracted={mockOnTextExtracted} />);
 

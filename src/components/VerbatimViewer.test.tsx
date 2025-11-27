@@ -19,6 +19,7 @@ vi.mock('@/lib/docx', () => ({
 vi.mock('@/lib/api', () => ({
   getInlineAnnotations: vi.fn(),
   updateInlineAnnotation: vi.fn(),
+  transcribeImage: vi.fn(),
 }));
 
 vi.mock('./AnnotatedTextViewer', () => ({
@@ -27,7 +28,7 @@ vi.mock('./AnnotatedTextViewer', () => ({
 
 import { extractTextFromImage, extractTextFromPDF } from '@/lib/ocr';
 import { extractTextFromDocx } from '@/lib/docx';
-import { getInlineAnnotations } from '@/lib/api';
+import { getInlineAnnotations, transcribeImage } from '@/lib/api';
 
 describe('VerbatimViewer Component', () => {
   const mockOnTextExtracted = vi.fn();
@@ -205,9 +206,9 @@ describe('VerbatimViewer Component', () => {
       expect(screen.getByText(/click to upload image/i)).toBeInTheDocument();
     });
 
-    it('should call extractTextFromImage for image files', async () => {
+    it('should call transcribeImage for image files (Default AI Vision)', async () => {
       const user = userEvent.setup();
-      vi.mocked(extractTextFromImage).mockResolvedValue('Extracted from image');
+      vi.mocked(transcribeImage).mockResolvedValue({ text: 'Extracted from AI' });
 
       render(<VerbatimViewer text="" onTextExtracted={mockOnTextExtracted} />);
 
@@ -219,7 +220,32 @@ describe('VerbatimViewer Component', () => {
 
       await user.upload(input, file);
 
-      // extractTextFromImage should be called (FileReader is async so we wait)
+      // transcribeImage should be called
+      await waitFor(() => {
+        expect(transcribeImage).toHaveBeenCalledWith(expect.objectContaining({
+          image: expect.any(String)
+        }));
+      }, { timeout: 2000 });
+    });
+
+    it('should call extractTextFromImage when AI Vision is disabled', async () => {
+      const user = userEvent.setup();
+      vi.mocked(extractTextFromImage).mockResolvedValue('Extracted from local OCR');
+
+      render(<VerbatimViewer text="" onTextExtracted={mockOnTextExtracted} />);
+
+      const imageTab = screen.getByRole('tab', { name: /image/i });
+      await user.click(imageTab);
+
+      // Disable AI Vision
+      const toggleButton = screen.getByRole('button', { name: /ai vision enabled/i });
+      await user.click(toggleButton);
+
+      const file = new File(['image'], 'test.png', { type: 'image/png' });
+      const input = screen.getByLabelText(/click to upload image/i) as HTMLInputElement;
+
+      await user.upload(input, file);
+
       await waitFor(() => {
         expect(extractTextFromImage).toHaveBeenCalledWith(file, expect.any(Function));
       }, { timeout: 2000 });
@@ -248,9 +274,9 @@ describe('VerbatimViewer Component', () => {
       const user = userEvent.setup();
       
       // Mock a slow extraction
-      vi.mocked(extractTextFromImage).mockImplementation(async () => {
+      vi.mocked(transcribeImage).mockImplementation(async () => {
         await new Promise(resolve => setTimeout(resolve, 100));
-        return 'Extracted';
+        return { text: 'Extracted' };
       });
 
       render(<VerbatimViewer text="" onTextExtracted={mockOnTextExtracted} />);
@@ -276,7 +302,7 @@ describe('VerbatimViewer Component', () => {
       const user = userEvent.setup();
       const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      vi.mocked(extractTextFromImage).mockRejectedValue(new Error('OCR failed'));
+      vi.mocked(transcribeImage).mockRejectedValue(new Error('AI Vision failed'));
 
       render(<VerbatimViewer text="" onTextExtracted={mockOnTextExtracted} />);
 
@@ -290,7 +316,8 @@ describe('VerbatimViewer Component', () => {
 
       await waitFor(() => {
         expect(consoleErrorSpy).toHaveBeenCalledWith('OCR failed:', expect.any(Error));
-        expect(alertSpy).toHaveBeenCalledWith('Failed to extract text from image. Please try again.');
+        // The actual alert message will be "Failed to extract text: AI Vision failed"
+        expect(alertSpy).toHaveBeenCalledWith(expect.stringContaining('Failed to extract text'));
       }, { timeout: 2000 });
 
       alertSpy.mockRestore();

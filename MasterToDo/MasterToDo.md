@@ -15,7 +15,6 @@
 2. [🔴 CRITICAL & BLOCKED](#-critical--blocked)
    - *None*
 3. [⭐⭐⭐ HIGH PRIORITY (Next Up)](#-high-priority-next-up)
-   - [Clean Text Feature](#-clean-text-feature)
    - [Batch Document Upload & Processing](#-batch-document-upload--processing)
    - [Rubric Document Upload & Extraction](#-rubric-document-upload--extraction)
    - [Submission Form Improvements](#-submission-form-improvements)

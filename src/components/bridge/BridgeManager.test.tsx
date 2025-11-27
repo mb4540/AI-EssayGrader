@@ -32,6 +32,9 @@ describe('BridgeManager - Integration Tests', () => {
     exportFile: vi.fn(),
     importFile: vi.fn(),
     importCsv: vi.fn(),
+    getClassPeriods: vi.fn().mockReturnValue([]),
+    addClassPeriod: vi.fn(),
+    removeClassPeriod: vi.fn(),
     loading: false,
     error: null,
   };

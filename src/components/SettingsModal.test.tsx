@@ -54,7 +54,7 @@ describe('SettingsModal Component', () => {
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
       expect(screen.getByRole('tab', { name: /grading system/i })).toBeInTheDocument();
-      expect(screen.getByRole('tab', { name: /ocr cleanup/i })).toBeInTheDocument();
+      expect(screen.getByRole('tab', { name: /handwriting/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /rubric enhancement/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /document types/i })).toBeInTheDocument();
       expect(screen.getByRole('tab', { name: /llm provider/i })).toBeInTheDocument();
@@ -66,14 +66,14 @@ describe('SettingsModal Component', () => {
       expect(screen.getByText(/grading system prompt/i)).toBeInTheDocument();
     });
 
-    it('should switch to OCR tab when clicked', async () => {
+    it('should switch to Handwriting tab when clicked', async () => {
       const user = userEvent.setup();
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-      const ocrTab = screen.getByRole('tab', { name: /ocr cleanup/i });
-      await user.click(ocrTab);
+      const handwritingTab = screen.getByRole('tab', { name: /handwriting/i });
+      await user.click(handwritingTab);
 
-      expect(screen.getByText(/ocr text cleanup prompt/i)).toBeInTheDocument();
+      expect(screen.getByText(/ocr cleanup prompt/i)).toBeInTheDocument();
     });
 
     it('should switch to rubric tab when clicked', async () => {
@@ -113,8 +113,8 @@ describe('SettingsModal Component', () => {
 
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-      const ocrTab = screen.getByRole('tab', { name: /ocr cleanup/i });
-      await user.click(ocrTab);
+      const handwritingTab = screen.getByRole('tab', { name: /handwriting/i });
+      await user.click(handwritingTab);
 
       const textarea = screen.getByPlaceholderText(/enter ocr cleanup prompt/i);
       expect(textarea).toHaveValue('Custom OCR prompt');
@@ -157,8 +157,8 @@ describe('SettingsModal Component', () => {
       const user = userEvent.setup();
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-      const ocrTab = screen.getByRole('tab', { name: /ocr cleanup/i });
-      await user.click(ocrTab);
+      const handwritingTab = screen.getByRole('tab', { name: /handwriting/i });
+      await user.click(handwritingTab);
 
       const textarea = screen.getByPlaceholderText(/enter ocr cleanup prompt/i);
       await user.clear(textarea);
@@ -271,8 +271,8 @@ describe('SettingsModal Component', () => {
 
       render(<SettingsModal isOpen={true} onClose={mockOnClose} />);
 
-      const ocrTab = screen.getByRole('tab', { name: /ocr cleanup/i });
-      await user.click(ocrTab);
+      const handwritingTab = screen.getByRole('tab', { name: /handwriting/i });
+      await user.click(handwritingTab);
 
       const textarea = screen.getByPlaceholderText(/enter ocr cleanup prompt/i);
       await user.clear(textarea);
