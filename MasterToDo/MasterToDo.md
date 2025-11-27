@@ -5,7 +5,7 @@
 **Last Updated:** November 27, 2025 (Image To Text Complete)  
 **Branch:** `main`  
 **Status:** Active Development  
-**Latest Release:** v1.5.0 (November 24, 2025)
+**Latest Release:** v1.6.0 (November 27, 2025)
 
 ---
 

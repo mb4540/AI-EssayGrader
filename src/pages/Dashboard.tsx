@@ -32,7 +32,7 @@ export default function Dashboard() {
   const filterHook = useDashboardFilters();
   const { filters, searchQuery, classPeriodFilter, sortField, sortDirection, startDate, endDate, setSearchQuery, setClassPeriodFilter, setPage, toggleSortDirection, setStartDate, setEndDate, setDatePreset, clearDateRange } = filterHook;
   
-  const dataHook = useDashboardData(filters);
+  const dataHook = useDashboardData(filters, bridge);
   const { submissions, assignments, isLoading, deleteSubmission: deleteSubmissionMutation, deleteAssignment: deleteAssignmentMutation, isDeleting } = dataHook;
   
   const groupingHook = useDashboardGrouping(submissions, bridge, sortField, sortDirection);

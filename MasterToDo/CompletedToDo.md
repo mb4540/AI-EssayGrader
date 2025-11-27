@@ -506,6 +506,7 @@ Make grading and annotations rubric-driven instead of ELAR-specific.
 - `src/components/SettingsModal.tsx`
 
 **Completed:** November 26, 2025
+**Release:** v1.6.0
 
 ---
 

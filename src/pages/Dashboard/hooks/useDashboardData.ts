@@ -7,10 +7,11 @@ import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { listSubmissions, deleteSubmission, listAssignments } from '@/lib/api';
 import type { DashboardFilters } from '../types';
+import type { UseBridgeReturn } from '@/hooks/useBridge';
 
 const PAGE_SIZE = 20;
 
-export function useDashboardData(filters: DashboardFilters) {
+export function useDashboardData(filters: DashboardFilters, bridge: UseBridgeReturn) {
   const queryClient = useQueryClient();
 
   // Fetch submissions with filters
@@ -19,12 +20,25 @@ export function useDashboardData(filters: DashboardFilters) {
     isLoading: isLoadingSubmissions,
   } = useQuery({
     queryKey: ['submissions', filters.searchQuery, filters.classPeriodFilter, filters.page],
-    queryFn: () => listSubmissions({
-      search: filters.searchQuery || undefined,
-      class_period: filters.classPeriodFilter || undefined,
-      page: filters.page + 1,
-      limit: PAGE_SIZE,
-    }),
+    queryFn: () => {
+      // Resolve student names to IDs using local bridge
+      let searchStudentIds: string | undefined = undefined;
+      
+      if (filters.searchQuery && !bridge.isLocked) {
+        const matchingStudents = bridge.findByName(filters.searchQuery);
+        if (matchingStudents.length > 0) {
+          searchStudentIds = matchingStudents.map(s => s.uuid).join(',');
+        }
+      }
+
+      return listSubmissions({
+        search: filters.searchQuery || undefined,
+        search_student_ids: searchStudentIds,
+        class_period: filters.classPeriodFilter || undefined,
+        page: filters.page + 1,
+        limit: PAGE_SIZE,
+      });
+    },
   });
 
   // Client-side date filtering
