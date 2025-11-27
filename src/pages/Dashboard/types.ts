@@ -7,7 +7,6 @@ export type SortDirection = 'asc' | 'desc';
 export type ViewMode = 'list' | 'grouped' | 'class';
 
 export interface DashboardFilters {
-  searchQuery: string;
   classPeriodFilter: string;
   page: number;
   sortField: SortField;

@@ -22,7 +22,6 @@ export function useDashboardFilters() {
     return { field: 'created_at', direction: 'desc' }; // Default: newest first
   };
 
-  const [searchQuery, setSearchQuery] = useState('');
   const [classPeriodFilter, setClassPeriodFilter] = useState('');
   const [page, setPage] = useState(0);
   
@@ -46,7 +45,6 @@ export function useDashboardFilters() {
   }, [sortField, sortDirection]);
 
   const filters: DashboardFilters = {
-    searchQuery,
     classPeriodFilter,
     page,
     sortField,
@@ -111,7 +109,6 @@ export function useDashboardFilters() {
   };
 
   const resetFilters = () => {
-    setSearchQuery('');
     setClassPeriodFilter('');
     setPage(0);
     setStartDate(null);
@@ -122,7 +119,6 @@ export function useDashboardFilters() {
   return {
     // Current filter values
     filters,
-    searchQuery,
     classPeriodFilter,
     page,
     sortField,
@@ -131,7 +127,6 @@ export function useDashboardFilters() {
     endDate,
     
     // Setters
-    setSearchQuery,
     setClassPeriodFilter,
     setPage,
     setSortField,

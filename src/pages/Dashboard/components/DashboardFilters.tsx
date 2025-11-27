@@ -1,14 +1,9 @@
 /**
  * Dashboard Filters Component
- * Search bar and class period filter
+ * Class period filter
  */
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-
 interface DashboardFiltersProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
   classPeriodFilter: string;
   onClassPeriodChange: (period: string) => void;
   classPeriods: string[];
@@ -16,25 +11,13 @@ interface DashboardFiltersProps {
 }
 
 export default function DashboardFilters({
-  searchQuery,
-  onSearchChange,
   classPeriodFilter,
   onClassPeriodChange,
   classPeriods,
   showClassFilter,
 }: DashboardFiltersProps) {
   return (
-    <div className="mb-6 flex gap-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          placeholder="Search by student name or ID..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-10 border-2 focus:border-indigo-500 bg-white"
-        />
-      </div>
-      
+    <div className="mb-6 flex gap-4 justify-end">      
       {/* Class Period Filter */}
       {showClassFilter && (
         <select

@@ -30,9 +30,9 @@ export default function Dashboard() {
   
   // Custom hooks for data, filters, grouping, and actions
   const filterHook = useDashboardFilters();
-  const { filters, searchQuery, classPeriodFilter, sortField, sortDirection, startDate, endDate, setSearchQuery, setClassPeriodFilter, setPage, toggleSortDirection, setStartDate, setEndDate, setDatePreset, clearDateRange } = filterHook;
+  const { filters, classPeriodFilter, sortField, sortDirection, startDate, endDate, setClassPeriodFilter, setPage, toggleSortDirection, setStartDate, setEndDate, setDatePreset, clearDateRange } = filterHook;
   
-  const dataHook = useDashboardData(filters, bridge);
+  const dataHook = useDashboardData(filters);
   const { submissions, assignments, isLoading, deleteSubmission: deleteSubmissionMutation, deleteAssignment: deleteAssignmentMutation, isDeleting } = dataHook;
   
   const groupingHook = useDashboardGrouping(submissions, bridge, sortField, sortDirection);
@@ -88,13 +88,8 @@ export default function Dashboard() {
           submissionCount={submissions.length}
         />
 
-        {/* Search and Filter Bar */}
+        {/* Filter Bar */}
         <DashboardFilters
-          searchQuery={searchQuery}
-          onSearchChange={(query) => {
-            setSearchQuery(query);
-            setPage(0);
-          }}
           classPeriodFilter={classPeriodFilter}
           onClassPeriodChange={(period) => {
             setClassPeriodFilter(period);

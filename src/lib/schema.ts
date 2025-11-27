@@ -72,8 +72,6 @@ export type SaveEditsRequest = z.infer<typeof SaveEditsRequestSchema>;
 export const ListRequestSchema = z.object({
   assignment_id: z.string().uuid().optional(),
   student_id: z.string().optional(),
-  student_ids: z.string().optional(), // Comma-separated list of UUIDs
-  search_student_ids: z.string().optional(), // Comma-separated list of UUIDs for OR search
   search: z.string().optional(),
   class_period: z.string().optional(),
   page: z.number().min(1).default(1),

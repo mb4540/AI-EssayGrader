@@ -169,7 +169,6 @@ export async function listSubmissions(params: ListRequest) {
   if (params.student_id) queryParams.set('student_id', params.student_id);
   if (params.search) queryParams.set('search', params.search);
   if (params.class_period) queryParams.set('class_period', params.class_period);
-  if (params.search_student_ids) queryParams.set('search_student_ids', params.search_student_ids);
   queryParams.set('page', params.page?.toString() || '1');
   queryParams.set('limit', params.limit?.toString() || '20');
 
