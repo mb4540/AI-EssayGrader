@@ -1,4 +1,4 @@
-import { BookOpen, Upload, Sparkles, FileText, Printer, Settings, Image, PenTool } from 'lucide-react';
+import { BookOpen, Sparkles, FileText, Printer, Image, PenTool, LayoutDashboard, GraduationCap, Users, Shield, Download, Lock, Key } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageHeader from '@/components/PageHeader';
 
@@ -18,7 +18,7 @@ export default function Help() {
           </CardHeader>
           <CardContent className="pt-6">
             <p className="text-lg text-gray-700 dark:text-gray-300 leading-relaxed">
-              EssayEase is your helpful assistant for grading 6th grade essays. Think of it as a smart helper that reads student essays and gives you suggestions for grades and feedback. You're always in control and can change anything the AI suggests!
+              EssayEase is your intelligent grading assistant for all core subjects. Whether you're grading History essays, English papers, or Science reports, EssayEase reads student work and provides suggested grades and feedback. You're always in control and can change anything the AI suggests!
             </p>
           </CardContent>
         </Card>
@@ -39,9 +39,9 @@ export default function Help() {
                   1
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">Click "New Submission"</h3>
+                  <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">Go to the Grade Tab</h3>
                   <p className="text-gray-700 dark:text-gray-300">
-                    On the main page (Dashboard), click the blue <strong>"New Submission"</strong> button in the top right corner.
+                    Click <strong>"Grade"</strong> in the top navigation bar. This is where you'll enter student work and get AI-assisted grading.
                   </p>
                 </div>
               </div>
@@ -52,13 +52,13 @@ export default function Help() {
                   2
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">Enter Student Information</h3>
+                  <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white">Select Student & Assignment</h3>
                   <p className="text-gray-700 dark:text-gray-300 mb-2">
-                    Fill in the student's name (required). Student ID and Assignment are optional but helpful for keeping track.
+                    Choose a student from the <strong>"Select Student"</strong> dropdown (requires unlocking your Bridge first). Optionally select an <strong>Assignment</strong> to auto-fill grading criteria.
                   </p>
                   <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p className="text-sm text-blue-900 dark:text-blue-100">
-                      <strong>💡 Tip:</strong> If you've created assignments, select one from the dropdown to automatically fill in grading criteria!
+                      <strong>💡 Tip:</strong> No students yet? Go to the <strong>Students</strong> tab first to add your roster and unlock the Bridge.
                     </p>
                   </div>
                 </div>
@@ -106,10 +106,10 @@ export default function Help() {
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Upload className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <Image className="w-5 h-5 text-blue-600 mt-0.5" />
                       <div>
                         <strong className="text-gray-900 dark:text-white">Image/PDF:</strong>
-                        <span className="text-gray-700 dark:text-gray-300"> Upload a photo of handwritten work</span>
+                        <span className="text-gray-700 dark:text-gray-300"> Upload a photo of handwritten work. Use the "AI Vision" toggle for best results with handwriting!</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
@@ -119,11 +119,6 @@ export default function Help() {
                         <span className="text-gray-700 dark:text-gray-300"> Upload a Word document</span>
                       </div>
                     </div>
-                  </div>
-                  <div className="mt-3 bg-teal-50 dark:bg-teal-950 p-3 rounded-lg border border-teal-200 dark:border-teal-800">
-                    <p className="text-sm text-teal-900 dark:text-teal-100">
-                      <strong>📸 For handwritten essays:</strong> After uploading, click <strong>"Enhance Text"</strong> to clean up any OCR mistakes!
-                    </p>
                   </div>
                 </div>
               </div>
@@ -185,165 +180,157 @@ export default function Help() {
           <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
             <CardTitle className="text-2xl">Advanced Features</CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 space-y-6">
-            {/* Assignments */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                📁 Creating Assignments
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                Save time by creating assignments with pre-set grading criteria:
-              </p>
-              <ol className="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300 ml-4">
-                <li>Click <strong>"New Assignment"</strong> on the Dashboard</li>
-                <li>Give it a name (e.g., "Persuasive Essay #1")</li>
-                <li>Add grading criteria (or use AI to enhance it)</li>
-                <li>Now when grading, select this assignment and criteria auto-fills!</li>
-              </ol>
-            </div>
-
-            {/* Draft Comparison */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                📝 Draft Comparison Mode
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                Compare a student's rough draft to their final draft to see improvement. Toggle to <strong>"Draft Comparison"</strong> mode at the top of the grading page.
-              </p>
-            </div>
-
-            {/* PDF Annotations */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                <PenTool className="w-5 h-5" />
-                PDF Annotations (New!)
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-3">
-                For PDF and Word document submissions, use the <strong>"Annotate"</strong> tab to mark up the actual student document with highlights, drawings, and comments!
-              </p>
-              <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800 space-y-2">
-                <p className="font-semibold text-purple-900 dark:text-purple-100">Available Tools:</p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-purple-800 dark:text-purple-200 ml-4">
-                  <li><strong>Highlight:</strong> Mark important sections in 6 different colors</li>
-                  <li><strong>Pen:</strong> Draw freehand to circle errors or underline text</li>
-                  <li><strong>Comments:</strong> Add detailed feedback boxes directly on the PDF</li>
-                  <li><strong>Eraser:</strong> Remove any annotation you don't want</li>
-                </ul>
-                <p className="text-sm text-purple-800 dark:text-purple-200 mt-2">
-                  <strong>Tip:</strong> Click the <strong>"Help"</strong> button in the annotation toolbar for detailed instructions on using each tool!
-                </p>
-              </div>
-            </div>
-
-            {/* Print/Download */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                <Printer className="w-5 h-5" />
-                Print or Download
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300">
-                After grading, use the <strong>"Print"</strong> or <strong>"Download"</strong> buttons to save a nice-looking report. For annotated PDFs, use the <strong>"Export PDF"</strong> button in the Annotate tab to download the marked-up version.
-              </p>
-            </div>
-
-            {/* Grouped View */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                📁 Organizing by Assignment
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                The Dashboard has two view modes to help you organize submissions:
-              </p>
-              <div className="space-y-3 ml-4">
-                <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">📋 List View</p>
-                  <p className="text-sm text-blue-800 dark:text-blue-200">
-                    Shows all submissions in one sortable table. Great for seeing everything at once or sorting by student name, grade, or date.
-                  </p>
-                </div>
-                <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                  <p className="font-semibold text-green-900 dark:text-green-100 mb-1">📂 By Assignment View</p>
-                  <p className="text-sm text-green-800 dark:text-green-200">
-                    Groups submissions by assignment. Click on an assignment folder to expand and see all student submissions for that assignment. Perfect when you want to review all essays for a specific assignment together!
-                  </p>
-                </div>
-              </div>
-              <p className="text-gray-700 dark:text-gray-300 mt-3">
-                <strong>Tip:</strong> Use the buttons at the top of the submissions card to switch between views.
-              </p>
+          <CardContent className="pt-6 space-y-8">
+            
+            {/* Quick Links */}
+            <div className="flex gap-4 mb-4 text-sm text-gray-600 dark:text-gray-400">
+              <span>Jump to:</span>
+              <a href="#dashboard-features" className="text-indigo-600 hover:underline">Dashboard</a>
+              <span>•</span>
+              <a href="#grade-features" className="text-indigo-600 hover:underline">Grade Tab</a>
+              <span>•</span>
+              <a href="#student-features" className="text-indigo-600 hover:underline">Students Tab (FERPA)</a>
             </div>
 
             {/* Dashboard Features */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                📊 Other Dashboard Features
-              </h3>
-              <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 ml-4">
-                <li><strong>Sort:</strong> Click any column header to sort by that column (in List View)</li>
-                <li><strong>Search:</strong> Use the search box to find specific students</li>
-                <li><strong>Delete Submission:</strong> Click the trash icon next to a submission to remove it</li>
-                <li><strong>Delete Assignment:</strong> Click the trash icon on an assignment folder to delete the entire assignment and all its submissions</li>
-                <li><strong>Export:</strong> Download all grades as a CSV file for your records</li>
-              </ul>
-            </div>
-
-            {/* Image Support in Draft Comparison */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                <Image className="w-5 h-5" />
-                Handwritten Essays in Draft Comparison
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                You can now upload handwritten essays for BOTH rough and final drafts!
-              </p>
-              <div className="bg-teal-50 dark:bg-teal-950 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
-                <p className="text-sm text-teal-900 dark:text-teal-100 mb-2">
-                  <strong>How it works:</strong>
+            <section id="dashboard-features" className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2">
+                <LayoutDashboard className="w-6 h-6 text-blue-600" />
+                <h3 className="font-bold text-xl text-gray-900 dark:text-white">Dashboard Tab</h3>
+              </div>
+              
+              <div>
+                <h4 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">View Modes</h4>
+                <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  Organize your submissions exactly how you want using the view toggle buttons:
                 </p>
-                <ul className="list-disc list-inside space-y-1 text-sm text-teal-800 dark:text-teal-200 ml-4">
-                  <li>Upload an image for rough draft → see image and text side-by-side</li>
-                  <li>Upload an image for final draft → see image and text side-by-side</li>
-                  <li>Click "Enhance Text" on either draft to clean up OCR errors</li>
-                  <li>Compare handwritten rough draft to handwritten final draft visually!</li>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1">📋 List View</p>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      See everything at once. Sort by name, grade, or date by clicking column headers.
+                    </p>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="font-semibold text-green-900 dark:text-green-100 mb-1">📂 By Assignment</p>
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      Groups submissions into folders by assignment title. Great for grading a whole class set!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">Management Tools</h4>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 ml-4">
+                  <li><strong>Delete Submission:</strong> Click the trash icon next to any submission to remove it permanently.</li>
+                  <li><strong>Delete Assignment:</strong> In Assignment View, deleting a folder deletes ALL submissions inside it. Use with caution!</li>
+                  <li><strong>Export CSV:</strong> Download all grades to a spreadsheet for your gradebook.</li>
+                  <li><strong>AI Settings (⚙️):</strong> Click the gear icon to customize grading prompts, strictness, and more. Changes apply instantly!</li>
                 </ul>
               </div>
-            </div>
+            </section>
 
-            {/* AI Settings */}
-            <div>
-              <h3 className="font-bold text-lg mb-2 text-gray-900 dark:text-white flex items-center gap-2">
-                <Settings className="w-5 h-5" />
-                AI Settings (Advanced)
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                Click the gear icon (⚙️) in the Dashboard header to customize how the AI works:
-              </p>
-              <div className="space-y-3 ml-4">
-                <div className="bg-indigo-50 dark:bg-indigo-950 p-3 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                  <p className="font-semibold text-indigo-900 dark:text-indigo-100 mb-1">Essay Grading Prompt</p>
-                  <p className="text-sm text-indigo-800 dark:text-indigo-200">
-                    Customize how the AI grades essays. Change the tone, focus areas, or grading approach.
-                  </p>
-                </div>
-                <div className="bg-purple-50 dark:bg-purple-950 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <p className="font-semibold text-purple-900 dark:text-purple-100 mb-1">OCR Cleanup Prompt</p>
-                  <p className="text-sm text-purple-800 dark:text-purple-200">
-                    Control how the AI cleans up text from handwritten essays. Adjust how strict or lenient it is.
-                  </p>
-                </div>
-                <div className="bg-pink-50 dark:bg-pink-950 p-3 rounded-lg border border-pink-200 dark:border-pink-800">
-                  <p className="font-semibold text-pink-900 dark:text-pink-100 mb-1">Rubric Enhancement Prompt</p>
-                  <p className="text-sm text-pink-800 dark:text-pink-200">
-                    Adjust how the AI transforms your simple grading rules into detailed rubrics.
-                  </p>
-                </div>
+            {/* Grade Tab Features */}
+            <section id="grade-features" className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2 pt-4">
+                <GraduationCap className="w-6 h-6 text-purple-600" />
+                <h3 className="font-bold text-xl text-gray-900 dark:text-white">Grade Tab</h3>
               </div>
-              <div className="mt-3 bg-amber-50 dark:bg-amber-950 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
-                <p className="text-sm text-amber-900 dark:text-amber-100">
-                  <strong>⚡ Changes take effect immediately!</strong> Your custom prompts are used right away - no need to redeploy or restart anything.
+
+              <div>
+                <h4 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">Creating Assignments</h4>
+                <p className="text-gray-700 dark:text-gray-300">
+                  Save time by clicking <strong>"New Assignment"</strong> on the Dashboard first. You can pre-set the rubric once, and then just select that assignment from the dropdown when grading each student.
                 </p>
               </div>
-            </div>
+
+              <div>
+                <h4 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">Draft Comparison</h4>
+                <p className="text-gray-700 dark:text-gray-300">
+                  Toggle <strong>"Draft Comparison"</strong> mode to upload a Rough Draft and a Final Draft side-by-side. The AI will grade the improvement between versions! Works for both typed text and handwritten images.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">PDF Annotations</h4>
+                <p className="text-gray-700 dark:text-gray-300 mb-2">
+                  For PDF/Word uploads, click the <strong>"Annotate"</strong> tab to mark up the paper directly:
+                </p>
+                <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800 flex flex-wrap gap-4">
+                  <span className="flex items-center gap-1 text-sm text-purple-900 dark:text-purple-100"><PenTool className="w-4 h-4"/> <strong>Highlight & Draw</strong></span>
+                  <span className="flex items-center gap-1 text-sm text-purple-900 dark:text-purple-100"><FileText className="w-4 h-4"/> <strong>Add Comments</strong></span>
+                  <span className="flex items-center gap-1 text-sm text-purple-900 dark:text-purple-100"><Printer className="w-4 h-4"/> <strong>Export with Markups</strong></span>
+                </div>
+              </div>
+            </section>
+
+            {/* Students Tab Features (FERPA) */}
+            <section id="student-features" className="space-y-4">
+              <div className="flex items-center gap-2 border-b pb-2 pt-4">
+                <Users className="w-6 h-6 text-amber-600" />
+                <h3 className="font-bold text-xl text-gray-900 dark:text-white">Students Tab & Security</h3>
+              </div>
+
+              <div className="bg-amber-50 dark:bg-amber-950 p-5 rounded-xl border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-3">
+                  <Shield className="w-8 h-8 text-amber-600 mt-1" />
+                  <div>
+                    <h4 className="font-bold text-lg text-amber-900 dark:text-amber-100 mb-2">🛡️ FERPA Compliance & The "Bridge" File</h4>
+                    <p className="text-amber-800 dark:text-amber-200 mb-3">
+                      EssayEase takes student privacy seriously. We use a unique <strong>"Bridge" system</strong> to keep student names safe:
+                    </p>
+                    <ul className="list-disc list-inside space-y-2 text-amber-800 dark:text-amber-200 text-sm">
+                      <li><strong>Names stay local:</strong> Student names are encrypted in a file on YOUR computer. They are never sent to our cloud servers.</li>
+                      <li><strong>Cloud sees IDs only:</strong> Our servers only see random codes (UUIDs). We don't know who "Student 12345" is—only you do!</li>
+                      <li><strong>You hold the key:</strong> You must "Unlock" the Bridge with your passphrase every time you grade to see names.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">Managing Your Bridge File</h4>
+                <p className="text-gray-700 dark:text-gray-300 mb-3">
+                  Because student names are stored locally, <strong>you must use the same computer</strong> (or transfer the Bridge file) to see your student roster.
+                </p>
+                <div className="grid md:grid-cols-2 gap-4 mb-4">
+                  <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="font-semibold text-blue-900 dark:text-blue-100 mb-1 flex items-center gap-2"><Download className="w-4 h-4" /> Export Bridge</p>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      Save a backup copy to a secure USB drive or school network drive. Do this regularly!
+                    </p>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-950 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                    <p className="font-semibold text-green-900 dark:text-green-100 mb-1 flex items-center gap-2"><Lock className="w-4 h-4" /> Import Bridge</p>
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      Restore your roster on a new computer by importing your backup file.
+                    </p>
+                  </div>
+                </div>
+                <ul className="list-disc list-inside space-y-2 text-gray-700 dark:text-gray-300 ml-4">
+                  <li><strong>Lost passphrase:</strong> Since we don't store your data, we cannot reset your Bridge passphrase. Keep it safe!</li>
+                  <li><strong>Class periods:</strong> Organize students by class period for easier filtering on the Dashboard.</li>
+                  <li><strong>Bulk import:</strong> Use CSV import to add many students at once from your gradebook export.</li>
+                </ul>
+              </div>
+
+              <div className="bg-red-50 dark:bg-red-950 p-4 rounded-lg border border-red-200 dark:border-red-800">
+                <div className="flex items-start gap-2">
+                  <Key className="w-5 h-5 text-red-600 mt-0.5" />
+                  <div>
+                    <p className="font-semibold text-red-900 dark:text-red-100 mb-1">Passphrase Best Practices</p>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-red-800 dark:text-red-200">
+                      <li>Use a strong, memorable passphrase (e.g., a sentence only you know)</li>
+                      <li>Consider rotating your passphrase each grading period</li>
+                      <li>Always lock the Bridge when stepping away from your computer</li>
+                      <li>Log out of EssayEase at the end of each session</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </section>
+
           </CardContent>
         </Card>
 
@@ -377,16 +364,6 @@ export default function Help() {
               <div className="bg-teal-50 dark:bg-teal-950 p-4 rounded-lg border border-teal-200 dark:border-teal-800">
                 <p className="text-teal-900 dark:text-teal-100">
                   <strong>Delete assignments carefully:</strong> When you delete an assignment, ALL submissions for that assignment are also deleted. Always double-check before confirming!
-                </p>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-950 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
-                <p className="text-purple-900 dark:text-purple-100">
-                  <strong>Use PDF annotations:</strong> The Annotate tab lets you mark up PDFs just like grading on paper. Highlights, drawings, and comments all save automatically and export with the PDF!
-                </p>
-              </div>
-              <div className="bg-indigo-50 dark:bg-indigo-950 p-4 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                <p className="text-indigo-900 dark:text-indigo-100">
-                  <strong>Customize AI behavior:</strong> Use the Settings (⚙️) to adjust how the AI grades if you want it more strict, more encouraging, or focused on different areas.
                 </p>
               </div>
             </div>
