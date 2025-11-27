@@ -2,7 +2,7 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 26, 2025 (Clean Text Feature Complete)  
+**Last Updated:** November 27, 2025 (Image To Text Complete)  
 **Branch:** `main`  
 **Status:** Active Development  
 **Latest Release:** v1.5.0 (November 24, 2025)
