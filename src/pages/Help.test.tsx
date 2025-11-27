@@ -19,7 +19,7 @@ describe('Help Page', () => {
       renderWithProviders(<Help />);
 
       expect(screen.getByText(/welcome to essayease/i)).toBeInTheDocument();
-      expect(screen.getByText(/helpful assistant for grading 6th grade essays/i)).toBeInTheDocument();
+      expect(screen.getByText(/intelligent grading assistant for all core subjects/i)).toBeInTheDocument();
     });
   });
 
@@ -46,22 +46,45 @@ describe('Help Page', () => {
       expect(screen.getByText(/advanced features/i)).toBeInTheDocument();
     });
 
+    it('should have tab-specific subsections', () => {
+      renderWithProviders(<Help />);
+
+      // Use getAllBy since there are quick links AND headings for each tab
+      expect(screen.getAllByText(/dashboard tab/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/grade tab/i).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(/students tab/i).length).toBeGreaterThanOrEqual(1);
+    });
+
     it('should describe dashboard features', () => {
       renderWithProviders(<Help />);
 
-      expect(screen.getByText(/other dashboard features/i)).toBeInTheDocument();
-      expect(screen.getByText(/sort:/i)).toBeInTheDocument();
-      expect(screen.getByText(/search:/i)).toBeInTheDocument();
-      expect(screen.getByText(/export:/i)).toBeInTheDocument();
+      expect(screen.getByText(/view modes/i)).toBeInTheDocument();
+      expect(screen.getByText(/📋 list view/i)).toBeInTheDocument();
+      expect(screen.getByText(/📂 by assignment/i)).toBeInTheDocument();
     });
 
-    it('should describe AI settings', () => {
+    it('should describe grade tab features', () => {
       renderWithProviders(<Help />);
 
-      expect(screen.getByText(/ai settings \(advanced\)/i)).toBeInTheDocument();
-      expect(screen.getByText(/essay grading prompt/i)).toBeInTheDocument();
-      expect(screen.getByText(/ocr cleanup prompt/i)).toBeInTheDocument();
-      expect(screen.getByText(/rubric enhancement prompt/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /creating assignments/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /draft comparison/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /pdf annotations/i })).toBeInTheDocument();
+    });
+
+    it('should describe FERPA and Bridge features', () => {
+      renderWithProviders(<Help />);
+
+      expect(screen.getByText(/ferpa compliance/i)).toBeInTheDocument();
+      expect(screen.getByText(/names stay local:/i)).toBeInTheDocument();
+      expect(screen.getByText(/managing your bridge file/i)).toBeInTheDocument();
+    });
+
+    it('should describe passphrase best practices', () => {
+      renderWithProviders(<Help />);
+
+      expect(screen.getByText(/passphrase best practices/i)).toBeInTheDocument();
+      expect(screen.getByText(/strong, memorable passphrase/i)).toBeInTheDocument();
+      expect(screen.getByText(/lock the bridge/i)).toBeInTheDocument();
     });
   });
 
