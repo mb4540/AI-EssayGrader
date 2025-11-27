@@ -481,3 +481,16 @@ export async function updateStudent(
     };
   }>(response);
 }
+
+/**
+ * Transcribe handwriting from an image using Multimodal LLM
+ */
+export async function transcribeImage(data: { image: string; provider?: 'gemini' | 'openai' }) {
+  const response = await fetch(`${API_BASE}/transcribe-image`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(data),
+  });
+
+  return handleResponse<{ text: string }>(response);
+}

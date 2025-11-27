@@ -2,7 +2,7 @@
 ## FastAI Grader - Archive of Finished Work
 
 **Created:** November 2, 2025  
-**Last Updated:** November 26, 2025  
+**Last Updated:** November 26, 2025 (Clean Text Feature Complete)  
 **Purpose:** Archive of all completed features and fixes
 
 ---
@@ -479,6 +479,33 @@ Make grading and annotations rubric-driven instead of ELAR-specific.
 **Completed:** November 14, 2025  
 **Time:** ~4 hours total  
 **Commits:** Multiple commits on `feature/enhanced-print-download` branch, merged to `main`
+
+---
+
+## ✅ COMPLETED - November 26, 2025
+
+### Image To Text (Gemini 2.5 Pro) ⭐⭐⭐
+**Priority:** HIGH PRIORITY
+**Status:** ✅ **COMPLETE**
+**Plan File:** `MasterToDo/ImageToText.md`
+
+**Goal:** Implement verbatim handwriting transcription using Gemini 2.5 Pro (Vision LLM) to replace poor-performing local Tesseract OCR.
+
+**Implementation:**
+- ✅ **Backend:** Created `netlify/functions/transcribe-image.ts` using Gemini 2.5 Pro (default) or GPT-4o.
+- ✅ **Verbatim Prompt:** "Transcribe... EXACTLY as it appears. Do not correct, rephrase, or alter words."
+- ✅ **Frontend:** Updated `FileDrop.tsx` with "AI Vision" toggle (Brain icon).
+- ✅ **Settings:** Added "Handwriting Recognition" section to SettingsModal to select provider.
+- ✅ **Fallback:** Kept "Local OCR" and "Clean Text" features as fallbacks.
+
+**Files Modified:**
+- `netlify/functions/transcribe-image.ts` (new)
+- `src/lib/api.ts`
+- `src/components/VerbatimViewer.tsx` (Updated to include AI Vision toggle)
+- `src/hooks/useFileUpload.ts` (Updated to support AI Vision)
+- `src/components/SettingsModal.tsx`
+
+**Completed:** November 26, 2025
 
 ---
 

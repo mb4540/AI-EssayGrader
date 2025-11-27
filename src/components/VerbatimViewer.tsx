@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
-import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare } from 'lucide-react';
+import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare, Brain } from 'lucide-react';
 import AnnotatedTextViewer from './AnnotatedTextViewer';
 import { getInlineAnnotations, updateInlineAnnotation } from '@/lib/api';
 import type { Annotation } from '@/lib/annotations/types';
@@ -56,6 +56,7 @@ export default function VerbatimViewer({
   const wordCount = text ? text.split(/\s+/).filter(Boolean).length : 0;
   const [activeTab, setActiveTab] = useState('text');
   const [tempText, setTempText] = useState('');
+  const [useAiVision, setUseAiVision] = useState(true);
   
   // Use custom hooks for file upload and text enhancement
   const { isProcessing, progress, uploadedImage, handleImageUpload, handleDocxUpload } = useFileUpload();
@@ -108,7 +109,7 @@ export default function VerbatimViewer({
     if (!file || !onTextExtracted) return;
 
     try {
-      await handleImageUpload(file, onTextExtracted);
+      await handleImageUpload(file, onTextExtracted, { useAiVision });
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to extract text from image');
     }
@@ -223,6 +224,19 @@ export default function VerbatimViewer({
             </TabsContent>
 
             <TabsContent value="image" className="space-y-3">
+              <div className="flex items-center justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setUseAiVision(!useAiVision)}
+                  className={`text-xs flex items-center gap-2 ${useAiVision ? 'text-emerald-600 bg-emerald-50' : 'text-gray-500'}`}
+                  title={useAiVision ? "Using advanced AI to read handwriting (Recommended)" : "Using local browser OCR (Faster but less accurate)"}
+                >
+                  <Brain className={`w-4 h-4 ${useAiVision ? 'fill-emerald-200' : ''}`} />
+                  {useAiVision ? 'AI Vision Enabled' : 'Enable AI Vision'}
+                </Button>
+              </div>
+
               <div className="border-2 border-dashed border-emerald-300 hover:border-emerald-500 rounded-lg p-8 text-center transition-colors bg-emerald-50/50 dark:bg-emerald-950/20">
                 <input
                   type="file"

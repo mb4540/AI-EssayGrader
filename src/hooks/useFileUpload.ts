@@ -4,6 +4,7 @@
 import { useState } from 'react';
 import { extractTextFromImage, extractTextFromPDF } from '@/lib/ocr';
 import { extractTextFromDocx } from '@/lib/docx';
+import { transcribeImage } from '@/lib/api';
 
 export type FileSourceType = 'text' | 'docx' | 'pdf' | 'doc' | 'image';
 
@@ -13,7 +14,8 @@ interface UseFileUploadReturn {
   uploadedImage: string | null;
   handleImageUpload: (
     file: File,
-    onTextExtracted: (text: string, sourceType: FileSourceType, imageDataUrl?: string) => void
+    onTextExtracted: (text: string, sourceType: FileSourceType, imageDataUrl?: string) => void,
+    options?: { useAiVision?: boolean }
   ) => Promise<void>;
   handleDocxUpload: (
     file: File,
@@ -29,7 +31,8 @@ export function useFileUpload(): UseFileUploadReturn {
 
   const handleImageUpload = async (
     file: File,
-    onTextExtracted: (text: string, sourceType: FileSourceType, imageDataUrl?: string) => void
+    onTextExtracted: (text: string, sourceType: FileSourceType, imageDataUrl?: string) => void,
+    options?: { useAiVision?: boolean }
   ) => {
     setIsProcessing(true);
     setProgress(0);
@@ -49,14 +52,33 @@ export function useFileUpload(): UseFileUploadReturn {
         });
       }
 
-      const extractedText = file.type === 'application/pdf' 
-        ? await extractTextFromPDF(file, setProgress)
-        : await extractTextFromImage(file, setProgress);
+      let extractedText = '';
+      
+      if (file.type === 'application/pdf') {
+        extractedText = await extractTextFromPDF(file, setProgress);
+      } else if (options?.useAiVision && imageDataUrl) {
+        // AI Vision Path
+        const globalProvider = localStorage.getItem('ai_provider');
+        const handwritingProvider = localStorage.getItem('ai_handwriting_provider');
+        
+        let provider: 'gemini' | 'openai' = (globalProvider === 'openai' || globalProvider === 'gemini') ? globalProvider : 'gemini';
+        
+        if (handwritingProvider && handwritingProvider !== 'default') {
+           provider = handwritingProvider as 'gemini' | 'openai';
+        }
+        
+        const result = await transcribeImage({ image: imageDataUrl, provider });
+        extractedText = result.text;
+      } else {
+        // Legacy Tesseract Path
+        extractedText = await extractTextFromImage(file, setProgress);
+      }
       
       onTextExtracted(extractedText, 'image', imageDataUrl);
     } catch (error) {
       console.error('OCR failed:', error);
-      throw new Error('Failed to extract text from image. Please try again.');
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`Failed to extract text: ${msg}`);
     } finally {
       setIsProcessing(false);
       setProgress(0);

@@ -2,7 +2,7 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 26, 2025  
+**Last Updated:** November 26, 2025 (Clean Text Feature Complete)  
 **Branch:** `main`  
 **Status:** Active Development  
 **Latest Release:** v1.5.0 (November 24, 2025)
@@ -63,20 +63,6 @@
 ---
 
 ## ⭐⭐⭐ HIGH PRIORITY (Next Up)
-
-### Clean Text Feature
-
-**Goal:** Clean up markdown artifacts and formatting issues when teachers paste text from PDFs
-
-**Tasks:**
-- [ ] Add "Clean Text" button to TEXT tab
-- [ ] Reuse existing OCR cleanup prompt from SettingsModal
-- [ ] Call `enhance-text` function with pasted text
-- [ ] Replace textarea content with cleaned text
-- [ ] Show loading state during cleanup
-- [ ] Add tooltip: "Remove PDF artifacts and formatting issues"
-
----
 
 ### Batch Document Upload & Processing
 

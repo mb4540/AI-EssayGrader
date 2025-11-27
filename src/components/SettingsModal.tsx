@@ -5,7 +5,7 @@ import { Label } from './ui/label';
 import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { X, Save, RotateCcw, Cpu } from 'lucide-react';
+import { X, Save, RotateCcw, Cpu, Brain } from 'lucide-react';
 import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
 
 interface SettingsModalProps {
@@ -98,6 +98,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
   const [customGeminiModel, setCustomGeminiModel] = useState('');
   const [openaiModel, setOpenaiModel] = useState('gpt-4o-mini');
+  
+  // Handwriting Settings
+  const [handwritingProvider, setHandwritingProvider] = useState('default');
 
   // Load prompts from localStorage on mount
   useEffect(() => {
@@ -113,6 +116,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const savedProvider = localStorage.getItem('ai_provider');
     const savedGeminiModel = localStorage.getItem('ai_model_gemini');
     const savedOpenaiModel = localStorage.getItem('ai_model_openai');
+    const savedHandwriting = localStorage.getItem('ai_handwriting_provider');
 
     if (savedProvider === 'openai' || savedProvider === 'gemini') {
       setLlmProvider(savedProvider);
@@ -126,6 +130,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
     }
     if (savedOpenaiModel) setOpenaiModel(savedOpenaiModel);
+    if (savedHandwriting) setHandwritingProvider(savedHandwriting);
   }, []);
 
   // Load document type prompt when selection changes
@@ -152,6 +157,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     localStorage.setItem('ai_provider', llmProvider);
     localStorage.setItem('ai_model_gemini', geminiModel === 'custom' ? customGeminiModel : geminiModel);
     localStorage.setItem('ai_model_openai', openaiModel);
+    localStorage.setItem('ai_handwriting_provider', handwritingProvider);
 
     alert('Settings saved! Note: These prompts are stored locally in your browser.');
   };
@@ -196,6 +202,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             size="sm"
             onClick={onClose}
             className="text-white hover:bg-white/20"
+            title="Close"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -207,7 +214,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="llm">LLM Provider</TabsTrigger>
               <TabsTrigger value="grading">Grading System</TabsTrigger>
-              <TabsTrigger value="ocr">OCR Cleanup</TabsTrigger>
+              <TabsTrigger value="ocr">Handwriting</TabsTrigger>
               <TabsTrigger value="rubric">Rubric Enhancement</TabsTrigger>
               <TabsTrigger value="doctypes">Document Types</TabsTrigger>
             </TabsList>
@@ -325,10 +332,13 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               />
             </TabsContent>
 
-            {/* OCR Cleanup Tab */}
-            <TabsContent value="ocr" className="space-y-4">
+            {/* OCR / Handwriting Tab */}
+            <TabsContent value="ocr" className="space-y-6">
               <div className="flex items-center justify-between">
-                <Label className="text-lg font-semibold">OCR Text Cleanup Prompt</Label>
+                <div className="flex items-center gap-2">
+                   <Brain className="w-5 h-5 text-indigo-600" />
+                   <Label className="text-lg font-semibold">Handwriting Recognition</Label>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -339,18 +349,40 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   Reset to Default
                 </Button>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                This prompt controls how the AI cleans up text from handwritten essay images (OCR results).
-              </p>
-              <Textarea
-                value={ocrPrompt}
-                onChange={(e) => {
-                  setOcrPrompt(e.target.value);
 
-                }}
-                className="min-h-[300px] font-mono text-sm"
-                placeholder="Enter OCR cleanup prompt..."
-              />
+              <div className="space-y-2">
+                  <Label>Recognition Model</Label>
+                  <Select value={handwritingProvider} onValueChange={setHandwritingProvider}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="default">Use Global Provider (Default)</SelectItem>
+                      <SelectItem value="gemini">Gemini 2.5 Pro (Recommended)</SelectItem>
+                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-gray-500">
+                    Select the AI model used to transcribe handwritten essays. Gemini 2.5 Pro is recommended for best accuracy.
+                  </p>
+              </div>
+
+              <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+              <div className="space-y-2">
+                  <Label className="text-base font-semibold">OCR Cleanup Prompt</Label>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    This prompt controls the secondary "Clean Text" feature used if the initial transcription needs further cleanup.
+                  </p>
+                  <Textarea
+                    value={ocrPrompt}
+                    onChange={(e) => {
+                      setOcrPrompt(e.target.value);
+                    }}
+                    className="min-h-[200px] font-mono text-sm"
+                    placeholder="Enter OCR cleanup prompt..."
+                  />
+              </div>
             </TabsContent>
 
             {/* Rubric Enhancement Tab */}
