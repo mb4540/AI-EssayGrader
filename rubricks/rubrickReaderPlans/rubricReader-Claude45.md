@@ -96,8 +96,9 @@ Frontend validates (PDF/DOCX, max 5MB)
 Send to extract-rubric-from-document function
     ↓
 Backend processes file:
-  - PDF → Convert to base64 image for Gemini vision
-  - DOCX → Extract text using mammoth
+  - PDF → Send directly to Gemini vision API
+  - DOCX → Convert to PDF, then send to Gemini vision API
+  - .doc → Convert to PDF, then send to Gemini vision API
     ↓
 Send to Gemini 2.5 Pro with extraction prompt
     ↓
@@ -143,10 +144,13 @@ Teacher accepts → populate criteria field
 
 #### Implementation Steps
 
-1. **Accept file upload** (multipart/form-data or base64)
+1. **Accept file upload** (base64 encoded)
 2. **Process file based on type:**
-   - **PDF:** Convert to base64 image (or multiple images if multi-page)
-   - **DOCX:** Use `mammoth` to extract text (already in package.json)
+   - **PDF:** Send directly to Gemini vision API
+   - **DOCX/DOC:** 
+     - Extract text using `mammoth`
+     - Create PDF using `pdf-lib`
+     - Send PDF to Gemini vision API
 3. **Get user's Gemini model setting**
    - Read from request body (passed from frontend)
    - Default to `gemini-2.0-flash-exp` if not specified
@@ -163,13 +167,13 @@ Teacher accepts → populate criteria field
 #### Libraries Needed
 ```json
 {
-  "mammoth": "^1.6.0",  // Already in package.json
   "@google/generative-ai": "^0.24.1", // Already in package.json
-  "pdf-lib": "^1.17.1"  // Already in package.json (for PDF manipulation if needed)
+  "mammoth": "^1.6.0",                 // Already in package.json - Extract text from Word docs
+  "pdf-lib": "^1.17.1"                 // Already in package.json - Create PDFs
 }
 ```
 
-**Note:** For PDF processing, we'll convert pages to images and send to Gemini's vision API.
+**Note:** Word documents (.doc/.docx) are converted to PDF before sending to Gemini for consistent processing.
 
 ---
 
@@ -564,10 +568,13 @@ export async function extractRubricFromDocument(
 - ✅ Loading states during upload
 
 ### Nice to Have
-- 📝 Support for legacy .doc files (best effort)
 - 📝 Detect rubric in multi-page documents
 - 📝 Extract penalties section if present
 - 📝 Suggest improvements to rubric
+
+### Known Limitations
+- ⚠️ **Word document conversion**: Documents are converted to text-based PDFs, which may lose some formatting (tables, images, complex layouts). For best results with heavily formatted rubrics, users should export to PDF directly from Word.
+- ⚠️ **Legacy .doc files**: Text extraction may be less reliable than .docx due to binary format differences.
 
 ---
 

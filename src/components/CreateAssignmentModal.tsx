@@ -6,8 +6,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { createAssignment, updateAssignment } from '@/lib/api';
+import { createAssignment, updateAssignment, extractRubricFromDocument } from '@/lib/api';
 import CriteriaInput from './CriteriaInput';
+import RubricPreviewModal from './RubricPreviewModal';
 import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
 
 interface Assignment {
@@ -41,7 +42,84 @@ export default function AssignmentModal({
   const [documentType, setDocumentType] = useState('personal_narrative');
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
+  
+  // Rubric Extraction State
+  const [rubricFile, setRubricFile] = useState<File | null>(null);
+  const [isExtractingRubric, setIsExtractingRubric] = useState(false);
+  const [showRubricPreview, setShowRubricPreview] = useState(false);
+  const [extractedRubric, setExtractedRubric] = useState<{
+    rubricText: string;
+    totalPoints: number;
+    warning?: string;
+  } | null>(null);
+
   const queryClient = useQueryClient();
+
+  const handleRubricFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      const validTypes = [
+        'application/pdf', 
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/msword'
+      ];
+      
+      if (!validTypes.includes(file.type) && !file.name.endsWith('.pdf') && !file.name.endsWith('.docx') && !file.name.endsWith('.doc')) {
+        alert('Please upload a PDF or Word document');
+        return;
+      }
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('File size must be less than 5MB');
+        return;
+      }
+      setRubricFile(file);
+    }
+  };
+
+  const handleRubricUpload = async () => {
+    if (!rubricFile) return;
+    
+    setIsExtractingRubric(true);
+    try {
+      // Get user's Gemini model and extraction prompt from localStorage
+      const geminiModel = localStorage.getItem('ai_model_gemini') || 'gemini-2.0-flash-exp';
+      const extractionPrompt = localStorage.getItem('ai_rubric_extraction_prompt') || '';
+      
+      const data = await extractRubricFromDocument(rubricFile, totalPoints, geminiModel, extractionPrompt);
+      
+      if (data.success) {
+        setExtractedRubric(data);
+        setShowRubricPreview(true);
+      } else {
+        // Show error with hint if available
+        const errorMsg = data.error || 'Failed to extract rubric';
+        const hint = (data as any).hint;
+        alert(hint ? `${errorMsg}\n\n${hint}` : errorMsg);
+      }
+    } catch (error: any) {
+      console.error('Rubric upload error:', error);
+      const errorMsg = error?.message || 'Failed to extract rubric. Please try again.';
+      alert(errorMsg);
+    } finally {
+      setIsExtractingRubric(false);
+    }
+  };
+
+  const handleAcceptRubric = (rubricText: string) => {
+    setCriteria(rubricText);
+    
+    // If we have extracted points, update the points field too
+    if (extractedRubric?.totalPoints) {
+      setTotalPoints(extractedRubric.totalPoints);
+    }
+    
+    setShowRubricPreview(false);
+    setRubricFile(null);
+    setSuccessMessage('Rubric extracted successfully!');
+    setTimeout(() => setSuccessMessage(null), 3000);
+  };
 
   // Pre-populate form in edit mode
   useEffect(() => {
@@ -229,6 +307,44 @@ export default function AssignmentModal({
             </p>
           </div>
 
+          {/* Rubric Import Section */}
+          <div className="space-y-2 p-4 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              Import Rubric <span className="text-xs font-normal text-muted-foreground">(Optional)</span>
+            </Label>
+            <div className="flex gap-2 items-center">
+              <Input
+                type="file"
+                accept=".pdf,.docx,.doc"
+                onChange={handleRubricFileSelect}
+                disabled={isExtractingRubric || createMutation.isPending}
+                className="flex-1 cursor-pointer text-sm"
+              />
+              <Button
+                type="button"
+                onClick={handleRubricUpload}
+                disabled={!rubricFile || isExtractingRubric || createMutation.isPending}
+                variant="secondary"
+                size="sm"
+                className="flex-shrink-0"
+              >
+                {isExtractingRubric ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Extracting...
+                  </>
+                ) : (
+                  'Extract Rubric'
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Upload a PDF, DOCX, or DOC document containing your rubric. We'll extract the criteria for you.
+              <br />
+              <span className="text-muted-foreground/80">Word documents are automatically converted to PDF for processing.</span>
+            </p>
+          </div>
+
           <div>
             <Label htmlFor="assignment-description" className="text-gray-700 dark:text-gray-300 font-medium">
               Description <span className="text-gray-400 text-xs">(optional)</span>
@@ -326,6 +442,14 @@ export default function AssignmentModal({
           )}
         </form>
       </div>
+
+      {/* Rubric Preview Modal */}
+      <RubricPreviewModal
+        isOpen={showRubricPreview}
+        onClose={() => setShowRubricPreview(false)}
+        onAccept={handleAcceptRubric}
+        extractedRubric={extractedRubric}
+      />
     </div>
   );
 }

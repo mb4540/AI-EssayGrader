@@ -494,3 +494,54 @@ export async function transcribeImage(data: { image: string; provider?: 'gemini'
 
   return handleResponse<{ text: string }>(response);
 }
+
+/**
+ * Extract rubric criteria from a document (PDF/DOCX) using Gemini
+ */
+export async function extractRubricFromDocument(
+  file: File,
+  totalPoints: number,
+  geminiModel: string,
+  extractionPrompt?: string
+): Promise<{
+  success: boolean;
+  rubricText: string;
+  totalPoints: number;
+  warning?: string;
+  error?: string;
+  raw?: any;
+}> {
+  // Convert file to base64
+  const base64 = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove data URL prefix (e.g., "data:application/pdf;base64,")
+      resolve(result.split(',')[1]);
+    };
+    reader.onerror = error => reject(error);
+  });
+
+  const response = await fetch(`${API_BASE}/extract-rubric-from-document`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      file: base64,
+      fileName: file.name,
+      fileType: file.type,
+      totalPoints,
+      geminiModel,
+      extractionPrompt
+    }),
+  });
+
+  return handleResponse<{
+    success: boolean;
+    rubricText: string;
+    totalPoints: number;
+    warning?: string;
+    error?: string;
+    raw?: any;
+  }>(response);
+}
