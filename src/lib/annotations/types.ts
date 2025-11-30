@@ -11,13 +11,12 @@ export type AnnotationStatus =
 
 export type AnnotationSeverity = 'info' | 'warning' | 'error';
 
-export type AnnotationCategory = 
-  | 'Content'
-  | 'Evidence'
-  | 'Organization'
-  | 'Clarity'
-  | 'Mechanics'
-  | 'Other';
+/**
+ * PHASE 0 UPDATE: AnnotationCategory is now a string to support dynamic rubric criterion IDs
+ * Examples: "ideas_development", "focus_organization", "authors_craft", "conventions"
+ * Legacy categories like "Content", "Mechanics" are still supported for backwards compatibility
+ */
+export type AnnotationCategory = string;
 
 /**
  * Annotation from LLM (before normalization)

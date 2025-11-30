@@ -1,6 +1,7 @@
 import VerbatimViewer from '@/components/VerbatimViewer';
 import DraftComparison from '@/components/DraftComparison';
 import type { Feedback } from '@/lib/schema';
+import type { RubricJSON } from '@/lib/calculator/types';
 
 interface SubmissionContentProps {
     draftMode: 'single' | 'comparison';
@@ -12,6 +13,7 @@ interface SubmissionContentProps {
     submissionId?: string;
     aiFeedback: Feedback | null;
     annotationsRefreshKey: number;
+    rubric?: RubricJSON | null;
 
     // Comparison props
     roughDraftText: string;
@@ -28,6 +30,7 @@ interface SubmissionContentProps {
 
 export function SubmissionContent({
     draftMode,
+    rubric,
     verbatimText,
     sourceType,
     onTextExtracted,
@@ -59,6 +62,7 @@ export function SubmissionContent({
                     submissionId={submissionId}
                     showAnnotations={!!submissionId && !!aiFeedback}
                     annotationsRefreshKey={annotationsRefreshKey}
+                    rubric={rubric}
                 />
             ) : (
                 <DraftComparison

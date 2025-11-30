@@ -19,12 +19,15 @@ import {
   CheckCheck 
 } from 'lucide-react';
 import type { Annotation, AnnotationStatus } from '@/lib/annotations/types';
+import type { RubricJSON } from '@/lib/calculator/types';
 import { addLineNumbers } from '@/lib/annotations/lineNumbers';
+import { getAnnotationDisplayLabel } from '@/lib/annotations/display';
 
 interface AnnotatedTextViewerProps {
   text: string;
   submissionId: string;
   annotations: Annotation[];
+  rubric?: RubricJSON | null;
   onAnnotationUpdate: (annotationId: string, updates: Partial<Annotation>) => Promise<void>;
   onAnnotationAdd: (annotation: Omit<Annotation, 'annotation_id'>) => Promise<void>;
 }
@@ -33,6 +36,7 @@ export default function AnnotatedTextViewer({
   text,
   submissionId: _submissionId,
   annotations,
+  rubric,
   onAnnotationUpdate,
   onAnnotationAdd: _onAnnotationAdd,
 }: AnnotatedTextViewerProps) {
@@ -160,7 +164,7 @@ export default function AnnotatedTextViewer({
                   <div className="flex items-start gap-2 mb-2">
                     {getSeverityIcon(annotation.severity)}
                     <Badge className={getStatusColor(annotation.status)}>
-                      {annotation.category}
+                      {getAnnotationDisplayLabel(annotation, rubric)}
                     </Badge>
                     <span className="text-xs text-gray-500">
                       "{annotation.quote}"

@@ -56,8 +56,8 @@ ${levelsDesc}`;
     : "";
   const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
   
-  // Use generic annotation categories that work for any subject
-  const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
+  // Use rubric criterion IDs as annotation categories for consistency
+  const annotationCategories = rubric.criteria.map(c => c.id).join('|');
 
   return `${gradingPhilosophy}
 
@@ -89,14 +89,12 @@ FEEDBACK GUIDELINES:
    - Explain why you chose that level
    - Points must be within [0, max_points] for each criterion
 
-2. Inline Annotations (Based on Generic Categories):
+2. Inline Annotations (Based on Rubric Criteria):
    - Create annotations for issues that affect the rubric criteria
-   - Tag each annotation with the most relevant category:
-     * Content: Issues with ideas, arguments, reasoning, accuracy
-     * Evidence: Issues with supporting details, examples, sources, citations
-     * Organization: Issues with structure, flow, transitions, coherence
-     * Clarity: Issues with unclear writing, explanations, or communication
-     * Mechanics: Grammar, spelling, punctuation, formatting (if relevant to rubric)
+   - Tag each annotation with the rubric criterion ID it relates to:
+${rubric.criteria.map(c => `     * ${c.id}: Issues related to "${c.name}"`).join('\n')}
+   - Choose the criterion that BEST matches the issue
+   - If an issue affects multiple criteria, pick the PRIMARY one
    - Put ALL issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
    - Include line number and exact quoted text for each issue
    - Provide clear, specific correction or suggestion for each issue
@@ -163,12 +161,10 @@ CRITICAL INLINE ANNOTATIONS RULES:
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
 - Category must be one of: ${annotationCategories}
-- Choose the category that best matches the issue type:
-  * Content = problems with ideas, arguments, reasoning, accuracy
-  * Evidence = missing/weak supporting details, examples, sources
-  * Organization = structure, flow, transitions issues
-  * Clarity = unclear writing or explanations
-  * Mechanics = grammar, spelling, punctuation (only if relevant to rubric)
+- Choose the rubric criterion that this issue MOST affects:
+${rubric.criteria.map(c => `  * ${c.id} = issues affecting "${c.name}"`).join('\n')}
+- If an issue affects multiple criteria, choose the PRIMARY one
+- Every annotation MUST map to a rubric criterion
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
 - Include ALL issues you find - do not limit the number of annotations
@@ -229,12 +225,10 @@ For EACH criterion listed above, identify 2-4 specific locations in the essay wh
 INSTRUCTIONS:
 1. Focus on providing ACTIONABLE, SPECIFIC feedback
 2. Quote the exact text that needs improvement (5-15 words)
-3. Map each annotation to the appropriate generic category:
-   - Content: Issues with ideas, arguments, reasoning, accuracy
-   - Evidence: Missing/weak supporting details, examples, sources
-   - Organization: Structure, flow, transitions issues
-   - Clarity: Unclear writing or explanations
-   - Mechanics: Grammar, spelling, punctuation
+3. Tag each annotation with the rubric criterion ID it addresses:
+   - Use the criterion_id from the list above
+   - This links the annotation directly to the rubric criterion
+   - Example: If addressing "${criteriaWithIssues[0]?.criterion.name || 'a criterion'}", use "${criteriaWithIssues[0]?.criterion.id || 'criterion_id'}"
 4. Provide clear suggestions for improvement
 5. Include line numbers from the numbered essay
 6. Make sure EVERY criterion gets at least 2 annotations
@@ -246,7 +240,7 @@ OUTPUT THIS JSON STRUCTURE:
     {
       "line": 5,
       "quote": "exact text with the issue",
-      "category": "Content|Evidence|Organization|Clarity|Mechanics",
+      "category": "${criteriaWithIssues.map(c => c.criterion.id).join('|')}",
       "suggestion": "Specific improvement suggestion",
       "severity": "warning",
       "criterion_id": "the rubric criterion this addresses"
@@ -258,7 +252,7 @@ CRITICAL RULES:
 - Provide 2-4 annotations per criterion
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
-- Category must be one of: Content, Evidence, Organization, Clarity, Mechanics
+- Category must be one of the rubric criterion IDs: ${criteriaWithIssues.map(c => c.criterion.id).join(', ')}
 - Include criterion_id to link back to the rubric
 - Be specific and actionable in suggestions
 
@@ -298,8 +292,8 @@ ${levelsDesc}`;
     ? `\nDOCUMENT TYPE: ${docType.label}\nGRADING FOCUS: ${docType.gradingFocus}\n`
     : "";
   
-  // Use generic annotation categories that work for any subject
-  const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
+  // Use rubric criterion IDs as annotation categories for consistency
+  const annotationCategories = rubric.criteria.map(c => c.id).join('|');
 
   return `${gradingPhilosophy}
 
@@ -337,14 +331,12 @@ FEEDBACK GUIDELINES:
    - You may note improvements from rough draft
    - Points must be within [0, max_points] for each criterion
 
-2. Inline Annotations (Based on Generic Categories):
+2. Inline Annotations (Based on Rubric Criteria):
    - Create annotations for issues that affect the rubric criteria
-   - Tag each annotation with the most relevant category:
-     * Content: Issues with ideas, arguments, reasoning, accuracy
-     * Evidence: Issues with supporting details, examples, sources, citations
-     * Organization: Issues with structure, flow, transitions, coherence
-     * Clarity: Issues with unclear writing, explanations, or communication
-     * Mechanics: Grammar, spelling, punctuation, formatting (if relevant to rubric)
+   - Tag each annotation with the rubric criterion ID it relates to:
+${rubric.criteria.map(c => `     * ${c.id}: Issues related to "${c.name}"`).join('\n')}
+   - Choose the criterion that BEST matches the issue
+   - If an issue affects multiple criteria, pick the PRIMARY one
    - Put ALL issues in inline_annotations array (NOT in grammar_findings/spelling_findings arrays)
    - Include line number and exact quoted text for each issue
    - Provide clear, specific correction or suggestion for each issue
@@ -413,12 +405,10 @@ CRITICAL INLINE ANNOTATIONS RULES:
 - Quote ONLY the problematic text, WITHOUT line numbers
 - Keep quotes short and precise (5-15 words max)
 - Category must be one of: ${annotationCategories}
-- Choose the category that best matches the issue type:
-  * Content = problems with ideas, arguments, reasoning, accuracy
-  * Evidence = missing/weak supporting details, examples, sources
-  * Organization = structure, flow, transitions issues
-  * Clarity = unclear writing or explanations
-  * Mechanics = grammar, spelling, punctuation (only if relevant to rubric)
+- Choose the rubric criterion that this issue MOST affects:
+${rubric.criteria.map(c => `  * ${c.id} = issues affecting "${c.name}"`).join('\n')}
+- If an issue affects multiple criteria, choose the PRIMARY one
+- Every annotation MUST map to a rubric criterion
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
 - Include ALL issues you find - do not limit the number of annotations
