@@ -65,33 +65,32 @@ const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
-    // Trigger background function
-    // Use DEPLOY_URL or URL from Netlify environment, fallback to rawUrl
-    const baseUrl = process.env.DEPLOY_URL || process.env.URL || event.rawUrl.split('/.netlify')[0];
-    const backgroundUrl = `${baseUrl}/.netlify/functions/extract-rubric-background`;
-    console.log(`[extract-rubric-trigger] Base URL: ${baseUrl}`);
-    console.log(`[extract-rubric-trigger] Triggering background function at: ${backgroundUrl}`);
+    // Start background processing immediately (don't wait for it to finish)
+    // We return the job ID right away and let the frontend poll for status
+    console.log(`[extract-rubric-trigger] Starting background processing for job ${job.jobId}`);
     
-    // Fire and forget - don't wait for response
-    fetch(backgroundUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jobId: job.jobId,
-        file,
-        fileName,
-        fileType,
-        totalPoints,
-        geminiModel,
-        extractionPrompt,
-      }),
-    })
-      .then(() => {
-        console.log(`[extract-rubric-trigger] Background function triggered successfully for job ${job.jobId}`);
+    // Import and call the background function directly (fire and forget)
+    import('./extract-rubric-background')
+      .then(async (module) => {
+        console.log(`[extract-rubric-trigger] Invoking background handler for job ${job.jobId}`);
+        // Call the handler with the same event structure
+        await module.handler({
+          httpMethod: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId: job.jobId,
+            file,
+            fileName,
+            fileType,
+            totalPoints,
+            geminiModel,
+            extractionPrompt,
+          }),
+        } as any, {} as any);
+        console.log(`[extract-rubric-trigger] Background processing completed for job ${job.jobId}`);
       })
       .catch((error) => {
-        console.error(`[extract-rubric-trigger] Failed to trigger background job:`, error);
-        console.error(`[extract-rubric-trigger] Error details:`, error.message);
+        console.error(`[extract-rubric-trigger] Background processing failed for job ${job.jobId}:`, error);
       });
 
     // Return job ID immediately

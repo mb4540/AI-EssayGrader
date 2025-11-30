@@ -66,28 +66,32 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
     console.log(`[enhance-rubric-trigger] Rules length: ${simple_rules.length} characters`);
 
-    // Trigger background function
-    // Use DEPLOY_URL or URL from Netlify environment, fallback to rawUrl
-    const baseUrl = process.env.DEPLOY_URL || process.env.URL || event.rawUrl.split('/.netlify')[0];
-    const backgroundUrl = `${baseUrl}/.netlify/functions/enhance-rubric-background`;
-    console.log(`[enhance-rubric-trigger] Base URL: ${baseUrl}`);
-    console.log(`[enhance-rubric-trigger] Triggering background function at: ${backgroundUrl}`);
+    // Start background processing immediately (don't wait for it to finish)
+    // We return the job ID right away and let the frontend poll for status
+    console.log(`[enhance-rubric-trigger] Starting background processing for job ${job.jobId}`);
     
-    // Fire and forget - don't wait for response
-    fetch(backgroundUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jobId: job.jobId,
-        simple_rules,
-        rubric_prompt,
-        total_points,
-        llmProvider,
-        llmModel,
-      }),
-    }).catch((error) => {
-      console.error(`[enhance-rubric-trigger] Failed to trigger background job:`, error);
-    });
+    // Import and call the background function directly (fire and forget)
+    import('./enhance-rubric-background')
+      .then(async (module) => {
+        console.log(`[enhance-rubric-trigger] Invoking background handler for job ${job.jobId}`);
+        // Call the handler with the same event structure
+        await module.handler({
+          httpMethod: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId: job.jobId,
+            simple_rules,
+            rubric_prompt,
+            total_points,
+            llmProvider,
+            llmModel,
+          }),
+        } as any, {} as any);
+        console.log(`[enhance-rubric-trigger] Background processing completed for job ${job.jobId}`);
+      })
+      .catch((error) => {
+        console.error(`[enhance-rubric-trigger] Background processing failed for job ${job.jobId}:`, error);
+      });
 
     // Return job ID immediately
     return {
