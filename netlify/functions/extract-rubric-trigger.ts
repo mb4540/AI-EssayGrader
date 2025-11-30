@@ -66,7 +66,10 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Trigger background function
-    const backgroundUrl = `${event.rawUrl.replace('/extract-rubric-trigger', '/extract-rubric-background')}`;
+    // Use DEPLOY_URL or URL from Netlify environment, fallback to rawUrl
+    const baseUrl = process.env.DEPLOY_URL || process.env.URL || event.rawUrl.split('/.netlify')[0];
+    const backgroundUrl = `${baseUrl}/.netlify/functions/extract-rubric-background`;
+    console.log(`[extract-rubric-trigger] Base URL: ${baseUrl}`);
     console.log(`[extract-rubric-trigger] Triggering background function at: ${backgroundUrl}`);
     
     // Fire and forget - don't wait for response

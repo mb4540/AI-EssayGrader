@@ -115,8 +115,13 @@ function createDefaultRubric(): RubricResponse {
 
 const handler: Handler = async (event: HandlerEvent) => {
   const startTime = Date.now();
+  
+  // CRITICAL: Log immediately to prove function is called
   console.log('[extract-rubric-background] ========== FUNCTION STARTED ==========');
   console.log('[extract-rubric-background] Timestamp:', new Date().toISOString());
+  console.log('[extract-rubric-background] HTTP Method:', event.httpMethod);
+  console.log('[extract-rubric-background] Headers:', JSON.stringify(event.headers));
+  console.log('[extract-rubric-background] Body length:', event.body?.length || 0);
   
   try {
     console.log('[extract-rubric-background] Parsing request body...');

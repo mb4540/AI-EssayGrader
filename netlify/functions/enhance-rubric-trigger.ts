@@ -67,7 +67,11 @@ const handler: Handler = async (event: HandlerEvent) => {
     console.log(`[enhance-rubric-trigger] Rules length: ${simple_rules.length} characters`);
 
     // Trigger background function
-    const backgroundUrl = `${event.rawUrl.replace('/enhance-rubric-trigger', '/enhance-rubric-background')}`;
+    // Use DEPLOY_URL or URL from Netlify environment, fallback to rawUrl
+    const baseUrl = process.env.DEPLOY_URL || process.env.URL || event.rawUrl.split('/.netlify')[0];
+    const backgroundUrl = `${baseUrl}/.netlify/functions/enhance-rubric-background`;
+    console.log(`[enhance-rubric-trigger] Base URL: ${baseUrl}`);
+    console.log(`[enhance-rubric-trigger] Triggering background function at: ${backgroundUrl}`);
     
     // Fire and forget - don't wait for response
     fetch(backgroundUrl, {
