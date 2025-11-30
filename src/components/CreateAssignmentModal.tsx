@@ -290,7 +290,7 @@ export default function AssignmentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl mx-4 border-2 border-blue-200 dark:border-blue-800 my-8">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl mx-4 border-2 border-blue-200 dark:border-blue-800 my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 rounded-t-xl">
           <div className="flex items-center justify-between">
@@ -313,7 +313,7 @@ export default function AssignmentModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>
             <Label htmlFor="assignment-title" className="text-gray-700 dark:text-gray-300 font-medium">
               Assignment Title <span className="text-red-500">*</span>
