@@ -163,7 +163,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Update job status to processing
-    updateJob(jobId, { status: 'processing' });
+    await updateJob(jobId, { status: 'processing' });
 
     console.log(`[enhance-rubric-background] Processing job ${jobId}`);
 
@@ -253,7 +253,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     console.log(`[enhance-rubric-background] Generated ${rubric.categories.length} categories`);
 
     // Update job with result
-    updateJob(jobId, {
+    await updateJob(jobId, {
       status: 'completed',
       result: {
         success: true,
@@ -277,7 +277,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     const { jobId } = JSON.parse(event.body || '{}');
 
     if (jobId) {
-      updateJob(jobId, {
+      await updateJob(jobId, {
         status: 'failed',
         error: error.message || 'Failed to enhance rubric',
       });

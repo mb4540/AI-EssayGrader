@@ -1,9 +1,11 @@
 /**
- * Shared in-memory job storage for rubric extraction and enhancement
+ * Persistent job storage for rubric extraction and enhancement using Netlify Blobs
  * 
- * This provides a simple, fast storage mechanism for background jobs.
- * Jobs are automatically cleaned up after 1 hour to prevent memory leaks.
+ * This provides a persistent storage mechanism for background jobs that works
+ * across different serverless function instances.
  */
+
+import { getStore } from '@netlify/blobs';
 
 export type JobStatus = 'pending' | 'processing' | 'completed' | 'failed';
 
@@ -19,12 +21,15 @@ export interface RubricJob {
   completedAt?: number;
 }
 
-// In-memory job storage
-const jobs = new Map<string, RubricJob>();
-
-// Cleanup interval (runs every 5 minutes)
-const CLEANUP_INTERVAL = 5 * 60 * 1000; // 5 minutes
+// Job expiry time
 const JOB_EXPIRY = 60 * 60 * 1000; // 1 hour
+
+/**
+ * Get the blob store for jobs
+ */
+function getJobStore() {
+  return getStore('rubric-jobs');
+}
 
 /**
  * Generate a unique job ID
@@ -36,7 +41,7 @@ export function generateJobId(): string {
 /**
  * Create a new job
  */
-export function createJob(type: 'extract' | 'enhance'): RubricJob {
+export async function createJob(type: 'extract' | 'enhance'): Promise<RubricJob> {
   const jobId = generateJobId();
   const job: RubricJob = {
     jobId,
@@ -46,7 +51,8 @@ export function createJob(type: 'extract' | 'enhance'): RubricJob {
     updatedAt: Date.now(),
   };
   
-  jobs.set(jobId, job);
+  const store = getJobStore();
+  await store.set(jobId, JSON.stringify(job));
   console.log(`[rubric-jobs] Created ${type} job: ${jobId}`);
   
   return job;
@@ -55,18 +61,25 @@ export function createJob(type: 'extract' | 'enhance'): RubricJob {
 /**
  * Get a job by ID
  */
-export function getJob(jobId: string): RubricJob | undefined {
-  return jobs.get(jobId);
+export async function getJob(jobId: string): Promise<RubricJob | null> {
+  const store = getJobStore();
+  const data = await store.get(jobId);
+  
+  if (!data) {
+    return null;
+  }
+  
+  return JSON.parse(data) as RubricJob;
 }
 
 /**
  * Update a job's status
  */
-export function updateJob(jobId: string, updates: Partial<RubricJob>): RubricJob | undefined {
-  const job = jobs.get(jobId);
+export async function updateJob(jobId: string, updates: Partial<RubricJob>): Promise<RubricJob | null> {
+  const job = await getJob(jobId);
   if (!job) {
     console.error(`[rubric-jobs] Job not found: ${jobId}`);
-    return undefined;
+    return null;
   }
   
   const updatedJob: RubricJob = {
@@ -79,7 +92,8 @@ export function updateJob(jobId: string, updates: Partial<RubricJob>): RubricJob
     updatedJob.completedAt = Date.now();
   }
   
-  jobs.set(jobId, updatedJob);
+  const store = getJobStore();
+  await store.set(jobId, JSON.stringify(updatedJob));
   console.log(`[rubric-jobs] Updated job ${jobId}: ${updatedJob.status}`);
   
   return updatedJob;
@@ -88,26 +102,34 @@ export function updateJob(jobId: string, updates: Partial<RubricJob>): RubricJob
 /**
  * Delete a job
  */
-export function deleteJob(jobId: string): boolean {
-  const deleted = jobs.delete(jobId);
-  if (deleted) {
-    console.log(`[rubric-jobs] Deleted job: ${jobId}`);
-  }
-  return deleted;
+export async function deleteJob(jobId: string): Promise<boolean> {
+  const store = getJobStore();
+  await store.delete(jobId);
+  console.log(`[rubric-jobs] Deleted job: ${jobId}`);
+  return true;
 }
 
 /**
  * Clean up old jobs (older than 1 hour)
+ * Note: This is a manual cleanup function. Call it periodically if needed.
  */
-export function cleanupOldJobs(): number {
+export async function cleanupOldJobs(): Promise<number> {
+  const store = getJobStore();
   const now = Date.now();
   let deletedCount = 0;
   
-  for (const [jobId, job] of jobs.entries()) {
-    const age = now - job.createdAt;
-    if (age > JOB_EXPIRY) {
-      jobs.delete(jobId);
-      deletedCount++;
+  // List all jobs
+  const { blobs } = await store.list();
+  
+  for (const blob of blobs) {
+    const jobData = await store.get(blob.key);
+    if (jobData) {
+      const job = JSON.parse(jobData) as RubricJob;
+      const age = now - job.createdAt;
+      if (age > JOB_EXPIRY) {
+        await store.delete(blob.key);
+        deletedCount++;
+      }
     }
   }
   
@@ -116,38 +138,4 @@ export function cleanupOldJobs(): number {
   }
   
   return deletedCount;
-}
-
-/**
- * Get job statistics
- */
-export function getJobStats(): {
-  total: number;
-  pending: number;
-  processing: number;
-  completed: number;
-  failed: number;
-  byType: { extract: number; enhance: number };
-} {
-  const stats = {
-    total: jobs.size,
-    pending: 0,
-    processing: 0,
-    completed: 0,
-    failed: 0,
-    byType: { extract: 0, enhance: 0 },
-  };
-  
-  for (const job of jobs.values()) {
-    stats[job.status]++;
-    stats.byType[job.type]++;
-  }
-  
-  return stats;
-}
-
-// Start cleanup interval
-if (typeof setInterval !== 'undefined') {
-  setInterval(cleanupOldJobs, CLEANUP_INTERVAL);
-  console.log('[rubric-jobs] Started cleanup interval');
 }

@@ -47,7 +47,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Create job
-    const job = createJob('extract');
+    const job = await createJob('extract');
 
     console.log(`[extract-rubric-trigger] Created job ${job.jobId} for file: ${fileName}`);
 

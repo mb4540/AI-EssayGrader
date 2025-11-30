@@ -44,7 +44,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Get job
-    const job = getJob(jobId);
+    const job = await getJob(jobId);
 
     if (!job) {
       return {

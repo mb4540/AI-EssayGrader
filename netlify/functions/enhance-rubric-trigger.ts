@@ -47,7 +47,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Create job
-    const job = createJob('enhance');
+    const job = await createJob('enhance');
 
     console.log(`[enhance-rubric-trigger] Created job ${job.jobId}`);
     console.log(`[enhance-rubric-trigger] Rules length: ${simple_rules.length} characters`);

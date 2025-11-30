@@ -124,7 +124,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Update job status to processing
-    updateJob(jobId, { status: 'processing' });
+    await updateJob(jobId, { status: 'processing' });
 
     console.log(`[extract-rubric-background] Processing job ${jobId} for file: ${fileName}`);
 
@@ -232,7 +232,7 @@ const handler: Handler = async (event: HandlerEvent) => {
       } catch (conversionError: any) {
         console.error('[extract-rubric-background] Word to PDF conversion error:', conversionError);
         
-        updateJob(jobId, {
+        await updateJob(jobId, {
           status: 'failed',
           error: `Failed to convert Word document to PDF: ${conversionError.message}`,
         });
@@ -240,7 +240,7 @@ const handler: Handler = async (event: HandlerEvent) => {
         return { statusCode: 200, body: JSON.stringify({ success: true }) };
       }
     } else {
-      updateJob(jobId, {
+      await updateJob(jobId, {
         status: 'failed',
         error: 'Unsupported file type. Please upload PDF or DOCX.',
       });
@@ -276,7 +276,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     const formattedText = formatRubricToText(rubricData);
 
     // Update job with result
-    updateJob(jobId, {
+    await updateJob(jobId, {
       status: 'completed',
       result: {
         success: true,
@@ -307,7 +307,7 @@ const handler: Handler = async (event: HandlerEvent) => {
       const defaultRubric = createDefaultRubric();
       const formattedText = formatRubricToText(defaultRubric);
 
-      updateJob(jobId, {
+      await updateJob(jobId, {
         status: 'completed',
         result: {
           success: true,
