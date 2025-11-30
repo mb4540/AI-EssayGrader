@@ -3,6 +3,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import mammoth from 'mammoth';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
+/**
+ * IMPORTANT: This function is LOCKED to Gemini 2.5 Pro for document extraction.
+ * Gemini is a multimodal LLM optimized for document understanding and provides
+ * superior rubric extraction from PDF/DOCX files compared to other models.
+ * 
+ * The LLM provider setting in AI Prompt Settings does NOT affect this function.
+ * It will always use Gemini regardless of user's global LLM preference.
+ */
+
 // Initialize Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
@@ -134,6 +143,12 @@ export const handler: Handler = async (event) => {
   try {
     const { file, fileName, fileType, totalPoints, geminiModel, extractionPrompt } = JSON.parse(event.body || '{}');
     
+    // Performance logging - start
+    const startTime = Date.now();
+    const modelName = geminiModel || 'gemini-2.0-flash-exp';
+    console.log(`[extract-rubric] Starting extraction with ${modelName}`);
+    console.log(`[extract-rubric] File: ${fileName} (${fileType})`);
+    
     if (!file) {
       return { 
         statusCode: 400, 
@@ -146,10 +161,12 @@ export const handler: Handler = async (event) => {
 
     // Decode base64
     const fileBuffer = Buffer.from(file, 'base64');
+    const fileSizeKB = Math.round(fileBuffer.length / 1024);
+    console.log(`[extract-rubric] File size: ${fileSizeKB}KB`);
     
     // Get Gemini model (default to gemini-2.0-flash-exp)
     const model = genAI.getGenerativeModel({ 
-      model: geminiModel || 'gemini-2.0-flash-exp',
+      model: modelName,
       generationConfig: {
         responseMimeType: "application/json"
       }
@@ -277,6 +294,18 @@ export const handler: Handler = async (event) => {
     const responseText = result.response.text();
     const rubricData: RubricResponse = JSON.parse(responseText);
 
+    // Performance logging - end
+    const duration = Date.now() - startTime;
+    const tokenUsage = result.response.usageMetadata;
+    const promptTokens = tokenUsage?.promptTokenCount || 0;
+    const completionTokens = tokenUsage?.candidatesTokenCount || 0;
+    const totalTokens = promptTokens + completionTokens;
+    
+    console.log(`[extract-rubric] Completed in ${duration}ms`);
+    console.log(`[extract-rubric] Extracted ${rubricData.categories.length} categories`);
+    console.log(`[extract-rubric] Total points: ${rubricData.totalPossiblePoints}`);
+    console.log(`[extract-rubric] Token usage: ${promptTokens} prompt + ${completionTokens} completion = ${totalTokens} total`);
+
     // Convert to paragraph format (using highest level description for each category)
     const formattedText = formatRubricToText(rubricData);
 
@@ -287,8 +316,17 @@ export const handler: Handler = async (event) => {
         rubricText: formattedText,
         totalPoints: rubricData.totalPossiblePoints,
         warning: rubricData.warning,
-        raw: rubricData // For debugging
-      }),
+        raw: rubricData, // For debugging
+        performance: {
+          duration_ms: duration,
+          provider: 'gemini',
+          model: modelName,
+          file_size_kb: fileSizeKB,
+          file_type: fileType,
+          categories_extracted: rubricData.categories.length,
+          tokens_used: totalTokens,
+        }
+      })
     };
 
   } catch (error: any) {

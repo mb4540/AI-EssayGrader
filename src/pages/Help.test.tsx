@@ -84,7 +84,8 @@ describe('Help Page', () => {
 
       expect(screen.getByText(/passphrase best practices/i)).toBeInTheDocument();
       expect(screen.getByText(/strong, memorable passphrase/i)).toBeInTheDocument();
-      expect(screen.getByText(/lock the bridge/i)).toBeInTheDocument();
+      // Multiple instances of "lock the bridge" exist on the page
+      expect(screen.getAllByText(/lock the bridge/i).length).toBeGreaterThan(0);
     });
   });
 
