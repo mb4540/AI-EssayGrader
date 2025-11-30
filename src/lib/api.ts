@@ -67,12 +67,9 @@ export async function ingestSubmission(data: IngestRequest) {
 export async function startGradingJob(data: GradeRequest) {
   const customPrompts = getCustomPrompts();
 
-  // Get LLM settings
-  const llmProvider = localStorage.getItem('ai_provider') || 'openai';
-  const geminiModel = localStorage.getItem('ai_model_gemini') || 'gemini-2.0-flash';
-  const openaiModel = localStorage.getItem('ai_model_openai') || 'gpt-4o-mini';
-
-  const llmModel = llmProvider === 'gemini' ? geminiModel : openaiModel;
+  // Get LLM settings (default to Gemini 2.5 Pro)
+  const llmProvider = localStorage.getItem('ai_provider') || 'gemini';
+  const llmModel = llmProvider === 'gemini' ? 'gemini-2.5-pro' : 'gpt-4o';
 
   const response = await fetch(`${API_BASE}/grade-bulletproof-trigger`, {
     method: 'POST',
