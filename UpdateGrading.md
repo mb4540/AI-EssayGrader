@@ -899,3 +899,407 @@ if (invalidAnnotations.length > 0) {
 **CRITICAL - Should be fixed BEFORE implementing Assignment Prompt feature**
 
 This bug affects the core grading output and causes confusion for teachers. Fix this first, then implement the Assignment Prompt feature.
+
+---
+
+## Additional Feature Requests
+
+### Phase 7: Non-Graded Annotations (ELAR Issues)
+
+#### Overview
+Add ability to identify general ELAR issues (spelling, grammar, punctuation) that are called out to students but **do NOT affect the grade** unless specifically included in the rubric.
+
+#### Requirements
+
+**1. Enable/Disable Non-Graded Annotations**
+- **Location**: Settings Modal → New "Annotation Settings" tab
+- **Control**: Checkbox labeled "Identify spelling, grammar, and punctuation errors"
+- **Behavior**:
+  - When enabled: LLM identifies these issues as separate annotations
+  - When disabled: LLM only identifies issues related to rubric criteria
+  - Default: Enabled (most teachers want to see these)
+
+**Storage:**
+```typescript
+localStorage.setItem('enable_non_graded_annotations', 'true');
+```
+
+**2. Non-Graded Annotation Properties**
+- **Category**: Use special category `non_graded` (not a rubric criterion)
+- **Subcategory**: `spelling`, `grammar`, `punctuation`, `mechanics`
+- **Severity**: Always `info` (not `warning` or `error`)
+- **Points Impact**: 0 (does not affect grade)
+
+**Example Annotation:**
+```json
+{
+  "line": 3,
+  "quote": "characrasteics",
+  "category": "non_graded",
+  "subcategory": "spelling",
+  "suggestion": "The correct spelling is 'characteristics'.",
+  "severity": "info",
+  "affects_grade": false
+}
+```
+
+**3. LLM Prompt Updates**
+
+**File:** `src/lib/prompts/extractor.ts`
+
+Add to annotation instructions:
+```typescript
+const enableNonGradedAnnotations = localStorage.getItem('enable_non_graded_annotations') === 'true';
+
+if (enableNonGradedAnnotations) {
+  prompt += `
+ADDITIONAL ANNOTATIONS (DO NOT AFFECT GRADE):
+- Identify spelling errors (category: "non_graded", subcategory: "spelling")
+- Identify grammar errors (category: "non_graded", subcategory: "grammar")
+- Identify punctuation errors (category: "non_graded", subcategory: "punctuation")
+- These are for STUDENT LEARNING ONLY - they do NOT reduce the grade
+- Mark all non-graded annotations with "affects_grade": false
+`;
+}
+```
+
+**4. Display in UI**
+
+**VerbatimViewer (Interactive View):**
+- Non-graded annotations: Light blue underline (vs. yellow/orange/red for graded)
+- Tooltip shows: "ℹ️ Spelling - Does not affect grade"
+
+**Print View:**
+- Non-graded annotations: Light blue highlight
+- Graded annotations: Color-coded by category (see Phase 8)
+
+---
+
+### Phase 8: Color-Coded Annotation Highlighting
+
+#### Overview
+Use different colors for different types of annotations in the print view, with a color key legend.
+
+#### Color Scheme
+
+**Graded Annotations (Rubric Criteria):**
+Each rubric criterion gets a distinct color. Use a color palette that works for up to 8 criteria.
+
+**Suggested Palette:**
+1. **Criterion 1**: Yellow (`#FEF3C7` background, `#92400E` text)
+2. **Criterion 2**: Green (`#D1FAE5` background, `#065F46` text)
+3. **Criterion 3**: Blue (`#DBEAFE` background, `#1E40AF` text)
+4. **Criterion 4**: Purple (`#E9D5FF` background, `#6B21A8` text)
+5. **Criterion 5**: Pink (`#FCE7F3` background, `#9F1239` text)
+6. **Criterion 6**: Orange (`#FED7AA` background, `#9A3412` text)
+7. **Criterion 7**: Teal (`#CCFBF1` background, `#115E59` text)
+8. **Criterion 8**: Indigo (`#E0E7FF` background, `#3730A3` text)
+
+**Non-Graded Annotations:**
+- **Light Blue**: `#BFDBFE` background, `#1E3A8A` text
+- **Label**: "ℹ️ For Learning Only - Does Not Affect Grade"
+
+#### Color Assignment
+
+**Dynamic Assignment Based on Rubric:**
+```typescript
+// Assign colors to rubric criteria dynamically
+const colorPalette = [
+  { bg: '#FEF3C7', text: '#92400E', name: 'Yellow' },
+  { bg: '#D1FAE5', text: '#065F46', name: 'Green' },
+  { bg: '#DBEAFE', text: '#1E40AF', name: 'Blue' },
+  { bg: '#E9D5FF', text: '#6B21A8', name: 'Purple' },
+  { bg: '#FCE7F3', text: '#9F1239', name: 'Pink' },
+  { bg: '#FED7AA', text: '#9A3412', name: 'Orange' },
+  { bg: '#CCFBF1', text: '#115E59', name: 'Teal' },
+  { bg: '#E0E7FF', text: '#3730A3', name: 'Indigo' },
+];
+
+const criterionColors = rubric.criteria.reduce((acc, criterion, index) => {
+  acc[criterion.id] = colorPalette[index % colorPalette.length];
+  return acc;
+}, {});
+
+// Non-graded annotations always use light blue
+criterionColors['non_graded'] = { bg: '#BFDBFE', text: '#1E3A8A', name: 'Light Blue' };
+```
+
+#### Color Key Legend
+
+**Location**: Top of print page, below student/assignment info
+
+**Design:**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ ANNOTATION KEY                                               │
+├─────────────────────────────────────────────────────────────┤
+│ [Yellow] IDEAS & DEVELOPMENT                                 │
+│ [Green]  FOCUS & ORGANIZATION                                │
+│ [Blue]   AUTHOR'S CRAFT                                      │
+│ [Purple] CONVENTIONS                                         │
+│ [Light Blue] ℹ️ Spelling/Grammar - Does Not Affect Grade    │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Implementation:**
+```typescript
+// In print utilities
+function generateColorKey(rubric: RubricJSON, hasNonGradedAnnotations: boolean) {
+  let html = '<div class="annotation-key">';
+  html += '<h3>Annotation Key</h3>';
+  
+  // Graded annotations
+  rubric.criteria.forEach((criterion, index) => {
+    const color = criterionColors[criterion.id];
+    html += `
+      <div class="key-item">
+        <span class="color-box" style="background-color: ${color.bg}; color: ${color.text};">
+          ${color.name}
+        </span>
+        <span class="criterion-name">${criterion.name}</span>
+      </div>
+    `;
+  });
+  
+  // Non-graded annotations
+  if (hasNonGradedAnnotations) {
+    html += `
+      <div class="key-item">
+        <span class="color-box" style="background-color: #BFDBFE; color: #1E3A8A;">
+          Light Blue
+        </span>
+        <span class="criterion-name">ℹ️ Spelling/Grammar - Does Not Affect Grade</span>
+      </div>
+    `;
+  }
+  
+  html += '</div>';
+  return html;
+}
+```
+
+---
+
+### Phase 9: Manual Annotation Addition
+
+#### Overview
+Allow teachers to manually add annotations to student submissions, specifying the line number and feedback.
+
+#### UI Location
+
+**1. Annotation Panel (New Component)**
+- **Location**: Below VerbatimViewer on Grade Submissions page
+- **Trigger**: "Add Annotation" button
+- **Modal/Inline**: Inline form that appears when clicked
+
+**2. Add Annotation Form**
+
+**Fields:**
+- **Line Number** (required): Dropdown or input (1 to max line count)
+- **Category** (required): Dropdown of rubric criteria + "Non-Graded"
+- **Quote** (optional): Auto-filled from selected line, editable
+- **Suggestion** (required): Textarea for teacher's feedback
+- **Severity** (optional): Dropdown (info/warning/error) - defaults based on category
+
+**Design:**
+```tsx
+<div className="add-annotation-form">
+  <h4>Add Manual Annotation</h4>
+  
+  <div className="form-field">
+    <Label>Line Number *</Label>
+    <Select value={lineNumber} onChange={setLineNumber}>
+      {Array.from({ length: totalLines }, (_, i) => (
+        <SelectItem key={i + 1} value={i + 1}>
+          Line {i + 1}: {getLinePreview(i + 1)}
+        </SelectItem>
+      ))}
+    </Select>
+  </div>
+  
+  <div className="form-field">
+    <Label>Category *</Label>
+    <Select value={category} onChange={setCategory}>
+      {rubric.criteria.map(c => (
+        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+      ))}
+      <SelectItem value="non_graded">Non-Graded (Spelling/Grammar)</SelectItem>
+    </Select>
+  </div>
+  
+  <div className="form-field">
+    <Label>Quote (optional)</Label>
+    <Input 
+      value={quote} 
+      onChange={setQuote}
+      placeholder="Specific text with the issue..."
+    />
+  </div>
+  
+  <div className="form-field">
+    <Label>Feedback *</Label>
+    <Textarea 
+      value={suggestion} 
+      onChange={setSuggestion}
+      placeholder="Explain the issue and how to improve..."
+      className="min-h-[100px]"
+    />
+  </div>
+  
+  <div className="form-actions">
+    <Button onClick={handleCancel} variant="outline">Cancel</Button>
+    <Button onClick={handleSave}>Add Annotation</Button>
+  </div>
+</div>
+```
+
+#### Backend Storage
+
+**Database:**
+Manual annotations are stored in the same `grader.annotations` table with an additional field:
+
+```sql
+ALTER TABLE grader.annotations 
+ADD COLUMN source text DEFAULT 'ai';
+
+COMMENT ON COLUMN grader.annotations.source 
+IS 'Source of annotation: ai (LLM-generated) or manual (teacher-added)';
+```
+
+**API Endpoint:**
+```typescript
+// POST /.netlify/functions/add-manual-annotation
+{
+  submission_id: string;
+  line_number: number;
+  category: string;  // rubric criterion ID or 'non_graded'
+  quote?: string;
+  suggestion: string;
+  severity?: 'info' | 'warning' | 'error';
+  source: 'manual';
+}
+```
+
+#### Display in UI
+
+**VerbatimViewer:**
+- Manual annotations appear alongside AI annotations
+- Badge shows "👤 Teacher" vs "🤖 AI"
+- Manual annotations can be edited/deleted by teacher
+
+**Print View:**
+- Manual annotations use the same color scheme
+- No distinction between AI and manual (both are feedback)
+
+#### Edit/Delete Manual Annotations
+
+**Edit:**
+- Click on manual annotation in VerbatimViewer
+- Form pre-fills with existing data
+- Save updates the annotation
+
+**Delete:**
+- Trash icon next to manual annotations
+- Confirmation dialog: "Delete this annotation?"
+- Only manual annotations can be deleted (AI annotations are read-only)
+
+---
+
+## Implementation Priority (Updated)
+
+**Phase 1 (CRITICAL - Fix First):**
+- Phase 6: Fix annotation category inconsistency
+
+**Phase 2 (High Priority):**
+- Phase 1-5: Assignment Prompt feature
+- Phase 7: Non-graded annotations
+
+**Phase 3 (Medium Priority):**
+- Phase 8: Color-coded highlighting
+- Phase 9: Manual annotation addition
+
+**Phase 4 (Low Priority):**
+- Testing and refinement
+- Documentation updates
+
+---
+
+## Files to Modify (Updated)
+
+### Phase 7: Non-Graded Annotations
+- [ ] `src/components/SettingsModal.tsx` - Add "Annotation Settings" tab
+- [ ] `src/lib/prompts/extractor.ts` - Add non-graded annotation instructions
+- [ ] `src/lib/annotations/types.ts` - Add `affects_grade` and `subcategory` fields
+- [ ] `src/components/VerbatimViewer.tsx` - Different styling for non-graded
+- [ ] `src/lib/print/printUtils.ts` - Light blue highlight for non-graded
+
+### Phase 8: Color-Coded Highlighting
+- [ ] `src/lib/print/printUtils.ts` - Implement color palette and key legend
+- [ ] `src/lib/print/printStyles.ts` - Add color styles
+- [ ] `src/components/VerbatimViewer.tsx` - Apply colors in interactive view
+
+### Phase 9: Manual Annotations
+- [ ] `migrations/add_annotation_source.sql` - Add `source` column
+- [ ] `netlify/functions/add-manual-annotation.ts` - NEW endpoint
+- [ ] `netlify/functions/update-annotation.ts` - NEW endpoint
+- [ ] `netlify/functions/delete-annotation.ts` - NEW endpoint
+- [ ] `src/lib/api/annotations.ts` - NEW API client
+- [ ] `src/components/AddAnnotationForm.tsx` - NEW component
+- [ ] `src/components/VerbatimViewer.tsx` - Show manual annotations with badge
+- [ ] `src/pages/Submission.tsx` - Integrate AddAnnotationForm
+
+---
+
+## Questions to Resolve (New)
+
+### Phase 7: Non-Graded Annotations
+
+1. **Setting Location**: Should the enable/disable toggle be:
+   - **Option A**: Global setting in Settings Modal (applies to all grading)
+   - **Option B**: Per-assignment setting in CreateAssignmentModal
+   - **Option C**: Per-submission toggle on Grade Submissions page
+   - **Recommendation**: Option A (global setting) - most teachers want consistent behavior
+
+2. **Annotation Count**: Should non-graded annotations:
+   - Count toward total annotation count?
+   - Be shown in annotation stats (e.g., "15 annotations, 3 non-graded")?
+   - **Recommendation**: Show separately: "12 graded, 3 informational"
+
+3. **Filtering**: Should teachers be able to:
+   - Hide non-graded annotations in the UI?
+   - Toggle them on/off in print view?
+   - **Recommendation**: Yes, add filter toggle
+
+### Phase 8: Color-Coded Highlighting
+
+1. **Color Assignment**: Should colors be:
+   - **Option A**: Automatically assigned in order (criterion 1 = yellow, criterion 2 = green, etc.)
+   - **Option B**: Teacher-customizable per rubric
+   - **Recommendation**: Option A (automatic) for simplicity
+
+2. **Rubrics with >8 Criteria**: What if a rubric has more than 8 criteria?
+   - Repeat colors (criterion 9 uses yellow again)?
+   - Use shades/variations?
+   - **Recommendation**: Repeat colors with pattern indicator
+
+3. **Accessibility**: Should we:
+   - Add patterns (stripes, dots) in addition to colors for colorblind users?
+   - Provide high-contrast mode?
+   - **Recommendation**: Yes, add optional patterns
+
+### Phase 9: Manual Annotations
+
+1. **Timing**: Can teachers add manual annotations:
+   - **Option A**: Only after AI grading completes
+   - **Option B**: Before or after AI grading
+   - **Recommendation**: Option B (more flexible)
+
+2. **Grade Impact**: Should manual annotations:
+   - Affect the grade if they're in a graded category?
+   - Always be informational only?
+   - **Recommendation**: Always informational (grade is AI + teacher override, not annotation-based)
+
+3. **Bulk Operations**: Should teachers be able to:
+   - Add multiple annotations at once?
+   - Import annotations from a template?
+   - **Recommendation**: Future enhancement, not MVP
