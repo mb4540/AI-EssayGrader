@@ -546,13 +546,37 @@ Add to submissions table documentation:
 
 ## CRITICAL BUG FIX: Annotation Category Inconsistency
 
+### Core Principle: Rubric as Source of Truth
+
+**Every rubric is different.** Teachers create rubrics with their own criteria names, point values, and performance levels. The system must work with ANY rubric, not just a specific ELAR rubric.
+
+**The rubric defines:**
+- What criteria exist (e.g., "IDEAS & DEVELOPMENT", "PROBLEM UNDERSTANDING", "THESIS STATEMENT")
+- What the criterion IDs are (e.g., `ideas_development`, `problem_understanding`, `thesis`)
+- What point values are possible (e.g., 0-25 points, 0-10 points)
+
+**The system must:**
+- Use the rubric's criterion IDs for ALL annotations
+- Never use hardcoded generic categories (`Content`, `Mechanics`, etc.)
+- Always look up display names from the rubric object
+- Work identically for ELAR, math, science, history, or any other subject
+
 ### Problem Identified (from OverallOutputs.md)
 
 **Current State - INCONSISTENT HEADERS:**
-- **Rubric Headers**: `IDEAS & DEVELOPMENT | FOCUS & ORGANIZATION | AUTHOR'S CRAFT | CONVENTIONS`
+
+**IMPORTANT:** The rubric headers shown below are from ONE specific rubric. Every rubric will have different criterion names, but the SAME consistency problem exists across all rubrics.
+
+**Example from ELAR Informational Writing Rubric:**
+- **Rubric Headers** (SOURCE OF TRUTH - varies per rubric): `IDEAS & DEVELOPMENT | FOCUS & ORGANIZATION | AUTHOR'S CRAFT | CONVENTIONS`
 - **Detailed Breakdown** (✅ CORRECT): `ideas_development | focus_organization | authors_craft | conventions`
 - **Specific Corrections** (❌ WRONG): `Mechanics | AUTHOR'S CRAFT | CONVENTIONS | IDEAS & DEVELOPMENT | FOCUS & ORGANIZATION | Content | Organization`
 - **Inline Annotations** (❌ WRONG): `Mechanics | Clarity | Content | Organization`
+
+**The Problem:** Annotations are using a mix of:
+1. Generic categories (`Mechanics`, `Content`, `Clarity`, `Organization`) - NOT from rubric
+2. Rubric display names (`AUTHOR'S CRAFT`, `IDEAS & DEVELOPMENT`) - Should be IDs
+3. Correct criterion IDs (`ideas_development`, `focus_organization`) - Only in Detailed Breakdown
 
 ### Root Cause Analysis
 
@@ -584,11 +608,17 @@ However, the LLM is **mixing** these generic categories with **actual rubric cri
 
 Instead of generic categories that don't match the rubric, **use the actual rubric criterion IDs** as annotation categories.
 
+**Key Principle:** The rubric is the **single source of truth**. Every rubric defines its own criteria with:
+- **Display Name** (e.g., "IDEAS & DEVELOPMENT") - What teachers see
+- **Criterion ID** (e.g., "ideas_development") - Internal identifier used in code/annotations
+- **Max Points** (e.g., 25) - Point value for the criterion
+
 **Benefits:**
 1. ✅ **Consistency**: Annotations always match rubric criteria
 2. ✅ **Clarity**: No confusion between generic categories and rubric names
 3. ✅ **Traceability**: Direct link from annotation to rubric criterion
-4. ✅ **Flexibility**: Works with ANY rubric (ELAR, math, science, etc.)
+4. ✅ **Flexibility**: Works with ANY rubric (ELAR, math, science, history, etc.)
+5. ✅ **Rubric-Driven**: The rubric defines what categories exist, not hardcoded generic categories
 
 ---
 
@@ -743,7 +773,11 @@ Apply the same changes to `buildComparisonExtractorPrompt()`:
 
 ### Consistent Headers Across All Sections
 
-**Rubric Headers** (Display Names):
+**IMPORTANT:** The example below uses an ELAR rubric. Your rubric will have different criterion names and IDs, but the same consistency pattern will apply.
+
+**Example: ELAR Informational Writing Rubric**
+
+**Rubric Headers** (Display Names - SOURCE OF TRUTH, varies per rubric):
 ```
 IDEAS & DEVELOPMENT | FOCUS & ORGANIZATION | AUTHOR'S CRAFT | CONVENTIONS
 ```
@@ -763,23 +797,35 @@ ideas_development | focus_organization | authors_craft | conventions
 ideas_development | focus_organization | authors_craft | conventions
 ```
 
+**Example: Math Problem-Solving Rubric (Different Rubric)**
+
+If your rubric has different criteria like:
+- Display Names: `PROBLEM UNDERSTANDING | MATHEMATICAL REASONING | CALCULATION ACCURACY | COMMUNICATION`
+- Criterion IDs: `problem_understanding | math_reasoning | calculation | communication`
+
+Then ALL sections would use: `problem_understanding | math_reasoning | calculation | communication`
+
+**The Pattern:** Whatever criteria are defined in the rubric, those criterion IDs are used consistently across all output sections.
+
 ### Display Mapping
 
-When displaying annotations in the UI, map criterion IDs to display names:
+When displaying annotations in the UI, **always look up the display name from the rubric** (the source of truth):
 
 ```typescript
-// In frontend display code
+// ✅ CORRECT: Look up from rubric (works for ANY rubric)
+const criterion = rubric.criteria.find(c => c.id === annotation.category);
+const displayName = criterion?.name || annotation.category;
+
+// ❌ WRONG: Hardcoded mapping (only works for one specific rubric)
 const criterionDisplayName = {
   'ideas_development': 'IDEAS & DEVELOPMENT',
   'focus_organization': 'FOCUS & ORGANIZATION',
   'authors_craft': 'AUTHOR\'S CRAFT',
   'conventions': 'CONVENTIONS'
 };
-
-// Or better: look up from rubric
-const criterion = rubric.criteria.find(c => c.id === annotation.category);
-const displayName = criterion?.name || annotation.category;
 ```
+
+**Why?** The rubric is the source of truth. Different rubrics have different criteria. Always look up display names dynamically from the rubric object.
 
 ---
 
@@ -843,6 +889,8 @@ if (invalidAnnotations.length > 0) {
 4. **Clarity**: No confusion between generic categories and rubric names
 5. **Maintainability**: Single source of truth (the rubric)
 6. **Accuracy**: LLM can't invent categories that don't exist in the rubric
+7. **Rubric-Driven**: The rubric defines what's possible, not hardcoded generic categories
+8. **Teacher-Friendly**: Teachers see their own rubric criteria, not generic terms
 
 ---
 
