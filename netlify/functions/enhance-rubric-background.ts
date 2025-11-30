@@ -256,20 +256,31 @@ const handler: Handler = async (event: HandlerEvent) => {
     
     if (Array.isArray(rubric)) {
       // Format 1: Direct array of categories
+      console.log('[enhance-rubric-background] Format 1: Direct array');
       normalizedRubric = {
         total_points: totalPoints,
         categories: rubric,
         penalties: [],
       };
+    } else if (rubric.rubric && rubric.rubric.categories && Array.isArray(rubric.rubric.categories)) {
+      // Format 2: Double-nested { rubric: { categories: [...], penalties: [] } }
+      console.log('[enhance-rubric-background] Format 2: Double-nested');
+      normalizedRubric = {
+        total_points: totalPoints,
+        categories: rubric.rubric.categories,
+        penalties: rubric.rubric.penalties || [],
+      };
     } else if (rubric.rubric && Array.isArray(rubric.rubric)) {
-      // Format 2: Wrapped in { rubric: [...], penalties: [] }
+      // Format 3: Wrapped in { rubric: [...], penalties: [] }
+      console.log('[enhance-rubric-background] Format 3: Single-nested array');
       normalizedRubric = {
         total_points: totalPoints,
         categories: rubric.rubric,
         penalties: rubric.penalties || [],
       };
     } else if (rubric.categories && Array.isArray(rubric.categories)) {
-      // Format 3: Expected format { categories: [...], penalties: [], total_points: ... }
+      // Format 4: Expected format { categories: [...], penalties: [], total_points: ... }
+      console.log('[enhance-rubric-background] Format 4: Expected format');
       normalizedRubric = rubric;
     } else {
       console.error('[enhance-rubric-background] Invalid rubric structure:', rubric);
@@ -277,6 +288,7 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
     
     rubric = normalizedRubric;
+    console.log('[enhance-rubric-background] Normalized to:', rubric.categories.length, 'categories');
 
     // Convert to markdown
     const enhancedRubric = convertRubricToMarkdown(rubric);
