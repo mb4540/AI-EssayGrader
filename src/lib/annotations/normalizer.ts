@@ -109,29 +109,20 @@ export function normalizeAnnotations(
 
 /**
  * Validate and normalize category
+ * 
+ * PHASE 0 UPDATE: Now accepts rubric criterion IDs (e.g., "ideas_development")
+ * instead of hardcoded generic categories. Any non-empty string is valid.
  */
 function validateCategory(category: string): AnnotationCategory | null {
-  const validCategories: AnnotationCategory[] = [
-    'Content',
-    'Evidence',
-    'Organization',
-    'Clarity',
-    'Mechanics',
-    'Other',
-  ];
-
-  // Try exact match
-  if (validCategories.includes(category as AnnotationCategory)) {
-    return category as AnnotationCategory;
+  // Accept any non-empty string as a valid category
+  // The category should be a rubric criterion ID (e.g., "ideas_development")
+  // or a legacy category for backwards compatibility
+  if (!category || category.trim() === '') {
+    return null;
   }
 
-  // Try case-insensitive match
-  const normalized = category.charAt(0).toUpperCase() + category.slice(1).toLowerCase();
-  if (validCategories.includes(normalized as AnnotationCategory)) {
-    return normalized as AnnotationCategory;
-  }
-
-  return null;
+  // Return the category as-is (it's a rubric criterion ID)
+  return category as AnnotationCategory;
 }
 
 /**
