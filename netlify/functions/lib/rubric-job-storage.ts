@@ -26,8 +26,23 @@ const JOB_EXPIRY = 60 * 60 * 1000; // 1 hour
 
 /**
  * Get the blob store for jobs
+ * Supports both production (auto-configured) and local dev (manual config)
  */
 function getJobStore() {
+  // For local development, explicitly pass siteID and token from env vars
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN;
+  
+  if (siteID && token) {
+    // Local development with explicit credentials
+    return getStore({
+      name: 'rubric-jobs',
+      siteID,
+      token,
+    });
+  }
+  
+  // Production - Netlify automatically provides credentials
   return getStore('rubric-jobs');
 }
 
