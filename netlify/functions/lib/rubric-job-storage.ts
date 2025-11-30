@@ -29,32 +29,23 @@ const JOB_EXPIRY = 60 * 60 * 1000; // 1 hour
  * Supports both production (auto-configured) and local dev (manual config)
  */
 function getJobStore() {
-  try {
-    // For local development, explicitly pass siteID and token from env vars
-    const siteID = process.env.NETLIFY_SITE_ID;
-    const token = process.env.NETLIFY_AUTH_TOKEN;
-    
-    if (siteID && token) {
-      // Local development with explicit credentials
-      console.log('[rubric-jobs] Using explicit Netlify credentials');
-      return getStore({
-        name: 'rubric-jobs',
-        siteID,
-        token,
-      });
-    }
-    
-    // Production - Netlify automatically provides credentials
-    console.log('[rubric-jobs] Using auto-configured Netlify Blobs');
-    return getStore('rubric-jobs');
-  } catch (error: any) {
-    console.error('[rubric-jobs] Failed to initialize Netlify Blobs:', error.message);
-    throw new Error(
-      'Netlify Blobs is not configured. ' +
-      'Please ensure Netlify Blobs is enabled for this site. ' +
-      'Visit: https://app.netlify.com/sites/YOUR_SITE/configuration/env'
-    );
+  // For local development, explicitly pass siteID and token from env vars
+  const siteID = process.env.NETLIFY_SITE_ID;
+  const token = process.env.NETLIFY_AUTH_TOKEN;
+  
+  if (siteID && token) {
+    // Local development with explicit credentials
+    console.log('[rubric-jobs] Using explicit Netlify credentials');
+    return getStore({
+      name: 'rubric-jobs',
+      siteID,
+      token,
+    });
   }
+  
+  // Production - Netlify automatically provides credentials
+  console.log('[rubric-jobs] Using auto-configured Netlify Blobs');
+  return getStore('rubric-jobs');
 }
 
 /**
