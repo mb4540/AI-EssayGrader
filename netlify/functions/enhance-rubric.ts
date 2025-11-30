@@ -117,11 +117,12 @@ function buildRubricEnhancementPrompt(totalPoints: number): string {
 Your task depends on the input provided:
 
 **IF the input is a COMPREHENSIVE RUBRIC** (detailed scoring criteria with multiple levels):
-- Keep ALL scoring criteria, descriptions, and levels EXACTLY as written
+- Keep ALL category names, scoring criteria, descriptions, and levels EXACTLY as written
+- PRESERVE the exact category titles/names (e.g., "IDEAS & DEVELOPMENT", "FOCUS & ORGANIZATION")
 - ONLY reformat to match the required structure
 - Use EXACTLY ${totalPoints} total points (adjust point values proportionally if needed)
-- Preserve the teacher's exact wording and intent
-- Do NOT add, remove, or change any criteria descriptions
+- Preserve the teacher's exact wording and intent for both category names AND descriptions
+- Do NOT add, remove, or change any category names or criteria descriptions
 
 **IF the input is SIMPLE RULES** (just a few words or brief guidelines):
 - Create a detailed, comprehensive rubric
@@ -143,7 +144,10 @@ Your task depends on the input provided:
 - Keep descriptions concise (1-2 sentences per level)
 - If no penalties mentioned, return penalties: []
 
-**IMPORTANT:** If the input already has detailed scoring criteria (like "Score: 4", "Score: 3", etc.), preserve those exact descriptions and only convert to the required JSON structure.
+**IMPORTANT:** 
+- If the input already has detailed scoring criteria (like "Score: 4", "Score: 3", etc.), preserve those exact descriptions and only convert to the required JSON structure.
+- If the input has category names/titles (like "IDEAS & DEVELOPMENT", "FOCUS & ORGANIZATION", "AUTHOR'S CRAFT", "CONVENTIONS"), you MUST preserve those exact names in the "name" field of each category.
+- NEVER use "undefined" or generic names - always extract and preserve the original category titles.
 
 Return a structured JSON object that will be used for grading.`;
 }
