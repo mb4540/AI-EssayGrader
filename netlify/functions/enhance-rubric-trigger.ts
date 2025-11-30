@@ -47,9 +47,23 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Create job
-    const job = await createJob('enhance');
-
-    console.log(`[enhance-rubric-trigger] Created job ${job.jobId}`);
+    console.log('[enhance-rubric-trigger] Creating job...');
+    let job;
+    try {
+      job = await createJob('enhance');
+      console.log(`[enhance-rubric-trigger] Created job ${job.jobId}`);
+    } catch (jobError: any) {
+      console.error('[enhance-rubric-trigger] Failed to create job:', jobError);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to create background job',
+          details: jobError.message,
+        }),
+      };
+    }
     console.log(`[enhance-rubric-trigger] Rules length: ${simple_rules.length} characters`);
 
     // Trigger background function

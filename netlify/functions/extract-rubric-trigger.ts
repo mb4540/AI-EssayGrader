@@ -47,9 +47,23 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Create job
-    const job = await createJob('extract');
-
-    console.log(`[extract-rubric-trigger] Created job ${job.jobId} for file: ${fileName}`);
+    console.log('[extract-rubric-trigger] Creating job...');
+    let job;
+    try {
+      job = await createJob('extract');
+      console.log(`[extract-rubric-trigger] Created job ${job.jobId} for file: ${fileName}`);
+    } catch (jobError: any) {
+      console.error('[extract-rubric-trigger] Failed to create job:', jobError);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          success: false,
+          error: 'Failed to create background job',
+          details: jobError.message,
+        }),
+      };
+    }
 
     // Trigger background function
     const backgroundUrl = `${event.rawUrl.replace('/extract-rubric-trigger', '/extract-rubric-background')}`;
