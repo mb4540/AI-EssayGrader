@@ -98,14 +98,14 @@ export async function checkEnhancementStatus(jobId: string): Promise<RubricJobRe
  * @param jobId - Job ID to poll
  * @param checkStatus - Function to check status (checkExtractionStatus or checkEnhancementStatus)
  * @param onProgress - Callback for progress updates
- * @param maxAttempts - Maximum polling attempts (default: 60 = 2 minutes at 2s intervals)
+ * @param maxAttempts - Maximum polling attempts (default: 150 = 5 minutes at 2s intervals)
  * @param interval - Polling interval in ms (default: 2000 = 2 seconds)
  */
 export async function pollJobStatus(
   jobId: string,
   checkStatus: (jobId: string) => Promise<RubricJobResponse>,
   onProgress?: (status: JobStatus) => void,
-  maxAttempts: number = 60,
+  maxAttempts: number = 150,
   interval: number = 2000
 ): Promise<RubricJobResponse> {
   let attempts = 0;
