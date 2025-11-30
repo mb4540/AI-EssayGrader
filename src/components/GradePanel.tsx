@@ -7,6 +7,7 @@ import { Loader2, CheckCircle, Calculator } from 'lucide-react';
 import type { Feedback } from '@/lib/schema';
 import type { ComputedScores, ExtractedScoresJSON } from '@/lib/calculator/types';
 import type { Annotation } from '@/lib/annotations/types';
+import { getAnnotationDisplayLabel } from '@/lib/annotations/display';
 
 interface GradePanelProps {
   aiFeedback: Feedback | null;
@@ -323,11 +324,9 @@ export default function GradePanel({
                           .filter(a => a.status !== 'teacher_rejected')
                           .map((annotation, idx) => {
                             // Get rubric criterion name if available
+                            // Phase 0: Use helper function to look up display name
                             const rubric = (aiFeedback as any).bulletproof?.rubric;
-                            const criterion = annotation.criterion_id
-                              ? rubric?.criteria?.find((c: any) => c.id === annotation.criterion_id)
-                              : null;
-                            const displayLabel = criterion?.name || annotation.category;
+                            const displayLabel = getAnnotationDisplayLabel(annotation, rubric);
 
                             return (
                               <li key={annotation.annotation_id || idx} className="text-sm text-purple-900 dark:text-purple-100 pl-3 border-l-2 border-purple-300 dark:border-purple-700 pl-3">
