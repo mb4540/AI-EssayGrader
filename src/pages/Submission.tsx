@@ -37,8 +37,8 @@ export default function Submission() {
           onPrint={actions.handlePrint}
         />
 
-        {/* Top Row: Student Info and Grading Criteria side by side */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Student Information - Full Width */}
+        <div className="mb-6">
           <StudentInfoCard
             bridge={state.bridge}
             selectedStudentUuid={state.selectedStudentUuid}
@@ -53,18 +53,18 @@ export default function Submission() {
             setEditingAssignment={state.setEditingAssignment}
             setIsEditModalOpen={state.setIsEditModalOpen}
           />
+        </div>
 
-          {/* Grading Criteria */}
-          <div className="transform transition-all duration-300">
-            <CriteriaInput
-              value={state.criteria}
-              onChange={state.setCriteria}
-              totalPoints={state.totalPoints}
-              onTotalPointsChange={state.setTotalPoints}
-              assignmentPrompt={state.assignmentPrompt}
-              onAssignmentPromptChange={state.setAssignmentPrompt}
-            />
-          </div>
+        {/* Grading Criteria - Full Width */}
+        <div className="mb-6 transform transition-all duration-300">
+          <CriteriaInput
+            value={state.criteria}
+            onChange={state.setCriteria}
+            totalPoints={state.totalPoints}
+            onTotalPointsChange={state.setTotalPoints}
+            assignmentPrompt={state.assignmentPrompt}
+            onAssignmentPromptChange={state.setAssignmentPrompt}
+          />
         </div>
 
         {/* Essay Section */}
