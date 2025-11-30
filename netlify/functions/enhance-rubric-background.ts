@@ -148,7 +148,33 @@ Your task depends on the input provided:
 - If the input has category names/titles (like "IDEAS & DEVELOPMENT", "FOCUS & ORGANIZATION", "AUTHOR'S CRAFT", "CONVENTIONS"), you MUST preserve those exact names in the "name" field of each category.
 - NEVER use "undefined" or generic names - always extract and preserve the original category titles.
 
-Return a structured JSON object that will be used for grading.`;
+**REQUIRED JSON OUTPUT FORMAT:**
+You MUST return ONLY valid JSON in this EXACT structure (no markdown, no code blocks, just raw JSON):
+
+{
+  "total_points": ${totalPoints},
+  "categories": [
+    {
+      "name": "Category Name",
+      "points": 25,
+      "levels": [
+        {
+          "label": "Exemplary",
+          "points": 25,
+          "description": "Description of what exemplary work looks like"
+        },
+        {
+          "label": "Proficient",
+          "points": 20,
+          "description": "Description of proficient work"
+        }
+      ]
+    }
+  ],
+  "penalties": []
+}
+
+CRITICAL: Return ONLY this JSON structure. Do NOT wrap it in { "rubric": ... } or any other object. The top-level keys must be "total_points", "categories", and "penalties".`;
 }
 
 const handler: Handler = async (event: HandlerEvent) => {
