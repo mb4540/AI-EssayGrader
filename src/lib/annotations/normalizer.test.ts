@@ -68,18 +68,19 @@ This sentence has a spelling eror in it.`;
       expect(result.stats.resolved).toBe(2);
     });
 
-    it('should handle case-insensitive category matching', () => {
+    it('should preserve category case (Phase 0: rubric criterion IDs)', () => {
+      // Phase 0: Categories are rubric criterion IDs, preserved as-is
       const rawAnnotations: RawAnnotation[] = [
         {
           line: 1,
           quote: 'test essay',
-          category: 'clarity', // lowercase
+          category: 'clarity', // lowercase preserved
           suggestion: 'Test',
         },
         {
           line: 1,
-          quote: 'literature',
-          category: 'MECHANICS', // uppercase
+          quote: 'test essay',
+          category: 'MECHANICS', // uppercase preserved
           suggestion: 'Test',
         },
       ];
@@ -87,25 +88,26 @@ This sentence has a spelling eror in it.`;
       const result = normalizeAnnotations(rawAnnotations, sampleText, submissionId);
 
       expect(result.normalized).toHaveLength(2);
-      expect(result.normalized[0].category).toBe('Clarity');
-      expect(result.normalized[1].category).toBe('Mechanics');
+      expect(result.normalized[0].category).toBe('clarity'); // Preserved as-is
+      expect(result.normalized[1].category).toBe('MECHANICS'); // Preserved as-is
     });
 
-    it('should mark annotation as unresolved if category is invalid', () => {
+    it('should accept any non-empty category (Phase 0: rubric criterion IDs)', () => {
+      // Phase 0: Categories are now dynamic rubric criterion IDs
       const rawAnnotations: RawAnnotation[] = [
         {
           line: 1,
           quote: 'test essay',
-          category: 'InvalidCategory',
+          category: 'ideas_development', // Rubric criterion ID
           suggestion: 'Test',
         },
       ];
 
       const result = normalizeAnnotations(rawAnnotations, sampleText, submissionId);
 
-      expect(result.normalized).toHaveLength(0);
-      expect(result.unresolved).toHaveLength(1);
-      expect(result.unresolved[0].reason).toContain('Invalid category');
+      expect(result.normalized).toHaveLength(1);
+      expect(result.normalized[0].category).toBe('ideas_development');
+      expect(result.unresolved).toHaveLength(0);
     });
 
     it('should mark annotation as unresolved if quote not found', () => {
@@ -256,15 +258,9 @@ This sentence has a spelling eror in it.`;
       const rawAnnotations: RawAnnotation[] = [
         {
           line: 1,
-          quote: 'test essay',
+          quote: 'test',
           category: 'Clarity',
           suggestion: 'Valid 1',
-        },
-        {
-          line: 1,
-          quote: 'nonexistent',
-          category: 'Clarity',
-          suggestion: 'Invalid - not found',
         },
         {
           line: 2,
@@ -275,18 +271,77 @@ This sentence has a spelling eror in it.`;
         {
           line: 1,
           quote: 'test',
-          category: 'InvalidCategory',
-          suggestion: 'Invalid - bad category',
+          category: 'ideas_development', // Phase 0: Now valid (rubric criterion ID)
+          suggestion: 'Valid 3 - rubric criterion',
+        },
+        {
+          line: 1,
+          quote: 'nonexistent',
+          category: 'Clarity',
+          suggestion: 'Invalid - not found',
         },
       ];
 
       const result = normalizeAnnotations(rawAnnotations, sampleText, submissionId);
 
       expect(result.stats.total).toBe(4);
-      expect(result.stats.resolved).toBe(2);
-      expect(result.stats.unresolved).toBe(2);
-      expect(result.normalized).toHaveLength(2);
-      expect(result.unresolved).toHaveLength(2);
+      expect(result.stats.resolved).toBe(3); // Phase 0: One more is now valid
+      expect(result.stats.unresolved).toBe(1); // Phase 0: One less unresolved
+      expect(result.normalized).toHaveLength(3); // Phase 0: Three valid now
+      expect(result.unresolved).toHaveLength(1);
+    });
+
+    it('should handle very long quotes', () => {
+      const longQuote = 'This is a test essay about literature and writing';
+      const rawAnnotations: RawAnnotation[] = [
+        {
+          line: 1,
+          quote: longQuote,
+          category: 'Clarity',
+          suggestion: 'Break into shorter sentences',
+        },
+      ];
+
+      const result = normalizeAnnotations(rawAnnotations, sampleText, submissionId);
+
+      expect(result.normalized).toHaveLength(1);
+      expect(result.normalized[0].quote).toBe(longQuote);
+    });
+
+    it('should handle quotes with leading/trailing whitespace', () => {
+      const rawAnnotations: RawAnnotation[] = [
+        {
+          line: 1,
+          quote: '  test essay  ',
+          category: 'Clarity',
+          suggestion: 'Test',
+        },
+      ];
+
+      const result = normalizeAnnotations(rawAnnotations, sampleText, submissionId);
+
+      // Should still find the text (fuzzy matching handles whitespace)
+      expect(result.normalized.length + result.unresolved.length).toBe(1);
+    });
+
+    it('should handle multi-line text', () => {
+      const multiLineText = `Line one has text.
+Line two has more text.
+Line three continues.`;
+
+      const rawAnnotations: RawAnnotation[] = [
+        {
+          line: 2,
+          quote: 'Line two',
+          category: 'Clarity',
+          suggestion: 'Test',
+        },
+      ];
+
+      const result = normalizeAnnotations(rawAnnotations, multiLineText, submissionId);
+
+      expect(result.normalized).toHaveLength(1);
+      expect(result.normalized[0].line_number).toBe(2);
     });
   });
 
@@ -314,15 +369,29 @@ This sentence has a spelling eror in it.`;
       expect(annotation.status).toBe('ai_suggested');
     });
 
-    it('should default to "Other" category if invalid', () => {
+    it('should preserve any non-empty category (Phase 0: rubric criterion IDs)', () => {
+      // Phase 0: Any non-empty string is a valid category (rubric criterion ID)
       const raw: RawAnnotation = {
         line: 1,
         quote: 'test',
-        category: 'InvalidCategory',
+        category: 'custom_rubric_criterion',
         suggestion: 'Test',
       };
 
-      const annotation = createUnmatchedAnnotation(raw, submissionId, 'Invalid category');
+      const annotation = createUnmatchedAnnotation(raw, submissionId, 'Test reason');
+
+      expect(annotation.category).toBe('custom_rubric_criterion'); // Preserved as-is
+    });
+
+    it('should default to "Other" only if category is empty', () => {
+      const raw: RawAnnotation = {
+        line: 1,
+        quote: 'test',
+        category: '', // Empty category
+        suggestion: 'Test',
+      };
+
+      const annotation = createUnmatchedAnnotation(raw, submissionId, 'Empty category');
 
       expect(annotation.category).toBe('Other');
     });

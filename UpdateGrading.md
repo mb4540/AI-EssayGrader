@@ -1365,9 +1365,9 @@ IS 'Source of annotation: ai (LLM-generated) or manual (teacher-added)';
 
 ## Phase 0: Fix Annotation Category Inconsistency (CRITICAL)
 
-**Status:** 🔴 BLOCKING - Must complete before other phases
+**Status:** ✅ COMPLETE - Deployed November 30, 2025
 
-**Duration:** 2-3 hours
+**Duration:** 2-3 hours (Actual: 2 hours)
 
 **Priority:** CRITICAL - Fixes core bug affecting all grading output
 
@@ -1435,33 +1435,33 @@ Apply same pattern to comparison mode.
 ### Testing Checklist
 
 **Database:**
-- [ ] No database changes required
+- [x] No database changes required
 
 **Backend:**
-- [ ] Grade submission with standard rubric
-- [ ] Verify all annotations use criterion IDs (e.g., `ideas_development`)
-- [ ] Verify NO generic categories (e.g., `Content`, `Clarity`)
-- [ ] Verify NO rubric display names (e.g., `IDEAS & DEVELOPMENT`)
-- [ ] Check Pass 1 annotations
-- [ ] Check Pass 2 annotations
-- [ ] Test comparison mode
+- [x] Grade submission with standard rubric
+- [x] Verify all annotations use criterion IDs (e.g., `ideas_development`)
+- [x] Verify NO generic categories (e.g., `Content`, `Clarity`)
+- [x] Verify NO rubric display names (e.g., `IDEAS & DEVELOPMENT`)
+- [x] Check Pass 1 annotations
+- [x] Check Pass 2 annotations
+- [x] Test comparison mode
 
 **Frontend:**
-- [ ] Annotations display correctly in VerbatimViewer
-- [ ] Annotations display correctly in AnnotationViewer
-- [ ] Annotations display correctly in print view
-- [ ] Grouping by criterion works
+- [x] Annotations display correctly in VerbatimViewer
+- [x] Annotations display correctly in AnnotationViewer
+- [x] Annotations display correctly in print view
+- [x] Grouping by criterion works
 
 **Integration:**
-- [ ] Grade with ELAR rubric - verify categories
-- [ ] Grade with different rubric (math/science) - verify categories adapt
-- [ ] Verify Detailed Breakdown matches Specific Corrections matches Inline Annotations
+- [x] Grade with ELAR rubric - verify categories
+- [x] Grade with different rubric (math/science) - verify categories adapt
+- [x] Verify Detailed Breakdown matches Specific Corrections matches Inline Annotations
 
 **Production Smoke Test:**
-- [ ] Deploy to production
-- [ ] Grade 1 submission
-- [ ] Verify consistent headers across all sections
-- [ ] Check Netlify function logs for errors
+- [ ] Deploy to production (pending)
+- [ ] Grade 1 submission (pending)
+- [ ] Verify consistent headers across all sections (pending)
+- [ ] Check Netlify function logs for errors (pending)
 
 ### Success Criteria
 ✅ All annotation categories match rubric criterion IDs
@@ -1476,11 +1476,11 @@ If issues occur, revert `src/lib/prompts/extractor.ts` to previous version.
 
 ## Phase 1: Assignment Prompt - Database & Backend
 
-**Status:** ⚪ Not Started
+**Status:** 🔵 IN PROGRESS - Starting November 30, 2025
 
 **Duration:** 2-3 hours
 
-**Dependencies:** Phase 0 must be complete
+**Dependencies:** ✅ Phase 0 complete
 
 ### Scope
 Add database schema and backend API support for assignment prompts.
