@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare, Brain } from 'lucide-react';
 import AnnotatedTextViewer from './AnnotatedTextViewer';
 import { getInlineAnnotations, updateInlineAnnotation } from '@/lib/api';
 import type { Annotation } from '@/lib/annotations/types';
+import type { RubricJSON } from '@/lib/calculator/types';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useTextEnhancement } from '@/hooks/useTextEnhancement';
 
@@ -20,6 +21,7 @@ interface VerbatimViewerProps {
   submissionId?: string;
   showAnnotations?: boolean;
   annotationsRefreshKey?: number; // Used to trigger annotation refresh
+  rubric?: RubricJSON | null; // Phase 0: For displaying criterion names
   // Customization props for reuse in Draft Comparison
   title?: string;
   titleIcon?: string;
@@ -42,6 +44,7 @@ export default function VerbatimViewer({
   submissionId,
   showAnnotations = false,
   annotationsRefreshKey,
+  rubric,
   title = "Student Essay (Verbatim)",
   titleIcon = "📝",
   borderColor = "border-emerald-500",
@@ -347,6 +350,7 @@ export default function VerbatimViewer({
                       text={text}
                       submissionId={submissionId}
                       annotations={annotations}
+                      rubric={rubric}
                       onAnnotationUpdate={handleAnnotationUpdate}
                       onAnnotationAdd={handleAnnotationAdd}
                     />

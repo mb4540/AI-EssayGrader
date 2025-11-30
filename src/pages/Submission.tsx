@@ -76,6 +76,7 @@ export default function Submission() {
           submissionId={state.submissionId}
           aiFeedback={state.aiFeedback}
           annotationsRefreshKey={state.annotationsRefreshKey}
+          rubric={(state.aiFeedback as any)?.bulletproof?.rubric}
           roughDraftText={state.roughDraftText}
           finalDraftText={state.finalDraftText}
           roughDraftSourceType={state.roughDraftSourceType}
