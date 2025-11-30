@@ -251,11 +251,32 @@ const handler: Handler = async (event: HandlerEvent) => {
       throw new Error(`Failed to parse LLM response: ${parseError.message}`);
     }
 
-    // Validate rubric structure
-    if (!rubric.categories || !Array.isArray(rubric.categories)) {
+    // Normalize rubric structure - Gemini returns different formats
+    let normalizedRubric;
+    
+    if (Array.isArray(rubric)) {
+      // Format 1: Direct array of categories
+      normalizedRubric = {
+        total_points: totalPoints,
+        categories: rubric,
+        penalties: [],
+      };
+    } else if (rubric.rubric && Array.isArray(rubric.rubric)) {
+      // Format 2: Wrapped in { rubric: [...], penalties: [] }
+      normalizedRubric = {
+        total_points: totalPoints,
+        categories: rubric.rubric,
+        penalties: rubric.penalties || [],
+      };
+    } else if (rubric.categories && Array.isArray(rubric.categories)) {
+      // Format 3: Expected format { categories: [...], penalties: [], total_points: ... }
+      normalizedRubric = rubric;
+    } else {
       console.error('[enhance-rubric-background] Invalid rubric structure:', rubric);
       throw new Error('LLM returned invalid rubric structure - missing or invalid categories array');
     }
+    
+    rubric = normalizedRubric;
 
     // Convert to markdown
     const enhancedRubric = convertRubricToMarkdown(rubric);
