@@ -61,6 +61,8 @@ export default function Submission() {
               onChange={state.setCriteria}
               totalPoints={state.totalPoints}
               onTotalPointsChange={state.setTotalPoints}
+              assignmentPrompt={state.assignmentPrompt}
+              onAssignmentPromptChange={state.setAssignmentPrompt}
             />
           </div>
         </div>

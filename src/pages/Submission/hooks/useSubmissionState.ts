@@ -15,6 +15,7 @@ export function useSubmissionState() {
     const [studentName, setStudentName] = useState('');
     const [studentId, setStudentId] = useState('');
     const [assignmentId, setAssignmentId] = useState<string | undefined>();
+    const [assignmentPrompt, setAssignmentPrompt] = useState('');
     const [criteria, setCriteria] = useState('');
     const [totalPoints, setTotalPoints] = useState(100);
     const [verbatimText, setVerbatimText] = useState('');
@@ -53,6 +54,9 @@ export function useSubmissionState() {
             }
             if (selectedAssignment?.total_points) {
                 setTotalPoints(selectedAssignment.total_points);
+            }
+            if (selectedAssignment?.assignment_prompt) {
+                setAssignmentPrompt(selectedAssignment.assignment_prompt);
             }
         }
     }, [assignmentId, assignmentsData]);
@@ -127,6 +131,7 @@ export function useSubmissionState() {
         studentName, setStudentName,
         studentId, setStudentId,
         assignmentId, setAssignmentId,
+        assignmentPrompt, setAssignmentPrompt,
         criteria, setCriteria,
         totalPoints, setTotalPoints,
         verbatimText, setVerbatimText,
