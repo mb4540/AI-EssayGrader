@@ -12,6 +12,8 @@ interface CriteriaInputProps {
   onChange: (value: string) => void;
   totalPoints?: number;
   onTotalPointsChange?: (points: number) => void;
+  assignmentPrompt?: string;
+  onAssignmentPromptChange?: (prompt: string) => void;
   showCard?: boolean;
   title?: string;
   required?: boolean;
@@ -82,6 +84,8 @@ export default function CriteriaInput({
   onChange,
   totalPoints = 100,
   onTotalPointsChange,
+  assignmentPrompt,
+  onAssignmentPromptChange,
   showCard = true,
   title = 'Grading Criteria',
   required = true,
@@ -123,6 +127,26 @@ export default function CriteriaInput({
 
   const content = (
     <div className={showCard ? '' : className}>
+      {/* Assignment Prompt Section */}
+      {(assignmentPrompt !== undefined || onAssignmentPromptChange) && (
+        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+          <Label htmlFor="assignment-prompt" className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2 block">
+            Assignment Prompt <span className="text-xs font-normal text-gray-600 dark:text-gray-400">(optional)</span>
+          </Label>
+          <Textarea
+            id="assignment-prompt"
+            value={assignmentPrompt || ''}
+            onChange={(e) => onAssignmentPromptChange?.(e.target.value)}
+            placeholder="Enter the instructions given to students for this assignment (e.g., 'Write a 5-paragraph persuasive essay arguing for or against school uniforms')..."
+            disabled={disabled}
+            className="min-h-[80px] text-sm bg-white dark:bg-slate-800"
+          />
+          <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+            Student-facing instructions that help the AI understand what students were asked to do
+          </p>
+        </div>
+      )}
+      
       <div className="flex items-center justify-between mb-2">
         <Label htmlFor="criteria" className="text-gray-700 dark:text-gray-300 font-medium">
           {title} {required && <span className="text-red-500">*</span>}
