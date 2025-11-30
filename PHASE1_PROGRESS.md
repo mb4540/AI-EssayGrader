@@ -2,7 +2,7 @@
 
 **Date:** November 30, 2025  
 **Branch:** `feature/assignment-prompt`  
-**Status:** 🔵 IN PROGRESS (30% complete)
+**Status:** ✅ COMPLETE - Ready for testing and deployment
 
 ---
 
@@ -39,34 +39,47 @@
 
 ---
 
-## 🔄 In Progress / TODO
+### 4. Submission Ingestion
+- **File:** `src/lib/schema.ts`, `netlify/functions/ingest.ts`
+- Added `assignment_prompt` to IngestRequestSchema (optional field)
+- Included in INSERT statement for submissions table
+- Extracted from request body and stored
 
-### 4. Submission Ingestion (Next Step)
-- **File:** `netlify/functions/ingest.ts`
-- [ ] Add `assignment_prompt` to request schema validation
-- [ ] Include in INSERT statement for submissions table
-- [ ] Pass to background grading job
+**Status:** ✅ Complete
 
 ### 5. Background Grading
 - **File:** `netlify/functions/grade-bulletproof-background.ts`
-- [ ] Fetch `assignment_prompt` from submission
-- [ ] Fetch `assignment_prompt` from assignment (if linked)
-- [ ] Prioritize: submission.assignment_prompt || assignment.assignment_prompt
-- [ ] Pass to prompt builder functions
+- Fetches `assignment_prompt` from both submission and assignment
+- Prioritizes: `submission.assignment_prompt || assignment.assignment_prompt`
+- Passes to prompt builder functions
+
+**Status:** ✅ Complete
 
 ### 6. LLM Prompt Integration
 - **File:** `src/lib/prompts/extractor.ts`
-- [ ] Add `assignmentPrompt` parameter to `buildExtractorPrompt()`
-- [ ] Add `assignmentPrompt` parameter to `buildComparisonExtractorPrompt()`
-- [ ] Include assignment instructions in prompt context
-- [ ] Instruct LLM to evaluate adherence to prompt requirements
+- Added `assignmentPrompt` parameter to `buildExtractorPrompt()`
+- Added `assignmentPrompt` parameter to `buildComparisonExtractorPrompt()`
+- Includes assignment instructions in prompt context as "ASSIGNMENT INSTRUCTIONS" section
+- Instructs LLM to evaluate adherence to prompt requirements
 
-### 7. Frontend - Submission Page (Optional for Phase 1)
+**Status:** ✅ Complete
+
+---
+
+## 🔄 Optional / Future Enhancements
+
+### 7. Frontend - Submission Page (Optional)
 - **File:** `src/pages/Submission.tsx`
 - [ ] Add `assignmentPrompt` state
 - [ ] Load from assignment if `assignmentId` present
 - [ ] Pass to CriteriaInput component
 - [ ] Include in grading request
+
+**Note:** Not required for Phase 1 - assignment_prompt can be set when creating assignment, and will be used automatically during grading.
+
+---
+
+## 📋 Testing Checklist
 
 ### 8. Testing
 - [ ] Run database migration in Neon
@@ -118,28 +131,14 @@
 
 ---
 
-## Next Steps (Priority Order)
+## ✅ Next Steps - Ready for Deployment
 
-1. **Update ingest.ts** - Accept assignment_prompt in submission creation
-2. **Update grade-bulletproof-background.ts** - Fetch and pass to prompts
-3. **Update extractor.ts** - Include in LLM prompts
-4. **Run migration** - Add columns to database
-5. **Test end-to-end** - Create assignment → Grade submission → Verify prompt used
-6. **Update db_ref.md** - Document schema changes
-7. **Merge to main** - When Phase 1 complete and tested
+1. **Run database migration** - Execute `migrations/add_assignment_prompt.sql` in Neon
+2. **Test end-to-end** - Create assignment → Grade submission → Verify prompt used
+3. **Update db_ref.md** - Document schema changes
+4. **Merge to main** - Deploy to production
 
----
-
-## Estimated Time Remaining
-
-- **Ingest.ts update:** 15 minutes
-- **Grade-bulletproof-background.ts update:** 20 minutes
-- **Extractor.ts update:** 30 minutes
-- **Database migration:** 5 minutes
-- **Testing:** 30 minutes
-- **Documentation:** 15 minutes
-
-**Total:** ~2 hours remaining for Phase 1
+**Estimated Time:** ~30 minutes for testing and deployment
 
 ---
 
