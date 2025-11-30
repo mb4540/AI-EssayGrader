@@ -65,33 +65,44 @@ const handler: Handler = async (event: HandlerEvent) => {
       };
     }
 
-    // Start background processing immediately (don't wait for it to finish)
-    // We return the job ID right away and let the frontend poll for status
-    console.log(`[extract-rubric-trigger] Starting background processing for job ${job.jobId}`);
-    
-    // Import and call the background function directly (fire and forget)
-    import('./extract-rubric-background')
-      .then(async (module) => {
-        console.log(`[extract-rubric-trigger] Invoking background handler for job ${job.jobId}`);
-        // Call the handler with the same event structure
-        await module.handler({
-          httpMethod: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            jobId: job.jobId,
-            file,
-            fileName,
-            fileType,
-            totalPoints,
-            geminiModel,
-            extractionPrompt,
-          }),
-        } as any, {} as any);
-        console.log(`[extract-rubric-trigger] Background processing completed for job ${job.jobId}`);
-      })
-      .catch((error) => {
-        console.error(`[extract-rubric-trigger] Background processing failed for job ${job.jobId}:`, error);
+    // Build background URL (matching bulletproof grading pattern)
+    const base = process.env.URL || process.env.DEPLOY_PRIME_URL || 'http://localhost:8888';
+    const backgroundUrl = new URL('/.netlify/functions/extract-rubric-background', base);
+    console.log(`[extract-rubric-trigger] Background URL: ${backgroundUrl.toString()}`);
+
+    // Fire-and-forget with short timeout so trigger returns quickly
+    const ac = new AbortController();
+    const timeout = setTimeout(() => ac.abort(), 6000);
+
+    try {
+      const backgroundResponse = await fetch(backgroundUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: job.jobId,
+          file,
+          fileName,
+          fileType,
+          totalPoints,
+          geminiModel,
+          extractionPrompt,
+        }),
+        signal: ac.signal
       });
+
+      clearTimeout(timeout);
+
+      if (!backgroundResponse.ok) {
+        const errorText = await backgroundResponse.text().catch(() => '<no body>');
+        console.error('[extract-rubric-trigger] Background function failed:', backgroundResponse.status, errorText);
+      } else {
+        console.log(`[extract-rubric-trigger] Background function triggered successfully for job ${job.jobId}`);
+      }
+    } catch (e) {
+      clearTimeout(timeout);
+      // Don't fail the trigger - just log the error
+      console.error('[extract-rubric-trigger] Background trigger error:', e instanceof Error ? e.message : e);
+    }
 
     // Return job ID immediately
     return {
