@@ -1,9 +1,64 @@
-# Update Grading: Assignment Prompt Feature
+# Update Grading: Multi-Phase Enhancement Plan
 
 ## Overview
-Add an "Assignment Prompt" field that contains instructions given to students. This is NOT an LLM prompt, but rather the assignment instructions/requirements that students must follow. This prompt becomes part of the rubric context when grading.
+This document outlines a comprehensive plan to enhance the grading system with multiple features:
+1. **Assignment Prompt** - Student-facing instructions
+2. **Annotation Category Fix** - Consistent rubric-based categories
+3. **Non-Graded Annotations** - Spelling/grammar feedback without grade impact
+4. **Color-Coded Highlighting** - Visual distinction between annotation types
+5. **Manual Annotations** - Teacher-added feedback
 
 **Created:** November 30, 2025
+**Last Updated:** November 30, 2025
+
+---
+
+## Implementation Strategy
+
+### Phased Approach
+Each phase is designed to be:
+- ✅ **Independently testable** - Can be verified without other phases
+- ✅ **Incrementally deployable** - Can go to production separately
+- ✅ **Backwards compatible** - Won't break existing functionality
+- ✅ **Clearly scoped** - Well-defined start and end points
+
+### Testing Requirements
+Each phase includes:
+- Database migration verification
+- Backend API testing
+- Frontend UI testing
+- Integration testing
+- Production smoke testing
+
+---
+
+## Phase Overview & Dependencies
+
+```
+Phase 0: Annotation Category Fix (CRITICAL - BLOCKING)
+   ↓
+Phase 1: Assignment Prompt (Database + Backend)
+   ↓
+Phase 2: Assignment Prompt (Frontend + Integration)
+   ↓
+Phase 3: Non-Graded Annotations (Backend)
+   ↓
+Phase 4: Non-Graded Annotations (Frontend)
+   ↓
+Phase 5: Color-Coded Highlighting (Print System)
+   ↓
+Phase 6: Manual Annotations (Backend + Database)
+   ↓
+Phase 7: Manual Annotations (Frontend + UI)
+```
+
+**Estimated Timeline:**
+- Phase 0: 2-3 hours (CRITICAL)
+- Phases 1-2: 4-6 hours
+- Phases 3-4: 4-6 hours
+- Phase 5: 3-4 hours
+- Phases 6-7: 6-8 hours
+- **Total: 19-27 hours**
 
 ---
 
@@ -1303,3 +1358,880 @@ IS 'Source of annotation: ai (LLM-generated) or manual (teacher-added)';
    - Add multiple annotations at once?
    - Import annotations from a template?
    - **Recommendation**: Future enhancement, not MVP
+
+---
+
+# DETAILED PHASE BREAKDOWN
+
+## Phase 0: Fix Annotation Category Inconsistency (CRITICAL)
+
+**Status:** 🔴 BLOCKING - Must complete before other phases
+
+**Duration:** 2-3 hours
+
+**Priority:** CRITICAL - Fixes core bug affecting all grading output
+
+### Scope
+Fix the inconsistency where annotations use mixed categories (generic categories + rubric names) instead of consistent rubric criterion IDs.
+
+### Files to Modify
+1. `src/lib/prompts/extractor.ts` - Update annotation category system (3 locations)
+
+### Changes Required
+
+#### Change 1: Update `buildExtractorPrompt()` (Lines 59-60)
+```typescript
+// OLD
+const annotationCategories = 'Content|Evidence|Organization|Clarity|Mechanics';
+
+// NEW
+const annotationCategories = rubric.criteria.map(c => c.id).join('|');
+```
+
+#### Change 2: Update annotation instructions (Lines 92-99)
+```typescript
+// OLD
+2. Inline Annotations (Based on Generic Categories):
+   - Tag each annotation with the most relevant category:
+     * Content: Issues with ideas, arguments, reasoning, accuracy
+     * Evidence: Issues with supporting details, examples, sources, citations
+     * Organization: Issues with structure, flow, transitions, coherence
+     * Clarity: Issues with unclear writing, explanations, or communication
+     * Mechanics: Grammar, spelling, punctuation, formatting
+
+// NEW
+2. Inline Annotations (Based on Rubric Criteria):
+   - Tag each annotation with the rubric criterion ID it relates to:
+${rubric.criteria.map(c => `     * ${c.id}: Issues related to "${c.name}"`).join('\n')}
+   - Choose the criterion that BEST matches the issue
+   - If an issue affects multiple criteria, pick the PRIMARY one
+```
+
+#### Change 3: Update category rules (Lines 165-173)
+```typescript
+// OLD
+- Category must be one of: ${annotationCategories}
+- Choose the category that best matches the issue type:
+  * Content = problems with ideas, arguments, reasoning, accuracy
+  * Evidence = missing/weak supporting details, examples, sources
+  * Organization = structure, flow, transitions issues
+  * Clarity = unclear writing or explanations
+  * Mechanics = grammar, spelling, punctuation
+
+// NEW
+- Category must be one of: ${annotationCategories}
+- Choose the rubric criterion that this issue MOST affects:
+${rubric.criteria.map(c => `  * ${c.id} = issues affecting "${c.name}"`).join('\n')}
+- If an issue affects multiple criteria, choose the PRIMARY one
+- Every annotation MUST map to a rubric criterion
+```
+
+#### Change 4: Update `buildCriteriaAnnotationsPrompt()` (Lines 232-237, 249)
+Apply same pattern to Pass 2 annotations.
+
+#### Change 5: Update `buildComparisonExtractorPrompt()` (Lines 340+)
+Apply same pattern to comparison mode.
+
+### Testing Checklist
+
+**Database:**
+- [ ] No database changes required
+
+**Backend:**
+- [ ] Grade submission with standard rubric
+- [ ] Verify all annotations use criterion IDs (e.g., `ideas_development`)
+- [ ] Verify NO generic categories (e.g., `Content`, `Clarity`)
+- [ ] Verify NO rubric display names (e.g., `IDEAS & DEVELOPMENT`)
+- [ ] Check Pass 1 annotations
+- [ ] Check Pass 2 annotations
+- [ ] Test comparison mode
+
+**Frontend:**
+- [ ] Annotations display correctly in VerbatimViewer
+- [ ] Annotations display correctly in AnnotationViewer
+- [ ] Annotations display correctly in print view
+- [ ] Grouping by criterion works
+
+**Integration:**
+- [ ] Grade with ELAR rubric - verify categories
+- [ ] Grade with different rubric (math/science) - verify categories adapt
+- [ ] Verify Detailed Breakdown matches Specific Corrections matches Inline Annotations
+
+**Production Smoke Test:**
+- [ ] Deploy to production
+- [ ] Grade 1 submission
+- [ ] Verify consistent headers across all sections
+- [ ] Check Netlify function logs for errors
+
+### Success Criteria
+✅ All annotation categories match rubric criterion IDs
+✅ No generic categories appear in output
+✅ Consistent headers across Detailed Breakdown, Specific Corrections, and Inline Annotations
+✅ Works with any rubric (not just ELAR)
+
+### Rollback Plan
+If issues occur, revert `src/lib/prompts/extractor.ts` to previous version.
+
+---
+
+## Phase 1: Assignment Prompt - Database & Backend
+
+**Status:** ⚪ Not Started
+
+**Duration:** 2-3 hours
+
+**Dependencies:** Phase 0 must be complete
+
+### Scope
+Add database schema and backend API support for assignment prompts.
+
+### Files to Modify
+1. `migrations/add_assignment_prompt.sql` - NEW
+2. `db_ref.md` - Update schema docs
+3. `netlify/functions/create-assignment.ts` - Add field
+4. `netlify/functions/update-assignment.ts` - Add field
+5. `netlify/functions/get-assignment.ts` - Include in SELECT
+6. `netlify/functions/list-assignments.ts` - Include in SELECT
+7. `netlify/functions/ingest.ts` - Add to submissions INSERT
+8. `src/lib/schema.ts` - Add to TypeScript types
+
+### Changes Required
+
+#### Database Migration
+```sql
+-- migrations/add_assignment_prompt.sql
+ALTER TABLE grader.assignments 
+ADD COLUMN assignment_prompt text;
+
+ALTER TABLE grader.submissions 
+ADD COLUMN assignment_prompt text;
+
+COMMENT ON COLUMN grader.assignments.assignment_prompt 
+IS 'Student-facing instructions and requirements for the assignment';
+
+COMMENT ON COLUMN grader.submissions.assignment_prompt 
+IS 'Assignment instructions (from assignment or entered during grading)';
+```
+
+#### Backend API Updates
+- Add `assignment_prompt` to request schemas
+- Include in INSERT/UPDATE statements
+- Include in SELECT queries
+
+### Testing Checklist
+
+**Database:**
+- [ ] Run migration on local database
+- [ ] Verify columns added to both tables
+- [ ] Verify comments added
+- [ ] Test rollback script
+- [ ] Update `db_ref.md`
+
+**Backend:**
+- [ ] Create assignment with prompt - verify saved
+- [ ] Create assignment without prompt - verify NULL
+- [ ] Update assignment to add prompt - verify updated
+- [ ] Get assignment - verify prompt returned
+- [ ] List assignments - verify prompt included
+- [ ] Ingest submission with prompt - verify saved
+
+**API Testing:**
+```bash
+# Test create assignment with prompt
+curl -X POST http://localhost:8888/.netlify/functions/create-assignment \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "title": "Test Assignment",
+    "assignment_prompt": "Write a 5-paragraph essay...",
+    "teacher_criteria": "Ideas: 25pts\nOrganization: 25pts"
+  }'
+
+# Test get assignment
+curl http://localhost:8888/.netlify/functions/get-assignment?id=$ASSIGNMENT_ID \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Production:**
+- [ ] Deploy migration to production
+- [ ] Verify no errors in Netlify logs
+- [ ] Test create assignment in production
+- [ ] Verify backward compatibility (old assignments still work)
+
+### Success Criteria
+✅ Database columns added successfully
+✅ API accepts and returns assignment_prompt
+✅ Backward compatible (NULL prompts work)
+✅ No breaking changes to existing functionality
+
+### Rollback Plan
+```sql
+ALTER TABLE grader.assignments DROP COLUMN assignment_prompt;
+ALTER TABLE grader.submissions DROP COLUMN assignment_prompt;
+```
+
+---
+
+## Phase 2: Assignment Prompt - Frontend & Integration
+
+**Status:** ⚪ Not Started
+
+**Duration:** 2-3 hours
+
+**Dependencies:** Phase 1 must be complete
+
+### Scope
+Add UI for assignment prompts in CreateAssignmentModal and Grade Submissions page.
+
+### Files to Modify
+1. `src/components/CreateAssignmentModal.tsx` - Add UI field
+2. `src/components/CriteriaInput.tsx` - Add display/edit field
+3. `src/pages/Submission.tsx` - Add state and pass to components
+4. `src/pages/Submission/hooks/useSubmissionState.ts` - Add state
+5. `src/pages/Submission/hooks/useSubmissionActions.ts` - Pass to API
+6. `netlify/functions/grade-bulletproof-background.ts` - Fetch and use
+7. `src/lib/prompts/extractor.ts` - Add to prompt builders
+
+### Changes Required
+
+#### CreateAssignmentModal
+Add textarea field between Description and Grading Criteria:
+```tsx
+<div className="space-y-2">
+  <Label htmlFor="assignment-prompt">
+    Assignment Prompt
+    <span className="text-gray-500 text-sm ml-2">(optional)</span>
+  </Label>
+  <Textarea
+    id="assignment-prompt"
+    value={assignmentPrompt}
+    onChange={(e) => setAssignmentPrompt(e.target.value)}
+    placeholder="Enter the instructions given to students..."
+    className="min-h-[100px]"
+  />
+</div>
+```
+
+#### CriteriaInput
+Add display at top of card with blue background.
+
+#### Grading Integration
+Update `buildExtractorPrompt()` to include assignment prompt in LLM context.
+
+### Testing Checklist
+
+**Frontend:**
+- [ ] CreateAssignmentModal shows new field
+- [ ] Can create assignment with prompt
+- [ ] Can create assignment without prompt
+- [ ] Prompt saves correctly
+- [ ] CriteriaInput shows prompt (read-only for saved assignments)
+- [ ] CriteriaInput allows editing for ad-hoc grading
+- [ ] State management works correctly
+
+**Integration:**
+- [ ] Create assignment with prompt
+- [ ] Load assignment in Grade Submissions
+- [ ] Verify prompt appears in CriteriaInput
+- [ ] Grade submission
+- [ ] Verify prompt included in LLM context (check logs)
+- [ ] Verify grading considers prompt
+
+**User Flow:**
+1. Create new assignment with prompt
+2. Navigate to Grade Submissions
+3. Select the assignment
+4. Verify prompt displays
+5. Grade a submission
+6. Verify feedback references prompt requirements
+
+**Production:**
+- [ ] Deploy to production
+- [ ] Create test assignment with prompt
+- [ ] Grade test submission
+- [ ] Verify prompt appears in grading context
+
+### Success Criteria
+✅ UI fields work correctly
+✅ Assignment prompt saves and loads
+✅ Prompt included in LLM grading context
+✅ Grading considers assignment instructions
+✅ No UI/UX issues
+
+### Rollback Plan
+Revert frontend files to previous versions. Backend remains compatible.
+
+---
+
+## Phase 3: Non-Graded Annotations - Backend
+
+**Status:** ⚪ Not Started
+
+**Duration:** 2-3 hours
+
+**Dependencies:** Phase 0 must be complete
+
+### Scope
+Add backend support for non-graded annotations (spelling, grammar, punctuation) that don't affect grade.
+
+### Files to Modify
+1. `src/lib/prompts/extractor.ts` - Add non-graded annotation instructions
+2. `src/lib/annotations/types.ts` - Add `affects_grade` and `subcategory` fields
+3. `netlify/functions/grade-bulletproof-background.ts` - Handle non-graded annotations
+
+### Changes Required
+
+#### Update Annotation Types
+```typescript
+export interface RawAnnotation {
+  line: number;
+  quote: string;
+  category: string;
+  subcategory?: string;  // NEW: 'spelling', 'grammar', 'punctuation'
+  suggestion: string;
+  severity: 'info' | 'warning' | 'error';
+  affects_grade?: boolean;  // NEW: false for non-graded
+}
+```
+
+#### Update LLM Prompt
+```typescript
+// Check if non-graded annotations are enabled
+const enableNonGraded = localStorage.getItem('enable_non_graded_annotations') === 'true';
+
+if (enableNonGraded) {
+  prompt += `
+ADDITIONAL ANNOTATIONS (DO NOT AFFECT GRADE):
+- Identify spelling errors (category: "non_graded", subcategory: "spelling")
+- Identify grammar errors (category: "non_graded", subcategory: "grammar")
+- Identify punctuation errors (category: "non_graded", subcategory: "punctuation")
+- Mark with "affects_grade": false
+- These are for STUDENT LEARNING ONLY
+`;
+}
+```
+
+### Testing Checklist
+
+**Backend:**
+- [ ] Enable non-graded annotations setting
+- [ ] Grade submission with spelling errors
+- [ ] Verify non-graded annotations created
+- [ ] Verify `category: "non_graded"`
+- [ ] Verify `affects_grade: false`
+- [ ] Verify subcategory set correctly
+- [ ] Disable setting and verify no non-graded annotations
+
+**Database:**
+- [ ] Non-graded annotations save to database
+- [ ] Can query by category = 'non_graded'
+- [ ] Annotation count includes non-graded
+
+**API Testing:**
+```bash
+# Grade with non-graded enabled
+curl -X POST http://localhost:8888/.netlify/functions/grade-bulletproof-trigger \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"submission_id": "$ID"}'
+
+# Check annotations
+curl http://localhost:8888/.netlify/functions/get-inline-annotations?submission_id=$ID \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Success Criteria
+✅ Non-graded annotations generated when enabled
+✅ Correctly marked with `affects_grade: false`
+✅ Subcategories set correctly
+✅ Can be disabled via setting
+✅ Saved to database correctly
+
+### Rollback Plan
+Remove non-graded annotation logic from prompts. Existing annotations remain but no new ones created.
+
+---
+
+## Phase 4: Non-Graded Annotations - Frontend
+
+**Status:** ⚪ Not Started
+
+**Duration:** 2-3 hours
+
+**Dependencies:** Phase 3 must be complete
+
+### Scope
+Add UI for enabling/disabling non-graded annotations and displaying them differently.
+
+### Files to Modify
+1. `src/components/SettingsModal.tsx` - Add "Annotation Settings" tab
+2. `src/components/VerbatimViewer.tsx` - Different styling for non-graded
+3. `src/lib/print/printUtils.ts` - Light blue highlight for non-graded
+
+### Changes Required
+
+#### Settings Modal
+Add new tab "Annotation Settings" with checkbox:
+```tsx
+<Checkbox
+  checked={enableNonGraded}
+  onCheckedChange={setEnableNonGraded}
+  label="Identify spelling, grammar, and punctuation errors"
+  description="These annotations help students learn but do not affect the grade"
+/>
+```
+
+#### VerbatimViewer Styling
+```tsx
+// Different underline color for non-graded
+const annotationStyle = annotation.category === 'non_graded'
+  ? 'border-b-2 border-blue-300'  // Light blue
+  : 'border-b-2 border-yellow-400';  // Yellow for graded
+```
+
+#### Tooltip
+```tsx
+{annotation.category === 'non_graded' && (
+  <span className="text-blue-600">ℹ️ Does not affect grade</span>
+)}
+```
+
+### Testing Checklist
+
+**Frontend:**
+- [ ] Settings Modal shows new tab
+- [ ] Checkbox works correctly
+- [ ] Setting persists in localStorage
+- [ ] VerbatimViewer shows different colors
+- [ ] Tooltip indicates "Does not affect grade"
+- [ ] Print view uses light blue highlight
+
+**User Flow:**
+1. Enable non-graded annotations in Settings
+2. Grade a submission with errors
+3. Verify light blue underlines for spelling/grammar
+4. Hover to see "Does not affect grade" tooltip
+5. Print and verify light blue highlights
+6. Disable setting and verify no non-graded annotations on next grade
+
+**Production:**
+- [ ] Deploy to production
+- [ ] Enable setting
+- [ ] Grade submission
+- [ ] Verify visual distinction
+
+### Success Criteria
+✅ Setting UI works correctly
+✅ Visual distinction between graded and non-graded
+✅ Tooltips show correct information
+✅ Print view uses correct colors
+✅ Setting persists across sessions
+
+### Rollback Plan
+Revert frontend files. Backend continues to work.
+
+---
+
+## Phase 5: Color-Coded Highlighting
+
+**Status:** ⚪ Not Started
+
+**Duration:** 3-4 hours
+
+**Dependencies:** Phase 4 must be complete
+
+### Scope
+Implement color-coded highlighting for annotations with color key legend.
+
+### Files to Modify
+1. `src/lib/print/printUtils.ts` - Implement color palette and key legend
+2. `src/lib/print/printStyles.ts` - Add color styles
+3. `src/components/VerbatimViewer.tsx` - Apply colors in interactive view
+
+### Changes Required
+
+#### Color Palette
+```typescript
+const colorPalette = [
+  { bg: '#FEF3C7', text: '#92400E', name: 'Yellow' },
+  { bg: '#D1FAE5', text: '#065F46', name: 'Green' },
+  { bg: '#DBEAFE', text: '#1E40AF', name: 'Blue' },
+  { bg: '#E9D5FF', text: '#6B21A8', name: 'Purple' },
+  { bg: '#FCE7F3', text: '#9F1239', name: 'Pink' },
+  { bg: '#FED7AA', text: '#9A3412', name: 'Orange' },
+  { bg: '#CCFBF1', text: '#115E59', name: 'Teal' },
+  { bg: '#E0E7FF', text: '#3730A3', name: 'Indigo' },
+];
+
+// Non-graded always light blue
+const nonGradedColor = { bg: '#BFDBFE', text: '#1E3A8A', name: 'Light Blue' };
+```
+
+#### Color Key Legend
+Generate HTML for color key at top of print page.
+
+### Testing Checklist
+
+**Print View:**
+- [ ] Each rubric criterion has distinct color
+- [ ] Non-graded annotations use light blue
+- [ ] Color key legend appears at top
+- [ ] Legend shows all criteria + non-graded
+- [ ] Colors are readable (good contrast)
+- [ ] Works with 4-criterion rubric
+- [ ] Works with 8-criterion rubric
+- [ ] Works with >8 criteria (colors repeat)
+
+**Interactive View:**
+- [ ] VerbatimViewer uses same colors
+- [ ] Hover shows criterion name
+- [ ] Colors match print view
+
+**Accessibility:**
+- [ ] Test with colorblind simulator
+- [ ] Verify text contrast meets WCAG AA
+- [ ] Consider adding patterns (future)
+
+**Production:**
+- [ ] Deploy to production
+- [ ] Print graded submission
+- [ ] Verify colors and legend
+- [ ] Test with different rubrics
+
+### Success Criteria
+✅ Each criterion has distinct color
+✅ Color key legend displays correctly
+✅ Colors are accessible and readable
+✅ Works with any rubric size
+✅ Consistent between interactive and print views
+
+### Rollback Plan
+Revert print utilities to single-color highlighting.
+
+---
+
+## Phase 6: Manual Annotations - Backend & Database
+
+**Status:** ⚪ Not Started
+
+**Duration:** 3-4 hours
+
+**Dependencies:** Phase 5 must be complete
+
+### Scope
+Add database schema and backend APIs for teacher-added manual annotations.
+
+### Files to Modify
+1. `migrations/add_annotation_source.sql` - NEW
+2. `netlify/functions/add-manual-annotation.ts` - NEW
+3. `netlify/functions/update-annotation.ts` - NEW
+4. `netlify/functions/delete-annotation.ts` - NEW
+5. `src/lib/api/annotations.ts` - NEW API client
+
+### Changes Required
+
+#### Database Migration
+```sql
+ALTER TABLE grader.annotations 
+ADD COLUMN source text DEFAULT 'ai';
+
+COMMENT ON COLUMN grader.annotations.source 
+IS 'Source of annotation: ai (LLM-generated) or manual (teacher-added)';
+
+CREATE INDEX idx_annotations_source ON grader.annotations(source);
+```
+
+#### API Endpoints
+- POST `/add-manual-annotation` - Create manual annotation
+- PUT `/update-annotation` - Update manual annotation (manual only)
+- DELETE `/delete-annotation` - Delete manual annotation (manual only)
+
+### Testing Checklist
+
+**Database:**
+- [ ] Run migration
+- [ ] Verify `source` column added
+- [ ] Verify default value is 'ai'
+- [ ] Verify index created
+- [ ] Test rollback
+
+**Backend:**
+- [ ] Add manual annotation - verify saved with source='manual'
+- [ ] Update manual annotation - verify updated
+- [ ] Try to update AI annotation - verify rejected
+- [ ] Delete manual annotation - verify deleted
+- [ ] Try to delete AI annotation - verify rejected
+- [ ] Get annotations - verify source field included
+
+**API Testing:**
+```bash
+# Add manual annotation
+curl -X POST http://localhost:8888/.netlify/functions/add-manual-annotation \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "submission_id": "$ID",
+    "line_number": 5,
+    "category": "ideas_development",
+    "suggestion": "Consider adding more evidence here"
+  }'
+
+# Update annotation
+curl -X PUT http://localhost:8888/.netlify/functions/update-annotation \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "annotation_id": "$ANNOTATION_ID",
+    "suggestion": "Updated feedback"
+  }'
+
+# Delete annotation
+curl -X DELETE http://localhost:8888/.netlify/functions/delete-annotation?id=$ANNOTATION_ID \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+**Production:**
+- [ ] Deploy migration and functions
+- [ ] Test add/update/delete in production
+- [ ] Verify permissions work correctly
+
+### Success Criteria
+✅ Database schema updated
+✅ API endpoints work correctly
+✅ Permissions enforced (can't edit/delete AI annotations)
+✅ Source field tracked correctly
+
+### Rollback Plan
+```sql
+ALTER TABLE grader.annotations DROP COLUMN source;
+DROP INDEX idx_annotations_source;
+```
+
+---
+
+## Phase 7: Manual Annotations - Frontend & UI
+
+**Status:** ⚪ Not Started
+
+**Duration:** 3-4 hours
+
+**Dependencies:** Phase 6 must be complete
+
+### Scope
+Add UI for teachers to add, edit, and delete manual annotations.
+
+### Files to Modify
+1. `src/components/AddAnnotationForm.tsx` - NEW component
+2. `src/components/VerbatimViewer.tsx` - Show manual annotations with badge
+3. `src/pages/Submission.tsx` - Integrate AddAnnotationForm
+
+### Changes Required
+
+#### AddAnnotationForm Component
+Form with fields:
+- Line Number (dropdown with preview)
+- Category (rubric criteria + non-graded)
+- Quote (optional, auto-filled)
+- Feedback (required)
+
+#### VerbatimViewer Updates
+- Show badge: "👤 Teacher" vs "🤖 AI"
+- Edit button for manual annotations
+- Delete button for manual annotations
+
+### Testing Checklist
+
+**Frontend:**
+- [ ] "Add Annotation" button appears
+- [ ] Form opens correctly
+- [ ] Line number dropdown works
+- [ ] Category dropdown shows rubric criteria
+- [ ] Can add annotation
+- [ ] Annotation appears immediately
+- [ ] Badge shows "👤 Teacher"
+- [ ] Can edit manual annotation
+- [ ] Can delete manual annotation
+- [ ] Cannot edit/delete AI annotations
+
+**User Flow:**
+1. Grade a submission (AI annotations appear)
+2. Click "Add Annotation"
+3. Select line 5
+4. Select category "ideas_development"
+5. Enter feedback
+6. Save
+7. Verify annotation appears with teacher badge
+8. Edit the annotation
+9. Verify changes save
+10. Delete the annotation
+11. Verify it's removed
+
+**Print View:**
+- [ ] Manual annotations appear in print
+- [ ] No visual distinction from AI (both are feedback)
+- [ ] Use same color scheme
+
+**Production:**
+- [ ] Deploy to production
+- [ ] Add manual annotation
+- [ ] Verify it saves and displays
+- [ ] Print and verify it appears
+
+### Success Criteria
+✅ UI is intuitive and easy to use
+✅ Manual annotations work correctly
+✅ Edit/delete only for manual annotations
+✅ Visual distinction in interactive view
+✅ No distinction in print view
+
+### Rollback Plan
+Revert frontend files. Backend and database remain functional.
+
+---
+
+## Testing Strategy
+
+### Unit Testing
+Each phase should have unit tests for:
+- Database migrations (up and down)
+- API endpoints (success and error cases)
+- Frontend components (render and interaction)
+- Utility functions (color assignment, validation)
+
+### Integration Testing
+Test complete workflows:
+- Create assignment → Grade submission → View annotations
+- Enable setting → Grade → Verify behavior
+- Add manual annotation → Edit → Delete
+
+### Regression Testing
+After each phase:
+- [ ] Existing assignments still work
+- [ ] Existing submissions still load
+- [ ] Grading still works
+- [ ] Print still works
+- [ ] No console errors
+
+### Performance Testing
+- [ ] Grading time doesn't increase significantly
+- [ ] Annotation rendering is fast (<100ms)
+- [ ] Print generation is fast (<2s)
+- [ ] Database queries are optimized
+
+### Production Smoke Testing
+After each deployment:
+1. Create test assignment
+2. Grade test submission
+3. View annotations
+4. Print submission
+5. Check Netlify logs for errors
+
+---
+
+## Deployment Strategy
+
+### Incremental Deployment
+Deploy each phase independently:
+1. Deploy to development branch
+2. Test thoroughly
+3. Deploy to staging (if available)
+4. Deploy to production
+5. Monitor for 24 hours
+6. Proceed to next phase
+
+### Feature Flags (Optional)
+Consider adding feature flags for:
+- Non-graded annotations
+- Color-coded highlighting
+- Manual annotations
+
+This allows enabling/disabling features without redeployment.
+
+### Rollback Procedures
+Each phase has a documented rollback plan. If issues occur:
+1. Identify the problematic phase
+2. Execute rollback plan
+3. Investigate issue
+4. Fix and redeploy
+
+---
+
+## Success Metrics
+
+### Phase 0: Annotation Category Fix
+- ✅ 100% of annotations use rubric criterion IDs
+- ✅ 0 generic categories in output
+- ✅ Consistent headers across all sections
+
+### Phases 1-2: Assignment Prompt
+- ✅ 80%+ of new assignments include prompt
+- ✅ Grading feedback references prompt requirements
+- ✅ No increase in grading errors
+
+### Phases 3-4: Non-Graded Annotations
+- ✅ 70%+ of teachers enable the feature
+- ✅ Average 5-10 non-graded annotations per submission
+- ✅ Clear visual distinction from graded annotations
+
+### Phase 5: Color-Coded Highlighting
+- ✅ 90%+ of print views show color key
+- ✅ Teachers report easier annotation review
+- ✅ No accessibility complaints
+
+### Phases 6-7: Manual Annotations
+- ✅ 50%+ of teachers add at least 1 manual annotation
+- ✅ Average 2-3 manual annotations per submission
+- ✅ No issues with edit/delete functionality
+
+---
+
+## Risk Assessment
+
+### High Risk
+- **Phase 0**: Changes core grading logic - extensive testing required
+- **Phase 3**: Non-graded annotations may confuse LLM - monitor quality
+
+### Medium Risk
+- **Phase 5**: Color palette may not work for all rubrics - need flexibility
+- **Phase 6**: Manual annotations add complexity - need good UX
+
+### Low Risk
+- **Phase 1-2**: Assignment prompt is additive - low impact
+- **Phase 4**: Frontend changes are isolated - easy to rollback
+- **Phase 7**: Manual annotation UI is optional feature
+
+---
+
+## Communication Plan
+
+### Stakeholders
+- Teachers (end users)
+- Development team
+- QA team
+- Product owner
+
+### Updates
+- **Before each phase**: Announce upcoming changes
+- **During development**: Daily standup updates
+- **After deployment**: Release notes and demo
+- **Issues**: Immediate communication and status updates
+
+### Documentation
+- Update user guide after each phase
+- Create video tutorials for new features
+- Update API documentation
+- Maintain changelog
+
+---
+
+## Conclusion
+
+This phased approach ensures:
+- ✅ Each feature is independently testable
+- ✅ Incremental value delivery
+- ✅ Reduced risk of major issues
+- ✅ Clear rollback procedures
+- ✅ Manageable scope per phase
+
+**Next Steps:**
+1. Review and approve this plan
+2. Begin Phase 0 (Annotation Category Fix)
+3. Test thoroughly before proceeding
+4. Deploy incrementally to production
+5. Monitor and iterate
