@@ -4,11 +4,11 @@ import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/ch
 import { getLLMProvider, LLMProviderName } from './lib/llm/factory';
 
 /**
- * NOTE: This function uses OpenAI's structured outputs feature (json_schema with strict mode)
- * which is currently only available in OpenAI's gpt-4o-2024-08-06 model or newer.
- * Gemini does not yet support this exact feature, so we use OpenAI by default.
+ * NOTE: This function uses JSON mode for rubric generation.
+ * - Gemini: Uses standard JSON mode (default)
+ * - OpenAI: Uses structured outputs with json_schema (fallback)
  * 
- * If Gemini is selected, we fall back to OpenAI for this specific function.
+ * Both providers work, but OpenAI's structured outputs provide stricter validation.
  */
 
 // Structured output schema for rubric
@@ -175,49 +175,68 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Performance logging - start
     const startTime = Date.now();
     
-    // IMPORTANT: This function requires OpenAI's structured outputs feature
-    // If Gemini is requested, we log a warning and use OpenAI anyway
-    let providerName = (llmProvider as LLMProviderName) || 'gemini';
-    if (providerName === 'gemini') {
-      console.log('[enhance-rubric] ⚠️  Gemini requested but structured outputs require OpenAI - using OpenAI');
-      providerName = 'openai';
-    }
+    // Use system default (Gemini) or user's choice
+    const providerName = (llmProvider as LLMProviderName) || 'gemini';
     
     console.log(`[enhance-rubric] Starting rubric enhancement with ${providerName}`);
     console.log(`[enhance-rubric] Input rules length: ${simple_rules.length} characters`);
     console.log(`[enhance-rubric] Target total points: ${totalPoints}`);
 
-    if (!process.env.OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY not configured (required for structured outputs)');
+    let content: string | undefined;
+    let tokensUsed = 0;
+
+    if (providerName === 'gemini') {
+      // Use Gemini with JSON mode
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('GEMINI_API_KEY not configured');
+      }
+
+      const provider = getLLMProvider('gemini', apiKey, llmModel);
+      const response = await provider.generate({
+        systemMessage: systemPrompt,
+        userMessage: `Simple grading rules:\n\n${simple_rules}`,
+        temperature: 0.7,
+        jsonMode: true,
+      });
+
+      content = response.content.trim();
+      tokensUsed = response.usage.promptTokens + response.usage.completionTokens;
+      
+    } else {
+      // Use OpenAI with structured outputs for stricter validation
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('OPENAI_API_KEY not configured');
+      }
+
+      const openai = new OpenAI({ apiKey });
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-2024-08-06', // Structured outputs require this specific model or newer
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            role: 'user',
+            content: `Simple grading rules:\n\n${simple_rules}`,
+          },
+        ],
+        response_format: {
+          type: 'json_schema',
+          json_schema: {
+            name: 'rubric',
+            strict: true,
+            schema: RUBRIC_SCHEMA
+          }
+        },
+        temperature: 0.7,
+      });
+
+      content = completion.choices[0]?.message?.content?.trim();
+      tokensUsed = completion.usage?.total_tokens || 0;
     }
-
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-    // Use structured outputs to guarantee format
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06', // Structured outputs require this specific model or newer
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt,
-        },
-        {
-          role: 'user',
-          content: `Simple grading rules:\n\n${simple_rules}`,
-        },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'rubric',
-          strict: true,
-          schema: RUBRIC_SCHEMA
-        }
-      },
-      temperature: 0.7,
-    });
-
-    const content = completion.choices[0]?.message?.content?.trim();
     if (!content) {
       throw new Error('No rubric generated');
     }
@@ -229,7 +248,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const duration = Date.now() - startTime;
     console.log(`[enhance-rubric] ✅ Completed in ${duration}ms`);
     console.log(`[enhance-rubric] Generated ${rubricData.categories.length} categories`);
-    console.log(`[enhance-rubric] Token usage: ${completion.usage?.prompt_tokens || 0} prompt + ${completion.usage?.completion_tokens || 0} completion = ${(completion.usage?.total_tokens || 0)} total`);
+    console.log(`[enhance-rubric] Token usage: ${tokensUsed} total`);
     
     // Validate the math
     const categorySum = rubricData.categories.reduce((sum: number, cat: any) => sum + cat.points, 0);
@@ -249,11 +268,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         enhanced_rubric,
         performance: {
           duration_ms: duration,
-          provider: 'openai', // Always OpenAI for structured outputs
-          model: 'gpt-4o-2024-08-06',
+          provider: providerName,
+          model: llmModel || (providerName === 'gemini' ? 'gemini-2.5-pro' : 'gpt-4o-2024-08-06'),
           input_length: simple_rules.length,
           categories_generated: rubricData.categories.length,
-          tokens_used: completion.usage?.total_tokens || 0,
+          tokens_used: tokensUsed,
         }
       }),
     };
