@@ -114,19 +114,36 @@ function createDefaultRubric(): RubricResponse {
 }
 
 const handler: Handler = async (event: HandlerEvent) => {
+  const startTime = Date.now();
+  console.log('[extract-rubric-background] ========== FUNCTION STARTED ==========');
+  console.log('[extract-rubric-background] Timestamp:', new Date().toISOString());
+  
   try {
+    console.log('[extract-rubric-background] Parsing request body...');
     const { jobId, file, fileName, fileType, totalPoints, geminiModel, extractionPrompt } =
       JSON.parse(event.body || '{}');
 
+    console.log('[extract-rubric-background] Request params:', {
+      jobId,
+      fileName,
+      fileType,
+      totalPoints,
+      geminiModel,
+      fileSize: file ? `${Math.round(file.length / 1024)}KB` : 'missing',
+      hasPrompt: !!extractionPrompt,
+    });
+
     if (!jobId) {
-      console.error('[extract-rubric-background] Missing jobId');
+      console.error('[extract-rubric-background] ERROR: Missing jobId');
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing jobId' }) };
     }
 
     // Update job status to processing
+    console.log(`[extract-rubric-background] Updating job ${jobId} to 'processing'...`);
     await updateJob(jobId, { status: 'processing' });
+    console.log(`[extract-rubric-background] Job ${jobId} status updated to 'processing'`);
 
-    console.log(`[extract-rubric-background] Processing job ${jobId} for file: ${fileName}`);
+    console.log(`[extract-rubric-background] Starting extraction for file: ${fileName}`);
 
     // Performance logging - start
     const startTime = Date.now();
@@ -249,6 +266,10 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Send PDF to Gemini
+    console.log(`[extract-rubric-background] Preparing Gemini request...`);
+    console.log(`[extract-rubric-background] Model: ${modelName}`);
+    console.log(`[extract-rubric-background] PDF size: ${Math.round(pdfBase64.length / 1024)}KB`);
+    
     promptParts.push('Analyze the PDF document below and extract the rubric.');
     promptParts.push({
       inlineData: {
@@ -258,8 +279,14 @@ const handler: Handler = async (event: HandlerEvent) => {
     });
 
     // Call Gemini
+    console.log(`[extract-rubric-background] Calling Gemini API...`);
+    const geminiStartTime = Date.now();
     const result = await model.generateContent(promptParts);
+    const geminiDuration = Date.now() - geminiStartTime;
+    console.log(`[extract-rubric-background] Gemini API responded in ${geminiDuration}ms`);
+    
     const responseText = result.response.text();
+    console.log(`[extract-rubric-background] Response length: ${responseText.length} chars`);
     const rubricData: RubricResponse = JSON.parse(responseText);
 
     // Performance logging - end
@@ -271,11 +298,15 @@ const handler: Handler = async (event: HandlerEvent) => {
 
     console.log(`[extract-rubric-background] ✅ Job ${jobId} completed in ${duration}ms`);
     console.log(`[extract-rubric-background] Extracted ${rubricData.categories.length} categories`);
+    console.log(`[extract-rubric-background] Total points: ${rubricData.totalPossiblePoints}`);
 
     // Convert to paragraph format
+    console.log(`[extract-rubric-background] Formatting rubric to text...`);
     const formattedText = formatRubricToText(rubricData);
+    console.log(`[extract-rubric-background] Formatted text length: ${formattedText.length} chars`);
 
     // Update job with result
+    console.log(`[extract-rubric-background] Updating job ${jobId} to 'completed'...`);
     await updateJob(jobId, {
       status: 'completed',
       result: {
@@ -295,10 +326,15 @@ const handler: Handler = async (event: HandlerEvent) => {
         tokens_used: totalTokens,
       },
     });
+    console.log(`[extract-rubric-background] Job ${jobId} marked as completed`);
+    console.log('[extract-rubric-background] ========== FUNCTION COMPLETED ==========');
 
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   } catch (error: any) {
-    console.error('[extract-rubric-background] Error:', error);
+    console.error('[extract-rubric-background] ========== ERROR OCCURRED ==========');
+    console.error('[extract-rubric-background] Error type:', error.constructor.name);
+    console.error('[extract-rubric-background] Error message:', error.message);
+    console.error('[extract-rubric-background] Error stack:', error.stack);
 
     const { jobId } = JSON.parse(event.body || '{}');
     

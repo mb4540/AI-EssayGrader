@@ -67,6 +67,7 @@ const handler: Handler = async (event: HandlerEvent) => {
 
     // Trigger background function
     const backgroundUrl = `${event.rawUrl.replace('/extract-rubric-trigger', '/extract-rubric-background')}`;
+    console.log(`[extract-rubric-trigger] Triggering background function at: ${backgroundUrl}`);
     
     // Fire and forget - don't wait for response
     fetch(backgroundUrl, {
@@ -81,9 +82,14 @@ const handler: Handler = async (event: HandlerEvent) => {
         geminiModel,
         extractionPrompt,
       }),
-    }).catch((error) => {
-      console.error(`[extract-rubric-trigger] Failed to trigger background job:`, error);
-    });
+    })
+      .then(() => {
+        console.log(`[extract-rubric-trigger] Background function triggered successfully for job ${job.jobId}`);
+      })
+      .catch((error) => {
+        console.error(`[extract-rubric-trigger] Failed to trigger background job:`, error);
+        console.error(`[extract-rubric-trigger] Error details:`, error.message);
+      });
 
     // Return job ID immediately
     return {
