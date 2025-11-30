@@ -5,7 +5,7 @@ export class GeminiProvider implements LLMProvider {
     private client: GoogleGenerativeAI;
     private model: string;
 
-    constructor(apiKey: string, model: string = 'gemini-2.0-flash') {
+    constructor(apiKey: string, model: string = 'gemini-2.5-pro') {
         this.client = new GoogleGenerativeAI(apiKey);
         this.model = model;
     }

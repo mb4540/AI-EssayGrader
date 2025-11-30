@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
-import { Input } from './ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { X, Save, RotateCcw, Cpu, Brain } from 'lucide-react';
@@ -194,11 +193,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [selectedDocType, setSelectedDocType] = useState('personal_narrative');
   const [docTypePrompt, setDocTypePrompt] = useState('');
 
-  // LLM Settings
-  const [llmProvider, setLlmProvider] = useState<'openai' | 'gemini'>('openai');
-  const [geminiModel, setGeminiModel] = useState('gemini-2.0-flash');
-  const [customGeminiModel, setCustomGeminiModel] = useState('');
-  const [openaiModel, setOpenaiModel] = useState('gpt-4o-mini');
+  // LLM Settings - Simplified to single provider choice
+  const [llmProvider, setLlmProvider] = useState<'gemini' | 'openai'>('gemini');
   
   // Handwriting Settings
   const [handwritingProvider, setHandwritingProvider] = useState('default');
@@ -217,22 +213,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     // Load LLM settings
     const savedProvider = localStorage.getItem('ai_provider');
-    const savedGeminiModel = localStorage.getItem('ai_model_gemini');
-    const savedOpenaiModel = localStorage.getItem('ai_model_openai');
     const savedHandwriting = localStorage.getItem('ai_handwriting_provider');
 
+    // Default to Gemini if not set
     if (savedProvider === 'openai' || savedProvider === 'gemini') {
       setLlmProvider(savedProvider);
+    } else {
+      setLlmProvider('gemini');
     }
-    if (savedGeminiModel) {
-      if (savedGeminiModel === 'gemini-1.5-flash' || savedGeminiModel === 'gemini-1.5-pro') {
-        setGeminiModel(savedGeminiModel);
-      } else {
-        setGeminiModel('custom');
-        setCustomGeminiModel(savedGeminiModel);
-      }
-    }
-    if (savedOpenaiModel) setOpenaiModel(savedOpenaiModel);
     if (savedHandwriting) setHandwritingProvider(savedHandwriting);
   }, []);
 
@@ -259,8 +247,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     // Save LLM settings
     localStorage.setItem('ai_provider', llmProvider);
-    localStorage.setItem('ai_model_gemini', geminiModel === 'custom' ? customGeminiModel : geminiModel);
-    localStorage.setItem('ai_model_openai', openaiModel);
     localStorage.setItem('ai_handwriting_provider', handwritingProvider);
 
     alert('Settings saved! Note: These prompts are stored locally in your browser.');
@@ -336,70 +322,37 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>AI Provider</Label>
-                  <Select value={llmProvider} onValueChange={(v: 'openai' | 'gemini') => setLlmProvider(v)}>
+                  <Label>AI Model</Label>
+                  <Select value={llmProvider} onValueChange={(v: 'gemini' | 'openai') => setLlmProvider(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="openai">OpenAI (GPT-4o)</SelectItem>
-                      <SelectItem value="gemini">Google Gemini</SelectItem>
+                      <SelectItem value="gemini">Gemini 2.5 Pro (Default)</SelectItem>
+                      <SelectItem value="openai">OpenAI GPT-4o (Fallback)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500">
-                    Select which AI provider to use for grading and feedback.
+                    Select which AI model to use for grading and feedback.
                   </p>
                 </div>
 
-                {llmProvider === 'openai' && (
-                  <div className="space-y-2">
-                    <Label>OpenAI Model</Label>
-                    <Select value={openaiModel} onValueChange={setOpenaiModel}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="gpt-4o-mini">GPT-4o Mini (Fast & Cheap)</SelectItem>
-                        <SelectItem value="gpt-4o">GPT-4o (High Quality)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                {llmProvider === 'gemini' && (
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>Gemini Model</Label>
-                      <Select value={geminiModel} onValueChange={setGeminiModel}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="gemini-2.0-flash">Gemini 2.0 Flash (Recommended)</SelectItem>
-                          <SelectItem value="gemini-2.0-flash-exp">Gemini 2.0 Flash Experimental</SelectItem>
-                          <SelectItem value="gemini-2.0-pro-exp-02-05">Gemini 2.0 Pro Experimental</SelectItem>
-                          <SelectItem value="gemini-flash-latest">Gemini Flash Latest</SelectItem>
-                          <SelectItem value="custom">Custom Model ID...</SelectItem>
-                        </SelectContent>
-                      </Select>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Model Details</h4>
+                  {llmProvider === 'gemini' ? (
+                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                      <p><strong>Model:</strong> gemini-2.5-pro</p>
+                      <p><strong>Best for:</strong> High-quality grading and detailed feedback</p>
+                      <p><strong>API Key:</strong> GEMINI_API_KEY required in Netlify environment</p>
                     </div>
-
-                    {geminiModel === 'custom' && (
-                      <div className="space-y-2">
-                        <Label>Custom Model ID</Label>
-                        <Input
-                          value={customGeminiModel}
-                          onChange={(e) => setCustomGeminiModel(e.target.value)}
-                          placeholder="e.g., gemini-2.0-flash-exp"
-                          className="font-mono"
-                        />
-                        <p className="text-xs text-blue-600 dark:text-blue-400">
-                          Enter any valid Gemini model ID. Ensure your API key has access to it.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                      <p><strong>Model:</strong> gpt-4o</p>
+                      <p><strong>Best for:</strong> Fallback option when Gemini is unavailable</p>
+                      <p><strong>API Key:</strong> OPENAI_API_KEY required in Netlify environment</p>
+                    </div>
+                  )}
+                </div>
 
                 <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
                   <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">API Key Requirement</h4>

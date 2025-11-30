@@ -140,8 +140,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     const rubricObj = rubricFromJSON(rubric);
     validateRubric(rubricObj);
 
-    // Initialize LLM Provider
-    const providerName = (llmProvider as LLMProviderName) || 'openai';
+    // Initialize LLM Provider (default to Gemini)
+    const providerName = (llmProvider as LLMProviderName) || 'gemini';
 
     // DEBUG: Log available env keys
     console.log('Available Env Keys:', Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('URL')));
