@@ -5,6 +5,7 @@ import { Input } from './ui/input';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Sparkles, Loader2 } from 'lucide-react';
+import { startRubricEnhancement, pollJobStatus, checkEnhancementStatus, type JobStatus } from '../lib/api/rubricJobs';
 
 interface CriteriaInputProps {
   value: string;
@@ -29,27 +30,51 @@ Penalties:
 - Off-topic: -10
 - Too short (< 200 words): -10`;
 
-async function enhanceRubricWithAI(simpleRules: string, totalPoints?: number): Promise<string> {
+async function enhanceRubricWithAI(
+  simpleRules: string, 
+  totalPoints?: number,
+  onProgress?: (status: JobStatus) => void
+): Promise<string> {
   const customRubricPrompt = localStorage.getItem('ai_rubric_prompt');
-  const requestBody = { 
+  const llmProvider = localStorage.getItem('ai_provider') || 'gemini';
+  const llmModel = llmProvider === 'gemini' 
+    ? localStorage.getItem('ai_model_gemini') || 'gemini-2.5-pro'
+    : localStorage.getItem('ai_model_openai') || 'gpt-4o';
+  
+  console.log('📤 Starting rubric enhancement job');
+  console.log('📊 Total Points:', totalPoints);
+  console.log('🤖 Provider:', llmProvider);
+  
+  // Start the background job
+  const startResponse = await startRubricEnhancement({
     simple_rules: simpleRules,
     rubric_prompt: customRubricPrompt || undefined,
-    total_points: totalPoints
-  };
-  console.log('📤 Sending to enhance-rubric:', requestBody);
-  
-  const response = await fetch('/.netlify/functions/enhance-rubric', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(requestBody),
+    total_points: totalPoints,
+    llmProvider,
+    llmModel,
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to enhance rubric');
+  if (!startResponse.success || !startResponse.jobId) {
+    throw new Error(startResponse.error || 'Failed to start enhancement job');
   }
 
-  const data = await response.json();
-  return data.enhanced_rubric;
+  console.log('✅ Job started:', startResponse.jobId);
+
+  // Poll for completion
+  const result = await pollJobStatus(
+    startResponse.jobId,
+    checkEnhancementStatus,
+    onProgress,
+    60, // 60 attempts = 2 minutes
+    2000 // 2 second intervals
+  );
+
+  if (!result.result?.enhanced_rubric) {
+    throw new Error('No enhanced rubric in result');
+  }
+
+  console.log('✅ Enhancement complete');
+  return result.result.enhanced_rubric;
 }
 
 export default function CriteriaInput({ 
@@ -64,6 +89,7 @@ export default function CriteriaInput({
   disabled = false
 }: CriteriaInputProps) {
   const [isEnhancing, setIsEnhancing] = useState(false);
+  const [enhanceStatus, setEnhanceStatus] = useState<JobStatus | null>(null);
 
   const handleEnhance = async () => {
     if (!value.trim()) {
@@ -73,19 +99,25 @@ export default function CriteriaInput({
 
     console.log('🎯 Enhance With AI clicked');
     console.log('📊 Total Points value:', totalPoints);
-    console.log('📊 Total Points type:', typeof totalPoints);
-    console.log('📊 Sending to API:', { simple_rules: value.substring(0, 50) + '...', total_points: totalPoints });
     
     setIsEnhancing(true);
+    setEnhanceStatus('pending');
+    
     try {
-      const enhanced = await enhanceRubricWithAI(value, totalPoints);
-      console.log('✅ Enhanced rubric received:', enhanced.substring(0, 100) + '...');
+      const enhanced = await enhanceRubricWithAI(value, totalPoints, (status) => {
+        setEnhanceStatus(status);
+      });
+      console.log('✅ Enhanced rubric received');
       onChange(enhanced);
+      setEnhanceStatus('completed');
     } catch (error) {
       console.error('Enhancement failed:', error);
+      setEnhanceStatus('failed');
       alert('Failed to enhance rubric. Please try again.');
     } finally {
       setIsEnhancing(false);
+      // Clear status after a delay
+      setTimeout(() => setEnhanceStatus(null), 3000);
     }
   };
 
@@ -121,7 +153,10 @@ export default function CriteriaInput({
             {isEnhancing ? (
               <>
                 <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                Enhancing...
+                {enhanceStatus === 'pending' && 'Starting...'}
+                {enhanceStatus === 'processing' && 'Enhancing...'}
+                {enhanceStatus === 'completed' && 'Complete!'}
+                {!enhanceStatus && 'Enhancing...'}
               </>
             ) : (
               <>

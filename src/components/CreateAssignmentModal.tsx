@@ -6,7 +6,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { createAssignment, updateAssignment, extractRubricFromDocument } from '@/lib/api';
+import { createAssignment, updateAssignment } from '@/lib/api';
+import { startRubricExtraction, pollJobStatus, checkExtractionStatus, type JobStatus } from '@/lib/api/rubricJobs';
 import CriteriaInput from './CriteriaInput';
 import RubricPreviewModal from './RubricPreviewModal';
 import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
@@ -87,16 +88,54 @@ export default function AssignmentModal({
       const geminiModel = localStorage.getItem('ai_model_gemini') || 'gemini-2.0-flash-exp';
       const extractionPrompt = localStorage.getItem('ai_rubric_extraction_prompt') || '';
       
-      const data = await extractRubricFromDocument(rubricFile, totalPoints, geminiModel, extractionPrompt);
+      // Convert file to base64
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(rubricFile);
+        reader.onload = () => {
+          const result = reader.result as string;
+          // Remove data URL prefix (e.g., "data:application/pdf;base64,")
+          resolve(result.split(',')[1]);
+        };
+        reader.onerror = error => reject(error);
+      });
+
+      console.log('📤 Starting rubric extraction job');
       
-      if (data.success) {
-        setExtractedRubric(data);
+      // Start the background job
+      const startResponse = await startRubricExtraction({
+        file: base64,
+        fileName: rubricFile.name,
+        fileType: rubricFile.type,
+        totalPoints,
+        geminiModel,
+        extractionPrompt,
+      });
+
+      if (!startResponse.success || !startResponse.jobId) {
+        throw new Error(startResponse.error || 'Failed to start extraction job');
+      }
+
+      console.log('✅ Job started:', startResponse.jobId);
+
+      // Poll for completion
+      const result = await pollJobStatus(
+        startResponse.jobId,
+        checkExtractionStatus,
+        (status: JobStatus) => {
+          console.log('📊 Extraction status:', status);
+        },
+        60, // 60 attempts = 2 minutes
+        2000 // 2 second intervals
+      );
+
+      if (result.result?.success) {
+        setExtractedRubric(result.result);
         setShowRubricPreview(true);
+        console.log('✅ Extraction complete');
       } else {
-        // Show error with hint if available
-        const errorMsg = data.error || 'Failed to extract rubric';
-        const hint = (data as any).hint;
-        alert(hint ? `${errorMsg}\n\n${hint}` : errorMsg);
+        const errorMsg = result.result?.error || result.error || 'Failed to extract rubric';
+        alert(errorMsg);
       }
     } catch (error: any) {
       console.error('Rubric upload error:', error);
