@@ -1,19 +1,43 @@
 # Phase 0 Testing Checklist
 
 **Phase:** Fix Annotation Category Inconsistency
-**Status:** ✅ Code Complete - Ready for Testing
+**Status:** 🔴 CRITICAL BUG FIXED - Ready for Re-Testing
 **Date:** November 30, 2025
+**Last Updated:** November 30, 2025 4:10pm
+
+---
+
+## ⚠️ CRITICAL BUG DISCOVERED AND FIXED
+
+**Issue Found During Manual Testing:**
+- Specific Corrections section was EMPTY
+- Inline Annotations section was EMPTY
+- Annotations were being rejected by validation
+
+**Root Cause:**
+- `validateCategory()` in `normalizer.ts` was still checking for hardcoded generic categories
+- New rubric criterion IDs (e.g., `ideas_development`) failed validation
+- ALL annotations went to `unresolved` array instead of being saved
+
+**Fix Applied:**
+- Updated `validateCategory()` to accept any non-empty string
+- Changed `AnnotationCategory` type to `string`
+- Commit: `f12af41`
 
 ---
 
 ## Changes Summary
 
-Replaced generic annotation categories (`Content|Evidence|Organization|Clarity|Mechanics`) with rubric criterion IDs (e.g., `ideas_development|focus_organization|authors_craft|conventions`).
+**Phase 0 Changes:**
+1. Replaced generic annotation categories with rubric criterion IDs in LLM prompts
+2. Fixed annotation validation to accept dynamic rubric criterion IDs
 
 **Files Modified:**
-- `src/lib/prompts/extractor.ts` (5 locations)
+- `src/lib/prompts/extractor.ts` (5 locations) - Commit `cb901c3`
+- `src/lib/annotations/normalizer.ts` - Commit `f12af41` ⚠️ CRITICAL FIX
+- `src/lib/annotations/types.ts` - Commit `f12af41` ⚠️ CRITICAL FIX
 
-**Commit:** `cb901c3`
+**Commits:** `cb901c3`, `f12af41`
 
 ---
 
