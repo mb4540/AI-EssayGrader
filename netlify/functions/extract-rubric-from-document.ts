@@ -3,6 +3,15 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import mammoth from 'mammoth';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
+/**
+ * IMPORTANT: This function is LOCKED to Gemini 2.5 Pro for document extraction.
+ * Gemini is a multimodal LLM optimized for document understanding and provides
+ * superior rubric extraction from PDF/DOCX files compared to other models.
+ * 
+ * The LLM provider setting in AI Prompt Settings does NOT affect this function.
+ * It will always use Gemini regardless of user's global LLM preference.
+ */
+
 // Initialize Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 

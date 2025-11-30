@@ -2,6 +2,15 @@ import { Handler } from '@netlify/functions';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 
+/**
+ * IMPORTANT: This function is LOCKED to Gemini 2.5 Pro for image transcription.
+ * Gemini is a multimodal LLM optimized for vision tasks and provides superior
+ * handwriting recognition compared to other models.
+ * 
+ * The LLM provider setting in AI Prompt Settings does NOT affect this function.
+ * It will always use Gemini 2.5 Pro regardless of user's global LLM preference.
+ */
+
 const handler: Handler = async (event) => {
   // CORS headers
   const headers = {
@@ -29,7 +38,7 @@ const handler: Handler = async (event) => {
   }
 
   try {
-    const { image, provider = 'gemini' } = JSON.parse(event.body || '{}');
+    const { image } = JSON.parse(event.body || '{}');
 
     if (!image) {
       return {
@@ -44,7 +53,9 @@ const handler: Handler = async (event) => {
 
     let transcription = '';
 
-    if (provider === 'gemini') {
+    // ALWAYS use Gemini 2.5 Pro (multimodal LLM optimized for vision)
+    // Ignore any provider parameter - this function is locked to Gemini
+    if (true) {  // Always true - using Gemini
       if (!process.env.GEMINI_API_KEY) {
         console.error('Missing GEMINI_API_KEY');
         return {
@@ -83,41 +94,8 @@ const handler: Handler = async (event) => {
       ]);
       
       transcription = result.response.text();
-
-    } else if (provider === 'openai') {
-      if (!process.env.OPENAI_API_KEY) {
-        console.error('Missing OPENAI_API_KEY');
-        return {
-          statusCode: 500,
-          headers,
-          body: JSON.stringify({ error: 'OPENAI_API_KEY is not configured' }),
-        };
-      }
-
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: SYSTEM_PROMPT },
-              { type: 'image_url', image_url: { url: image } }, // OpenAI accepts data URLs directly
-            ],
-          },
-        ],
-        max_tokens: 4096,
-      });
-
-      transcription = response.choices[0]?.message?.content || '';
-
-    } else {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Invalid provider. Use "gemini" or "openai".' }),
-      };
+      
+      console.log('[transcribe-image] ✅ Transcription completed with Gemini 2.5 Pro');
     }
 
     return {

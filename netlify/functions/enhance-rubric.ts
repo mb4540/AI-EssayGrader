@@ -1,10 +1,15 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import OpenAI from 'openai';
 import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
+import { getLLMProvider, LLMProviderName } from './lib/llm/factory';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+/**
+ * NOTE: This function uses OpenAI's structured outputs feature (json_schema with strict mode)
+ * which is currently only available in OpenAI's gpt-4o-2024-08-06 model or newer.
+ * Gemini does not yet support this exact feature, so we use OpenAI by default.
+ * 
+ * If Gemini is selected, we fall back to OpenAI for this specific function.
+ */
 
 // Structured output schema for rubric
 const RUBRIC_SCHEMA = {
@@ -152,7 +157,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
   }
 
   try {
-    const { simple_rules, rubric_prompt, total_points } = JSON.parse(event.body || '{}');
+    const { simple_rules, rubric_prompt, total_points, llmProvider, llmModel } = JSON.parse(event.body || '{}');
 
     if (!simple_rules || typeof simple_rules !== 'string') {
       return {
@@ -167,9 +172,30 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Build the prompt with the specified total points
     const systemPrompt = buildRubricEnhancementPrompt(totalPoints);
 
+    // Performance logging - start
+    const startTime = Date.now();
+    
+    // IMPORTANT: This function requires OpenAI's structured outputs feature
+    // If Gemini is requested, we log a warning and use OpenAI anyway
+    let providerName = (llmProvider as LLMProviderName) || 'gemini';
+    if (providerName === 'gemini') {
+      console.log('[enhance-rubric] ⚠️  Gemini requested but structured outputs require OpenAI - using OpenAI');
+      providerName = 'openai';
+    }
+    
+    console.log(`[enhance-rubric] Starting rubric enhancement with ${providerName}`);
+    console.log(`[enhance-rubric] Input rules length: ${simple_rules.length} characters`);
+    console.log(`[enhance-rubric] Target total points: ${totalPoints}`);
+
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY not configured (required for structured outputs)');
+    }
+
+    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
     // Use structured outputs to guarantee format
     const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-2024-08-06', // Structured outputs require this model or newer
+      model: 'gpt-4o-2024-08-06', // Structured outputs require this specific model or newer
       messages: [
         {
           role: 'system',
@@ -199,6 +225,12 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Parse the structured JSON response
     const rubricData = JSON.parse(content);
     
+    // Performance logging - end
+    const duration = Date.now() - startTime;
+    console.log(`[enhance-rubric] ✅ Completed in ${duration}ms`);
+    console.log(`[enhance-rubric] Generated ${rubricData.categories.length} categories`);
+    console.log(`[enhance-rubric] Token usage: ${completion.usage?.prompt_tokens || 0} prompt + ${completion.usage?.completion_tokens || 0} completion = ${(completion.usage?.total_tokens || 0)} total`);
+    
     // Validate the math
     const categorySum = rubricData.categories.reduce((sum: number, cat: any) => sum + cat.points, 0);
     if (Math.abs(categorySum - rubricData.total_points) > 0.01) {
@@ -213,7 +245,17 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ enhanced_rubric }),
+      body: JSON.stringify({ 
+        enhanced_rubric,
+        performance: {
+          duration_ms: duration,
+          provider: 'openai', // Always OpenAI for structured outputs
+          model: 'gpt-4o-2024-08-06',
+          input_length: simple_rules.length,
+          categories_generated: rubricData.categories.length,
+          tokens_used: completion.usage?.total_tokens || 0,
+        }
+      }),
     };
   } catch (error) {
     console.error('Rubric enhancement error:', error);
