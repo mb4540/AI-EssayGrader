@@ -241,7 +241,21 @@ const handler: Handler = async (event: HandlerEvent) => {
     }
 
     // Parse JSON response
-    const rubric = JSON.parse(content);
+    let rubric;
+    try {
+      rubric = JSON.parse(content);
+      console.log('[enhance-rubric-background] Parsed rubric:', JSON.stringify(rubric).substring(0, 200));
+    } catch (parseError: any) {
+      console.error('[enhance-rubric-background] JSON parse error:', parseError);
+      console.error('[enhance-rubric-background] Raw content:', content.substring(0, 500));
+      throw new Error(`Failed to parse LLM response: ${parseError.message}`);
+    }
+
+    // Validate rubric structure
+    if (!rubric.categories || !Array.isArray(rubric.categories)) {
+      console.error('[enhance-rubric-background] Invalid rubric structure:', rubric);
+      throw new Error('LLM returned invalid rubric structure - missing or invalid categories array');
+    }
 
     // Convert to markdown
     const enhancedRubric = convertRubricToMarkdown(rubric);
