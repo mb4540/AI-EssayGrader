@@ -230,6 +230,7 @@ export async function listAssignments() {
       id: string;
       title: string;
       description?: string;
+      assignment_prompt?: string;
       grading_criteria?: string;
       total_points?: number;
       created_at: string;
@@ -238,8 +239,8 @@ export async function listAssignments() {
 }
 
 export async function createAssignment(data: {
-  title: string; description?: string; grading_criteria?: string;
-  total_points?: number; document_type?: string
+  title: string; description?: string; assignment_prompt?: string;
+  grading_criteria?: string; total_points?: number; document_type?: string
 }) {
   const response = await fetch(`${API_BASE}/assignments`, {
     method: 'POST',
@@ -265,6 +266,7 @@ export async function updateAssignment(
   data: {
     title: string;
     description?: string;
+    assignment_prompt?: string;
     grading_criteria?: string;
     total_points?: number;
     document_type?: string;

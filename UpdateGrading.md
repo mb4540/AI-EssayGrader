@@ -35,21 +35,21 @@ Each phase includes:
 ## Phase Overview & Dependencies
 
 ```
-Phase 0: Annotation Category Fix (CRITICAL - BLOCKING)
+✅ Phase 0: Annotation Category Fix (CRITICAL - BLOCKING) - DEPLOYED
    ↓
-Phase 1: Assignment Prompt (Database + Backend)
+✅ Phase 1: Assignment Prompt (Database + Backend) - COMPLETE
    ↓
-Phase 2: Assignment Prompt (Frontend + Integration)
+✅ Phase 2: Assignment Prompt (Frontend + Integration) - COMPLETE
    ↓
-Phase 3: Non-Graded Annotations (Backend)
+⏳ Phase 3: Non-Graded Annotations (Backend) - NEXT
    ↓
-Phase 4: Non-Graded Annotations (Frontend)
+⏳ Phase 4: Non-Graded Annotations (Frontend)
    ↓
-Phase 5: Color-Coded Highlighting (Print System)
+⏳ Phase 5: Color-Coded Highlighting (Print System)
    ↓
-Phase 6: Manual Annotations (Backend + Database)
+⏳ Phase 6: Manual Annotations (Backend + Database)
    ↓
-Phase 7: Manual Annotations (Frontend + UI)
+⏳ Phase 7: Manual Annotations (Frontend + UI)
 ```
 
 **Estimated Timeline:**
@@ -1476,9 +1476,9 @@ If issues occur, revert `src/lib/prompts/extractor.ts` to previous version.
 
 ## Phase 1: Assignment Prompt - Database & Backend
 
-**Status:** 🔵 IN PROGRESS - Starting November 30, 2025
+**Status:** ✅ COMPLETE - November 30, 2025
 
-**Duration:** 2-3 hours
+**Duration:** 2-3 hours (Actual: 1 hour)
 
 **Dependencies:** ✅ Phase 0 complete
 
@@ -1573,11 +1573,11 @@ ALTER TABLE grader.submissions DROP COLUMN assignment_prompt;
 
 ## Phase 2: Assignment Prompt - Frontend & Integration
 
-**Status:** ⚪ Not Started
+**Status:** ✅ COMPLETE - November 30, 2025
 
-**Duration:** 2-3 hours
+**Duration:** 2-3 hours (Actual: 1 hour)
 
-**Dependencies:** Phase 1 must be complete
+**Dependencies:** ✅ Phase 1 complete
 
 ### Scope
 Add UI for assignment prompts in CreateAssignmentModal and Grade Submissions page.

@@ -52,6 +52,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       student_id,  // UUID from bridge (FERPA compliant)
       assignment_id, 
       assignment_title,
+      assignment_prompt,
       teacher_criteria, 
       verbatim_text,
       rough_draft_text,
@@ -115,7 +116,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         verbatim_text,
         rough_draft_text,
         final_draft_text,
-        teacher_criteria
+        teacher_criteria,
+        assignment_prompt
       )
       VALUES (
         ${student_id},
@@ -126,7 +128,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         ${verbatim_text || null},
         ${rough_draft_text || null},
         ${final_draft_text || null},
-        ${teacher_criteria}
+        ${teacher_criteria},
+        ${assignment_prompt || null}
       )
       RETURNING submission_id, created_at
     `;

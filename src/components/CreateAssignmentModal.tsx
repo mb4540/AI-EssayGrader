@@ -16,6 +16,7 @@ interface Assignment {
   id: string;
   title: string;
   description?: string;
+  assignment_prompt?: string;
   grading_criteria?: string;
   document_type?: string;
   total_points?: number;
@@ -38,6 +39,7 @@ export default function AssignmentModal({
 }: AssignmentModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [assignmentPrompt, setAssignmentPrompt] = useState('');
   const [criteria, setCriteria] = useState('');
   const [totalPoints, setTotalPoints] = useState(100);
   const [documentType, setDocumentType] = useState('personal_narrative');
@@ -169,6 +171,7 @@ export default function AssignmentModal({
       
       setTitle(existingAssignment.title || '');
       setDescription(existingAssignment.description || '');
+      setAssignmentPrompt(existingAssignment.assignment_prompt || '');
       setCriteria(existingAssignment.grading_criteria || '');
       setDocumentType(existingAssignment.document_type || 'personal_narrative');
       
@@ -268,6 +271,7 @@ export default function AssignmentModal({
     createMutation.mutate({ 
       title: title.trim(), 
       description: description.trim() || undefined,
+      assignment_prompt: assignmentPrompt.trim() || undefined,
       grading_criteria: criteria.trim() || undefined,
       document_type: documentType,
       total_points: totalPoints,
@@ -286,7 +290,7 @@ export default function AssignmentModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm overflow-y-auto p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-2xl mx-4 border-2 border-blue-200 dark:border-blue-800 my-8">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-3xl mx-4 border-2 border-blue-200 dark:border-blue-800 my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-500 to-indigo-500 p-6 rounded-t-xl">
           <div className="flex items-center justify-between">
@@ -309,7 +313,7 @@ export default function AssignmentModal({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           <div>
             <Label htmlFor="assignment-title" className="text-gray-700 dark:text-gray-300 font-medium">
               Assignment Title <span className="text-red-500">*</span>
@@ -396,6 +400,23 @@ export default function AssignmentModal({
               className="mt-1 border-2 focus:border-blue-500 min-h-[80px]"
               disabled={createMutation.isPending}
             />
+          </div>
+
+          <div>
+            <Label htmlFor="assignment-prompt" className="text-gray-700 dark:text-gray-300 font-medium">
+              Assignment Prompt <span className="text-gray-400 text-xs">(optional)</span>
+            </Label>
+            <Textarea
+              id="assignment-prompt"
+              value={assignmentPrompt}
+              onChange={(e) => setAssignmentPrompt(e.target.value)}
+              placeholder="Enter the instructions given to students for this assignment (e.g., 'Write a 5-paragraph persuasive essay arguing for or against school uniforms')..."
+              className="mt-1 border-2 focus:border-blue-500 min-h-[100px]"
+              disabled={createMutation.isPending}
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Student-facing instructions that help the AI understand what students were asked to do
+            </p>
           </div>
 
           <div>

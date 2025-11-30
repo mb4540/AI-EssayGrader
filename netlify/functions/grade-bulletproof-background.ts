@@ -59,12 +59,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         s.draft_mode, 
         s.teacher_criteria,
         s.assignment_id,
+        s.assignment_prompt as submission_assignment_prompt,
         a.rubric_json,
         a.scale_mode,
         a.total_points,
         a.rounding_mode,
         a.rounding_decimals,
-        a.document_type
+        a.document_type,
+        a.assignment_prompt as assignment_assignment_prompt
       FROM grader.submissions s
       LEFT JOIN grader.assignments a ON s.assignment_id = a.assignment_id
       JOIN grader.students st ON s.student_id = st.student_id
@@ -84,13 +86,18 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       draft_mode,
       teacher_criteria,
       assignment_id,
+      submission_assignment_prompt,
       rubric_json,
       scale_mode,
       total_points,
       rounding_mode,
       rounding_decimals,
-      document_type
+      document_type,
+      assignment_assignment_prompt
     } = submission[0];
+
+    // Prioritize submission's assignment_prompt over assignment's
+    const assignmentPrompt = submission_assignment_prompt || assignment_assignment_prompt || undefined;
 
     // Get or create rubric
     let rubric: RubricJSON;
@@ -165,14 +172,18 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         final_draft_text,
         submission_id,
         grading_prompt,
-        document_type
+        document_type,
+        undefined, // sourceTextContext (not used in this call)
+        assignmentPrompt
       )
       : buildExtractorPrompt(
         rubric,
         essayText,
         submission_id,
         grading_prompt,
-        document_type
+        document_type,
+        undefined, // sourceTextContext (not used in this call)
+        assignmentPrompt
       );
 
     console.log('Calling LLM for grading...');
