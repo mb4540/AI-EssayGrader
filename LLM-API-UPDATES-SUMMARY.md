@@ -39,20 +39,23 @@ Successfully updated all LLM function calls to use system defaults (Gemini 2.5 P
 
 ### 3. ✅ Update `enhance-rubric.ts` - Rubric Enhancement
 **File:** `netlify/functions/enhance-rubric.ts`
-- **Changed:** Added performance logging and LLM provider awareness
-- **Default:** OpenAI GPT-4o-2024-08-06 (REQUIRED for structured outputs)
-- **Fallback Logic:** If Gemini requested, logs warning and uses OpenAI anyway
-- **Reason:** OpenAI's structured outputs feature (`json_schema` with `strict: true`) is not available in Gemini yet
+- **Changed:** Now uses system default (Gemini) with JSON mode
+- **Default:** Gemini 2.5 Pro (respects user's global LLM setting)
+- **Fallback:** OpenAI GPT-4o-2024-08-06 if user selects OpenAI
+- **Implementation:**
+  - Gemini: Uses standard JSON mode
+  - OpenAI: Uses structured outputs with `json_schema` (stricter validation)
+  - Both providers work correctly
 - **Performance Logging Added:**
   - Duration (ms)
   - Input rules length
   - Categories generated
   - Token usage
 - **Response Enhanced:** Now includes `performance` object with metrics
-- **Documentation:** Added comment explaining why OpenAI is required
+- **Documentation:** Updated to explain both providers work
 
 **Important Note:**
-This function MUST use OpenAI because it relies on structured outputs to guarantee valid JSON format. Gemini doesn't support this feature yet.
+Both Gemini and OpenAI work for this function. OpenAI's structured outputs provide stricter JSON validation, but Gemini's JSON mode is sufficient.
 
 ### 4. ✅ Lock `transcribe-image.ts` - Handwriting Transcription
 **File:** `netlify/functions/transcribe-image.ts`
@@ -60,6 +63,13 @@ This function MUST use OpenAI because it relies on structured outputs to guarant
 - **Reason:** Gemini is optimized for vision tasks and provides superior handwriting recognition
 - **Removed:** Provider parameter - no longer accepts user choice
 - **Removed:** OpenAI fallback code
+- **Performance Logging Added:**
+  - Duration (ms)
+  - Image size and type
+  - Output text length
+  - Token usage
+  - Processing speed (chars/sec)
+- **Response Enhanced:** Now includes `performance` object with metrics
 - **Documentation:** Added clear comment explaining it's locked to Gemini
 - **Impact:** User's global LLM setting does NOT affect this function
 - **Always Uses:** Gemini 2.5 Pro regardless of AI Prompt Settings
@@ -73,6 +83,13 @@ This function MUST use OpenAI because it relies on structured outputs to guarant
 **File:** `netlify/functions/extract-rubric-from-document.ts`
 - **Changed:** LOCKED to Gemini (multimodal)
 - **Reason:** Gemini is optimized for document understanding
+- **Performance Logging Added:**
+  - Duration (ms)
+  - File size and type
+  - Categories extracted
+  - Total points
+  - Token usage
+- **Response Enhanced:** Now includes `performance` object with metrics
 - **Documentation:** Added clear comment explaining it's locked to Gemini
 - **Impact:** User's global LLM setting does NOT affect this function
 - **Always Uses:** Gemini regardless of AI Prompt Settings
@@ -89,9 +106,9 @@ This function MUST use OpenAI because it relies on structured outputs to guarant
 | `grade-bulletproof.ts` | OpenAI hardcoded | **SOFT DELETED** | N/A | N/A |
 | `grade-bulletproof-background.ts` | Uses factory | Uses factory (Gemini default) | ✅ Yes | ✅ Yes (already had) |
 | `enhance-text.ts` | OpenAI hardcoded | Uses factory (Gemini default) | ✅ Yes | ✅ Yes (NEW) |
-| `enhance-rubric.ts` | OpenAI hardcoded | OpenAI only (structured outputs) | ❌ No (OpenAI required) | ✅ Yes (NEW) |
-| `transcribe-image.ts` | Gemini default, configurable | **LOCKED to Gemini** | ❌ No (Gemini required) | ⚠️ Basic |
-| `extract-rubric-from-document.ts` | Gemini hardcoded | **LOCKED to Gemini** | ❌ No (Gemini required) | ⚠️ Basic |
+| `enhance-rubric.ts` | OpenAI hardcoded | Uses factory (Gemini default) | ✅ Yes | ✅ Yes (NEW) |
+| `transcribe-image.ts` | Gemini default, configurable | **LOCKED to Gemini** | ❌ No (Gemini required) | ✅ Yes (NEW) |
+| `extract-rubric-from-document.ts` | Gemini hardcoded | **LOCKED to Gemini** | ❌ No (Gemini required) | ✅ Yes (NEW) |
 
 ## Performance Monitoring
 
