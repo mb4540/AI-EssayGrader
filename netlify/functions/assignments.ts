@@ -25,7 +25,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       const { tenant_id } = auth;
       
       const assignments = await sql`
-        SELECT assignment_id as id, title, description, grading_criteria, total_points, created_at
+        SELECT assignment_id as id, title, description, assignment_prompt, grading_criteria, total_points, created_at
         FROM grader.assignments
         WHERE tenant_id = ${tenant_id}
         ORDER BY created_at DESC
@@ -55,7 +55,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       // Authenticate request
       const auth = await authenticateRequest(event.headers.authorization);
       const { tenant_id } = auth;
-      const { title, description, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
+      const { title, description, assignment_prompt, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
 
       if (!title || typeof title !== 'string' || title.trim().length === 0) {
         return {
@@ -87,17 +87,18 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       }
 
       const result = await sql`
-        INSERT INTO grader.assignments (tenant_id, title, description, grading_criteria, document_type, total_points, rubric_json)
+        INSERT INTO grader.assignments (tenant_id, title, description, assignment_prompt, grading_criteria, document_type, total_points, rubric_json)
         VALUES (
           ${tenant_id},
           ${title.trim()}, 
           ${description?.trim() || null},
+          ${assignment_prompt?.trim() || null},
           ${grading_criteria?.trim() || null},
           ${document_type || null},
           ${total_points || 100},
           ${rubricJson ? JSON.stringify(rubricJson) : null}
         )
-        RETURNING assignment_id as id, title, description, grading_criteria, document_type, total_points, rubric_json, created_at
+        RETURNING assignment_id as id, title, description, assignment_prompt, grading_criteria, document_type, total_points, rubric_json, created_at
       `;
 
       // Update rubric_id with actual assignment_id
@@ -138,7 +139,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
       // Authenticate request
       const auth = await authenticateRequest(event.headers.authorization);
       const { tenant_id } = auth;
-      const { assignment_id, title, description, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
+      const { assignment_id, title, description, assignment_prompt, grading_criteria, document_type, total_points } = JSON.parse(event.body || '{}');
 
       if (!assignment_id) {
         return {
@@ -180,13 +181,14 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         SET 
           title = ${title.trim()},
           description = ${description?.trim() || null},
+          assignment_prompt = ${assignment_prompt?.trim() || null},
           grading_criteria = ${grading_criteria?.trim() || null},
           document_type = ${document_type || null},
           total_points = ${total_points || 100},
           rubric_json = ${rubricJson ? JSON.stringify(rubricJson) : null}
         WHERE assignment_id = ${assignment_id}
         AND tenant_id = ${tenant_id}
-        RETURNING assignment_id as id, title, description, grading_criteria, document_type, total_points, rubric_json, created_at
+        RETURNING assignment_id as id, title, description, assignment_prompt, grading_criteria, document_type, total_points, rubric_json, created_at
       `;
 
       if (result.length === 0) {
