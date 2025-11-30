@@ -32,7 +32,7 @@ export function buildExtractorPrompt(
   submissionId: string,
   customGradingPrompt?: string,
   documentType?: string,
-  sourceTextContext?: any, // Future: SourceTextContext for book reports
+  _sourceTextContext?: any, // Future: SourceTextContext for book reports (unused - reserved for future)
   assignmentPrompt?: string
 ): string {
   // Build criterion descriptions for the prompt
@@ -277,7 +277,7 @@ export function buildComparisonExtractorPrompt(
   submissionId: string,
   customGradingPrompt?: string,
   documentType?: string,
-  sourceTextContext?: any, // Future: SourceTextContext for book reports
+  _sourceTextContext?: any, // Future: SourceTextContext for book reports (unused - reserved for future)
   assignmentPrompt?: string
 ): string {
   const criteriaDescriptions = rubric.criteria
