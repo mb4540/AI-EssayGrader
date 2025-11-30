@@ -28,6 +28,7 @@ export const IngestRequestSchema = z.object({
   student_id: z.string().uuid(), // Required - UUID from bridge
   assignment_id: z.string().uuid().optional(),
   assignment_title: z.string().optional(),
+  assignment_prompt: z.string().optional(), // Phase 1: Assignment instructions
   teacher_criteria: z.string().min(1),
   source_type: z.enum(['text', 'docx', 'pdf', 'doc', 'image']),
   draft_mode: z.enum(['single', 'comparison']).default('single'),

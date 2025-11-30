@@ -31,7 +31,9 @@ export function buildExtractorPrompt(
   essayText: string,
   submissionId: string,
   customGradingPrompt?: string,
-  documentType?: string
+  documentType?: string,
+  sourceTextContext?: any, // Future: SourceTextContext for book reports
+  assignmentPrompt?: string
 ): string {
   // Build criterion descriptions for the prompt
   const criteriaDescriptions = rubric.criteria
@@ -54,6 +56,12 @@ ${levelsDesc}`;
   const documentTypeGuidance = docType?.gradingFocus 
     ? `\nDOCUMENT TYPE: ${docType.label}\nGRADING FOCUS: ${docType.gradingFocus}\n`
     : "";
+  
+  // Add assignment prompt context if provided
+  const assignmentContext = assignmentPrompt
+    ? `\n## ASSIGNMENT INSTRUCTIONS\n\nThe student was given the following instructions:\n\n"${assignmentPrompt}"\n\nWhen grading, consider whether the student:\n- Followed the assignment instructions\n- Addressed the prompt requirements\n- Met the specified format/length/structure\n`
+    : "";
+  
   const gradingPhilosophy = customGradingPrompt || EXTRACTOR_SYSTEM_MESSAGE;
   
   // Use rubric criterion IDs as annotation categories for consistency
@@ -62,7 +70,7 @@ ${levelsDesc}`;
   return `${gradingPhilosophy}
 
 RUBRIC: "${rubric.title}"
-${documentTypeGuidance}
+${documentTypeGuidance}${assignmentContext}
 
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
@@ -268,7 +276,9 @@ export function buildComparisonExtractorPrompt(
   finalDraft: string,
   submissionId: string,
   customGradingPrompt?: string,
-  documentType?: string
+  documentType?: string,
+  sourceTextContext?: any, // Future: SourceTextContext for book reports
+  assignmentPrompt?: string
 ): string {
   const criteriaDescriptions = rubric.criteria
     .map((c) => {
@@ -292,13 +302,18 @@ ${levelsDesc}`;
     ? `\nDOCUMENT TYPE: ${docType.label}\nGRADING FOCUS: ${docType.gradingFocus}\n`
     : "";
   
+  // Add assignment prompt context if provided
+  const assignmentContext = assignmentPrompt
+    ? `\n## ASSIGNMENT INSTRUCTIONS\n\nThe student was given the following instructions:\n\n"${assignmentPrompt}"\n\nWhen grading, consider whether the student:\n- Followed the assignment instructions\n- Addressed the prompt requirements\n- Met the specified format/length/structure\n`
+    : "";
+  
   // Use rubric criterion IDs as annotation categories for consistency
   const annotationCategories = rubric.criteria.map(c => c.id).join('|');
 
   return `${gradingPhilosophy}
 
 RUBRIC: "${rubric.title}"
-${documentTypeGuidance}
+${documentTypeGuidance}${assignmentContext}
 
 CRITERIA TO EVALUATE:
 ${criteriaDescriptions}
