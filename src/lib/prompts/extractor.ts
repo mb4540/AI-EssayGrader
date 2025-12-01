@@ -33,7 +33,8 @@ export function buildExtractorPrompt(
   customGradingPrompt?: string,
   documentType?: string,
   _sourceTextContext?: any, // Future: SourceTextContext for book reports (unused - reserved for future)
-  assignmentPrompt?: string
+  assignmentPrompt?: string,
+  enableNonGradedAnnotations?: boolean
 ): string {
   // Build criterion descriptions for the prompt
   const criteriaDescriptions = rubric.criteria
@@ -176,6 +177,15 @@ ${rubric.criteria.map(c => `  * ${c.id} = issues affecting "${c.name}"`).join('\
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
 - Include ALL issues you find - do not limit the number of annotations
+${enableNonGradedAnnotations ? `
+
+ADDITIONAL NON-GRADED ANNOTATIONS (DO NOT AFFECT GRADE):
+Also identify basic mechanical errors for student learning:
+- Spelling errors: category="non_graded", subcategory="spelling", affects_grade=false
+- Grammar errors: category="non_graded", subcategory="grammar", affects_grade=false
+- Punctuation errors: category="non_graded", subcategory="punctuation", affects_grade=false
+These annotations help students learn but DO NOT impact the grade or rubric scores.
+Include these in the inline_annotations array with the fields above.` : ''}
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }
@@ -278,7 +288,8 @@ export function buildComparisonExtractorPrompt(
   customGradingPrompt?: string,
   documentType?: string,
   _sourceTextContext?: any, // Future: SourceTextContext for book reports (unused - reserved for future)
-  assignmentPrompt?: string
+  assignmentPrompt?: string,
+  enableNonGradedAnnotations?: boolean
 ): string {
   const criteriaDescriptions = rubric.criteria
     .map((c) => {
@@ -427,6 +438,15 @@ ${rubric.criteria.map(c => `  * ${c.id} = issues affecting "${c.name}"`).join('\
 - Severity: error (must fix), warning (should fix), info (suggestion)
 - Provide actionable suggestions, not just identification
 - Include ALL issues you find - do not limit the number of annotations
+${enableNonGradedAnnotations ? `
+
+ADDITIONAL NON-GRADED ANNOTATIONS (DO NOT AFFECT GRADE):
+Also identify basic mechanical errors for student learning:
+- Spelling errors: category="non_graded", subcategory="spelling", affects_grade=false
+- Grammar errors: category="non_graded", subcategory="grammar", affects_grade=false
+- Punctuation errors: category="non_graded", subcategory="punctuation", affects_grade=false
+These annotations help students learn but DO NOT impact the grade or rubric scores.
+Include these in the inline_annotations array with the fields above.` : ''}
 
 IMPORTANT: Output ONLY the JSON. No additional text before or after.`;
 }

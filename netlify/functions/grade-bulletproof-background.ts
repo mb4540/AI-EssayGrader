@@ -165,6 +165,11 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     console.log(`Using LLM Provider: ${providerName} (${llmModel || 'default'})`);
 
     const essayText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;
+    
+    // TODO Phase 4: Get this from user settings (localStorage on frontend, passed via API)
+    // For now, default to false until Settings UI is implemented
+    const enableNonGradedAnnotations = false;
+    
     const extractorPrompt = draft_mode === 'comparison'
       ? buildComparisonExtractorPrompt(
         rubric,
@@ -174,7 +179,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         grading_prompt,
         document_type,
         undefined, // sourceTextContext (not used in this call)
-        assignmentPrompt
+        assignmentPrompt,
+        enableNonGradedAnnotations
       )
       : buildExtractorPrompt(
         rubric,
@@ -183,7 +189,8 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         grading_prompt,
         document_type,
         undefined, // sourceTextContext (not used in this call)
-        assignmentPrompt
+        assignmentPrompt,
+        enableNonGradedAnnotations
       );
 
     console.log('Calling LLM for grading...');

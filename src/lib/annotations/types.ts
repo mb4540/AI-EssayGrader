@@ -25,9 +25,11 @@ export interface RawAnnotation {
   line: number;
   quote: string;
   category: string;
+  subcategory?: string; // For non-graded: 'spelling', 'grammar', 'punctuation'
   suggestion: string;
   severity?: AnnotationSeverity;
   criterion_id?: string; // Links to rubric criterion
+  affects_grade?: boolean; // false for non-graded annotations (spelling, grammar, etc.)
 }
 
 /**
@@ -41,10 +43,12 @@ export interface Annotation {
   end_offset: number;
   quote: string;
   category: AnnotationCategory;
+  subcategory?: string; // For non-graded: 'spelling', 'grammar', 'punctuation'
   suggestion: string;
   severity?: AnnotationSeverity;
   status: AnnotationStatus;
   criterion_id?: string; // Links to rubric criterion
+  affects_grade?: boolean; // false for non-graded annotations
   created_by?: string;
   created_at?: string;
   updated_at?: string;

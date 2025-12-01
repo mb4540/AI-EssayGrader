@@ -391,6 +391,32 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 className="min-h-[300px] font-mono text-sm"
                 placeholder="Enter grading prompt..."
               />
+              
+              {/* Non-Graded Annotations Setting */}
+              <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="enable-non-graded"
+                    checked={localStorage.getItem('enable_non_graded_annotations') === 'true'}
+                    onChange={(e) => {
+                      localStorage.setItem('enable_non_graded_annotations', e.target.checked ? 'true' : 'false');
+                      // Force re-render
+                      setGradingPrompt(gradingPrompt);
+                    }}
+                    className="mt-1 w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="enable-non-graded" className="text-sm font-semibold text-blue-900 dark:text-blue-100 cursor-pointer">
+                      Identify spelling, grammar, and punctuation errors
+                    </Label>
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                      These annotations help students learn but <strong>do not affect the grade</strong>. 
+                      They appear with light blue highlighting to distinguish them from graded feedback.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </TabsContent>
 
             {/* OCR / Handwriting Tab */}
