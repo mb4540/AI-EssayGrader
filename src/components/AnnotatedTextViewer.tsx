@@ -151,13 +151,19 @@ export default function AnnotatedTextViewer({
                   {line}
                 </div>
               </div>
-              {lineAnnotations.map(annotation => (
+              {lineAnnotations.map(annotation => {
+                const isNonGraded = annotation.category === 'non_graded' || annotation.affects_grade === false;
+                return (
                 <div
                   key={annotation.annotation_id}
                   className={`mt-2 ml-12 p-3 rounded-lg border-l-4 cursor-pointer transition-all ${
                     selectedAnnotation === annotation.annotation_id
-                      ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500'
-                      : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600'
+                      ? isNonGraded
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
+                        : 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500'
+                      : isNonGraded
+                        ? 'bg-blue-50/50 dark:bg-blue-900/10 border-blue-300 dark:border-blue-600'
+                        : 'bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-600'
                   }`}
                   onClick={() => setSelectedAnnotation(annotation.annotation_id!)}
                 >
@@ -243,8 +249,16 @@ export default function AnnotatedTextViewer({
                       )}
                     </>
                   )}
+                  
+                  {/* Non-graded indicator */}
+                  {isNonGraded && (
+                    <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 font-medium">
+                      ℹ️ Does not affect grade
+                    </div>
+                  )}
                 </div>
-              ))}
+              );
+              })}
             </div>
           );
         })}
