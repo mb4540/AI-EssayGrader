@@ -5,7 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare, Brain } from 'lucide-react';
 import AnnotatedTextViewer from './AnnotatedTextViewer';
-import { getInlineAnnotations, updateInlineAnnotation } from '@/lib/api';
+import { getInlineAnnotations, updateInlineAnnotation, createInlineAnnotation } from '@/lib/api';
 import type { Annotation } from '@/lib/annotations/types';
 import type { RubricJSON } from '@/lib/calculator/types';
 import { useFileUpload } from '@/hooks/useFileUpload';
@@ -102,9 +102,30 @@ export default function VerbatimViewer({
     }
   };
 
-  const handleAnnotationAdd = async (_annotation: Omit<Annotation, 'annotation_id'>) => {
-    // TODO: Implement add annotation
-    console.log('Add annotation not yet implemented');
+  const handleAnnotationAdd = async (annotation: Omit<Annotation, 'annotation_id'>) => {
+    try {
+      await createInlineAnnotation({
+        submission_id: annotation.submission_id,
+        line_number: annotation.line_number,
+        start_offset: annotation.start_offset,
+        end_offset: annotation.end_offset,
+        quote: annotation.quote,
+        category: annotation.category,
+        subcategory: annotation.subcategory,
+        suggestion: annotation.suggestion,
+        severity: annotation.severity || 'warning',
+        criterion_id: annotation.criterion_id,
+        affects_grade: annotation.affects_grade,
+      });
+      // Refresh annotations after creating
+      if (submissionId) {
+        const data = await getInlineAnnotations(submissionId);
+        setAnnotations(data.annotations);
+      }
+    } catch (error) {
+      console.error('Failed to create annotation:', error);
+      throw error; // Re-throw so the UI can handle it
+    }
   };
 
   const handleImageUploadWrapper = async (e: React.ChangeEvent<HTMLInputElement>) => {
