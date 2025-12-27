@@ -5,6 +5,7 @@ import { Textarea } from './ui/textarea';
 import { Button } from './ui/button';
 import { FileText, Image as ImageIcon, Upload, Loader2, Sparkles, MessageSquare, Brain } from 'lucide-react';
 import AnnotatedTextViewer from './AnnotatedTextViewer';
+import ContextHelp from './help/ContextHelp';
 import { getInlineAnnotations, updateInlineAnnotation, createInlineAnnotation } from '@/lib/api';
 import type { Annotation } from '@/lib/annotations/types';
 import type { RubricJSON } from '@/lib/calculator/types';
@@ -209,6 +210,7 @@ export default function VerbatimViewer({
                 {sourceType}
               </span>
             )}
+            <ContextHelp helpId="grade.studentEssay" />
           </div>
         </CardTitle>
       </CardHeader>

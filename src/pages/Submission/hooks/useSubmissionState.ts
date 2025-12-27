@@ -154,6 +154,7 @@ export function useSubmissionState() {
         originalFileUrl, setOriginalFileUrl,
         annotations, setAnnotations,
         annotationsRefreshKey, setAnnotationsRefreshKey,
+        loadedSubmissionId, setLoadedSubmissionId,
 
         // Data
         assignmentsData,

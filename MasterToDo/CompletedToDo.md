@@ -709,4 +709,107 @@ Load Rubric → LLM Extractor (JSON only) → TypeScript Calculator (Decimal mat
 
 ---
 
+**Last Updated:** December 27, 2025
+
+---
+
+## ✅ COMPLETED - December 27, 2025
+
+### Student Bridge Improvements ⭐⭐
+**Priority:** MEDIUM PRIORITY  
+**Status:** ✅ **FULLY IMPLEMENTED**  
+**Completed:** December 27, 2025
+
+**A. Add Student Search** ✅
+- ✅ Added search input to Students page (BridgeManager.tsx)
+- ✅ Filter students by name or ID using `searchTerm` state
+- ✅ Semantic search with fuzzy matching
+- ✅ Highlight matching text in results
+
+**B. Add Bulk Student Import** ✅
+- ✅ Created `ImportCsvModal.tsx` component
+- ✅ "Import CSV" button on Students page
+- ✅ Parse CSV file with header row handling
+- ✅ Validate data before import
+- ✅ Add all students to bridge
+- ✅ Auto-save to local encrypted Bridge file
+- ✅ Import results modal with save/sync status
+
+**Files Created/Modified:**
+- `src/components/bridge/ImportCsvModal.tsx`
+- `src/components/bridge/ImportResultsModal.tsx`
+- `src/components/bridge/BridgeManager.tsx`
+
+---
+
+### Medium Priority User Feedback (Completed) ⭐⭐
+**Status:** ✅ **IMPLEMENTED**  
+**Completed:** December 27, 2025
+
+**Shana:**
+- ✅ **CSV import: Handle header row** - ImportCsvModal properly handles header rows
+
+**Miranda:**
+- ✅ **Add ability to delete assignments** - Delete assignment functionality in Dashboard with confirmation modal
+
+**Files Modified:**
+- `src/pages/Dashboard/hooks/useDashboardActions.ts`
+- `src/pages/Dashboard/hooks/useDashboardData.ts`
+- `src/pages/Dashboard/components/views/ByAssignmentView.tsx`
+- `netlify/functions/assignments.ts`
+
+---
+
+### Help Page & Contextual Help System ⭐⭐
+**Priority:** MEDIUM PRIORITY  
+**Status:** ✅ **FULLY IMPLEMENTED**  
+**Completed:** December 27, 2025
+
+**Goal:** Add context-sensitive help throughout the app with blue circled ⓘ icons.
+
+**Implementation:**
+- ✅ Created centralized help content registry (`src/lib/help/helpContent.ts`)
+- ✅ Created reusable `ContextHelp` component with modal
+- ✅ Added ⓘ icons to Grade Submission page components:
+  - Student Information card
+  - Grading Criteria card
+  - Student Essay (Verbatim) card
+  - Grade & Feedback card
+- ✅ Added ⓘ icon to Bridge Manager (Class Periods section)
+- ✅ Created `HelpSection` component for Help page reuse
+
+**Files Created:**
+- `src/lib/help/helpContent.ts` - 17 help blocks
+- `src/components/help/ContextHelp.tsx`
+- `src/components/help/HelpSection.tsx`
+
+**Files Modified:**
+- `src/pages/Submission/components/StudentInfoCard.tsx`
+- `src/components/CriteriaInput.tsx`
+- `src/components/VerbatimViewer.tsx`
+- `src/components/GradePanel.tsx`
+- `src/components/bridge/BridgeManager.tsx`
+
+---
+
+### New Submission Button Fix ⭐⭐
+**Priority:** MEDIUM PRIORITY  
+**Status:** ✅ **FIXED**  
+**Completed:** December 27, 2025
+
+**Problem:** "New Submission" button required two clicks to clear prior student's essay.
+
+**Root Cause:** Race condition between state reset and React Query cache. The URL param (`id`) wasn't being cleared, causing the query to refetch old submission data.
+
+**Solution:**
+- Added `navigate('/submission', { replace: true })` to clear URL param
+- Reset `loadedSubmissionId` at start of `handleNewSubmission()`
+- Exposed `setLoadedSubmissionId` from `useSubmissionState`
+
+**Files Modified:**
+- `src/pages/Submission/hooks/useSubmissionState.ts`
+- `src/pages/Submission/hooks/useSubmissionActions.ts`
+
+---
+
 **Last Updated:** November 2, 2025

@@ -10,6 +10,7 @@ import AddStudentModal from './AddStudentModal';
 import ImportCsvModal from './ImportCsvModal';
 import EditStudentModal from './EditStudentModal';
 import ImportResultsModal, { ImportResults } from './ImportResultsModal';
+import ContextHelp from '../help/ContextHelp';
 import { BridgeEntry } from '../../bridge/bridgeTypes';
 import { updateStudent, updateStudentsBulk } from '../../lib/api';
 
@@ -541,11 +542,14 @@ export default function BridgeManager() {
         <Card className="shadow-xl bg-white mb-6">
           <CardHeader className="py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg text-gray-900">Manage Class Periods</CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
-                  Create class periods to organize your students
-                </p>
+              <div className="flex items-center gap-2">
+                <div>
+                  <CardTitle className="text-lg text-gray-900">Manage Class Periods</CardTitle>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Create class periods to organize your students
+                  </p>
+                </div>
+                <ContextHelp helpId="students.classPeriods" />
               </div>
               <Button
                 onClick={handleSyncAll}

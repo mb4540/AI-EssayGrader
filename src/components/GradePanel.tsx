@@ -4,6 +4,7 @@ import { Textarea } from './ui/textarea';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Loader2, CheckCircle, Calculator } from 'lucide-react';
+import ContextHelp from './help/ContextHelp';
 import type { Feedback } from '@/lib/schema';
 import type { ComputedScores, ExtractedScoresJSON } from '@/lib/calculator/types';
 import type { Annotation } from '@/lib/annotations/types';
@@ -39,11 +40,14 @@ export default function GradePanel({
   return (
     <Card className="h-full shadow-lg border-l-4 border-purple-500 bg-white dark:bg-slate-800">
       <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950 dark:to-pink-950">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
-            <span className="text-purple-600 dark:text-purple-300 text-sm">⭐</span>
+        <CardTitle className="text-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center">
+              <span className="text-purple-600 dark:text-purple-300 text-sm">⭐</span>
+            </div>
+            Grade & Feedback
           </div>
-          Grade & Feedback
+          <ContextHelp helpId="grade.gradeAndFeedback" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6 pt-4">

@@ -2,7 +2,7 @@
 ## FastAI Grader - Open Action Items
 
 **Created:** October 31, 2025  
-**Last Updated:** November 27, 2025 (Image To Text Complete)  
+**Last Updated:** December 27, 2025  
 **Branch:** `main`  
 **Status:** Active Development  
 **Latest Release:** v1.6.0 (November 27, 2025)
@@ -23,7 +23,6 @@
    - [Blob Storage for Large Rubrics](#-blob-storage-for-large-rubrics)
    - [Anchor Chart Integration](#-anchor-chart-integration)
    - [Grading Enhancements](#-grading-enhancements)
-   - [Student Bridge Improvements](#-student-bridge-improvements)
    - [Medium Priority User Feedback](#-medium-priority-user-feedback)
 5. [⭐ LOW PRIORITY / NICE TO HAVE](#-low-priority--nice-to-have)
    - [Performance Optimizations](#-performance-optimizations)
@@ -342,30 +341,13 @@
 
 ---
 
-### Student Bridge Improvements
-
-**A. Add Student Search**
-- [ ] Add search input to Students page
-- [ ] Filter students by name or ID
-- [ ] Highlight matching text
-
-**B. Add Bulk Student Import**
-- [ ] Add "Import CSV" button
-- [ ] Parse CSV file
-- [ ] Validate data
-- [ ] Add all students to bridge
-
----
-
 ### Medium Priority User Feedback
 
 **Shana:**
-- [ ] **CSV import: Handle header row**
 - [ ] **Add capability for no student roster**
 
 **Miranda:**
 - [ ] **Support PDF/Word upload for rubrics**
-- [ ] **Add ability to delete assignments**
 - [ ] **Non-ELAR subject grading (focus on content not grammar)**
 
 ---
