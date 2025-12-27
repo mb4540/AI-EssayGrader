@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ingestSubmission, gradeSubmission, saveTeacherEdits, uploadFile, getInlineAnnotations } from '@/lib/api';
@@ -11,6 +12,10 @@ type SubmissionState = ReturnType<typeof useSubmissionState>;
 export function useSubmissionActions(state: SubmissionState) {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
+
+    // Immediate UI feedback state for Run Grade button
+    const [isRunGradeStarting, setIsRunGradeStarting] = useState(false);
+    const runGradeInFlightRef = useRef(false);
 
     const {
         submissionId, setSubmissionId,
@@ -188,69 +193,79 @@ export function useSubmissionActions(state: SubmissionState) {
     };
 
     const handleRunGrade = async () => {
-        // First ingest if not already done
-        if (!submissionId) {
-            // Validation
-            if (!selectedStudentUuid) {
-                alert('Please select a student from the dropdown');
-                return;
-            }
+        // Prevent double-clicks
+        if (runGradeInFlightRef.current) return;
+        runGradeInFlightRef.current = true;
+        setIsRunGradeStarting(true);
 
-            if (draftMode === 'single') {
-                if (!criteria || !verbatimText) {
-                    alert('Please provide grading criteria and essay text');
+        try {
+            // First ingest if not already done
+            if (!submissionId) {
+                // Validation
+                if (!selectedStudentUuid) {
+                    alert('Please select a student from the dropdown');
                     return;
                 }
+
+                if (draftMode === 'single') {
+                    if (!criteria || !verbatimText) {
+                        alert('Please provide grading criteria and essay text');
+                        return;
+                    }
+                } else {
+                    if (!criteria || !roughDraftText || !finalDraftText) {
+                        alert('Please provide grading criteria and both draft versions');
+                        return;
+                    }
+                }
+
+                // FERPA COMPLIANT: Send only UUID to API (no PII)
+                const result = await ingestMutation.mutateAsync({
+                    student_id: selectedStudentUuid,  // Only UUID sent to cloud
+                    assignment_id: assignmentId || undefined,
+                    teacher_criteria: criteria,
+                    source_type: sourceType,
+                    draft_mode: draftMode,
+                    verbatim_text: draftMode === 'single' ? verbatimText : undefined,
+                    rough_draft_text: draftMode === 'comparison' ? roughDraftText : undefined,
+                    final_draft_text: draftMode === 'comparison' ? finalDraftText : undefined,
+                });
+
+                setSubmissionId(result.submission_id);
+
+                // Upload image if we have one
+                if (imageDataUrl && sourceType === 'image') {
+                    const imageUrl = await uploadImage(result.submission_id, imageDataUrl);
+                    if (imageUrl) {
+                        // Image uploaded successfully
+                    }
+                }
+
+                // Upload original document file if we have one
+                if (pendingFile) {
+                    try {
+                        const fileUrl = await uploadFile(result.submission_id, pendingFile.data, pendingFile.extension);
+                        setOriginalFileUrl(fileUrl); // Update state so Annotate tab appears immediately
+                        setPendingFile(null); // Clear after successful upload
+                    } catch (error) {
+                        console.error('Failed to upload original file:', error);
+                        // Don't block grading if file upload fails
+                    }
+                }
+
+                // Then grade
+                await gradeMutation.mutateAsync({
+                    submission_id: result.submission_id,
+                });
             } else {
-                if (!criteria || !roughDraftText || !finalDraftText) {
-                    alert('Please provide grading criteria and both draft versions');
-                    return;
-                }
+                // Just grade existing submission
+                await gradeMutation.mutateAsync({
+                    submission_id: submissionId,
+                });
             }
-
-            // FERPA COMPLIANT: Send only UUID to API (no PII)
-            const result = await ingestMutation.mutateAsync({
-                student_id: selectedStudentUuid,  // Only UUID sent to cloud
-                assignment_id: assignmentId || undefined,
-                teacher_criteria: criteria,
-                source_type: sourceType,
-                draft_mode: draftMode,
-                verbatim_text: draftMode === 'single' ? verbatimText : undefined,
-                rough_draft_text: draftMode === 'comparison' ? roughDraftText : undefined,
-                final_draft_text: draftMode === 'comparison' ? finalDraftText : undefined,
-            });
-
-            setSubmissionId(result.submission_id);
-
-            // Upload image if we have one
-            if (imageDataUrl && sourceType === 'image') {
-                const imageUrl = await uploadImage(result.submission_id, imageDataUrl);
-                if (imageUrl) {
-                    // Image uploaded successfully
-                }
-            }
-
-            // Upload original document file if we have one
-            if (pendingFile) {
-                try {
-                    const fileUrl = await uploadFile(result.submission_id, pendingFile.data, pendingFile.extension);
-                    setOriginalFileUrl(fileUrl); // Update state so Annotate tab appears immediately
-                    setPendingFile(null); // Clear after successful upload
-                } catch (error) {
-                    console.error('Failed to upload original file:', error);
-                    // Don't block grading if file upload fails
-                }
-            }
-
-            // Then grade
-            await gradeMutation.mutateAsync({
-                submission_id: result.submission_id,
-            });
-        } else {
-            // Just grade existing submission
-            await gradeMutation.mutateAsync({
-                submission_id: submissionId,
-            });
+        } finally {
+            setIsRunGradeStarting(false);
+            runGradeInFlightRef.current = false;
         }
     };
 
@@ -355,6 +370,7 @@ export function useSubmissionActions(state: SubmissionState) {
     };
 
     return {
+        isRunGradeStarting,
         ingestMutation,
         gradeMutation,
         saveMutation,

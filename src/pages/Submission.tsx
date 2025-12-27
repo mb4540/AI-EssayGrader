@@ -105,7 +105,7 @@ export default function Submission() {
           activeTab={state.activeTab}
           setActiveTab={state.setActiveTab}
           aiFeedback={state.aiFeedback}
-          isGrading={actions.gradeMutation.isPending}
+          isGrading={actions.isRunGradeStarting || actions.gradeMutation.isPending}
           teacherGrade={state.teacherGrade}
           setTeacherGrade={state.setTeacherGrade}
           teacherFeedback={state.teacherFeedback}
