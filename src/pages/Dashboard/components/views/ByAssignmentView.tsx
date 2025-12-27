@@ -22,7 +22,7 @@ interface ByAssignmentViewProps {
   onView: (id: string) => void;
   onDelete: (id: string) => void;
   onEditAssignment: (assignment: Assignment) => void;
-  onDeleteAssignment: (title: string, e: React.MouseEvent) => void;
+  onDeleteAssignment: (assignmentId: string, title: string, e: React.MouseEvent) => void;
 }
 
 export default function ByAssignmentView({
@@ -72,7 +72,7 @@ export default function ByAssignmentView({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => onDeleteAssignment(assignment.title, e)}
+                      onClick={(e) => onDeleteAssignment(assignment.id, assignment.title, e)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />

@@ -133,6 +133,74 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     }
   }
 
+  // DELETE: Delete assignment and all associated submissions
+  if (event.httpMethod === 'DELETE') {
+    try {
+      // Authenticate request
+      const auth = await authenticateRequest(event.headers.authorization);
+      const { tenant_id } = auth;
+      const { assignment_id } = JSON.parse(event.body || '{}');
+
+      if (!assignment_id) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'assignment_id is required' }),
+        };
+      }
+
+      // Verify assignment exists and belongs to tenant
+      const assignmentCheck = await sql`
+        SELECT assignment_id FROM grader.assignments
+        WHERE assignment_id = ${assignment_id} AND tenant_id = ${tenant_id}
+      `;
+
+      if (assignmentCheck.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Assignment not found' }),
+        };
+      }
+
+      // Delete all submissions for this assignment (must delete first due to FK)
+      const deletedSubmissions = await sql`
+        DELETE FROM grader.submissions
+        WHERE assignment_id = ${assignment_id}
+        RETURNING submission_id
+      `;
+
+      // Delete the assignment
+      const deletedAssignment = await sql`
+        DELETE FROM grader.assignments
+        WHERE assignment_id = ${assignment_id} AND tenant_id = ${tenant_id}
+        RETURNING assignment_id
+      `;
+
+      console.log(`✅ Deleted assignment ${assignment_id} with ${deletedSubmissions.length} submissions`);
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          ok: true,
+          deleted_assignment: deletedAssignment.length > 0,
+          deleted_submissions: deletedSubmissions.length,
+        }),
+      };
+    } catch (error) {
+      console.error('Delete assignment error:', error);
+      return {
+        statusCode: error instanceof Error && error.message.includes('Authentication') ? 401 : 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to delete assignment',
+          message: error instanceof Error ? error.message : 'Unknown error',
+        }),
+      };
+    }
+  }
+
   // PUT: Update existing assignment
   if (event.httpMethod === 'PUT' || event.httpMethod === 'PATCH') {
     try {

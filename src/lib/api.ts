@@ -301,6 +301,20 @@ export async function deleteSubmission(submissionId: string) {
   return handleResponse(response);
 }
 
+export async function deleteAssignment(assignmentId: string) {
+  const response = await fetch(`${API_BASE}/assignments`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ assignment_id: assignmentId }),
+  });
+
+  return handleResponse<{
+    ok: boolean;
+    deleted_assignment: boolean;
+    deleted_submissions: number;
+  }>(response);
+}
+
 export async function uploadFile(
   submissionId: string,
   fileData: string,
@@ -546,6 +560,28 @@ export async function updateStudent(
       class_period: string | null;
       created_at: string;
     };
+  }>(response);
+}
+
+/**
+ * Bulk update class_period for multiple students (upsert)
+ */
+export async function updateStudentsBulk(
+  studentIds: string[],
+  classPeriod: string | null
+) {
+  const response = await fetch(`${API_BASE}/update-students-bulk`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ student_ids: studentIds, class_period: classPeriod }),
+  });
+
+  return handleResponse<{
+    success: boolean;
+    total: number;
+    updated: number;
+    inserted: number;
+    failed: number;
   }>(response);
 }
 

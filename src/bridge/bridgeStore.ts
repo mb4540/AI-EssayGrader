@@ -235,30 +235,58 @@ export class BridgeStore {
 
   /**
    * Import students from CSV
-   * Expected format: name,localId
+   * Supported formats:
+   *   - 2 columns: name,localId
+   *   - 3 columns: name,localId,classPeriod
+   * Returns list of affected student UUIDs for optional Neon sync
    */
-  async importFromCsv(csvText: string): Promise<ImportResult> {
+  async importFromCsv(csvText: string): Promise<ImportResult & { affectedUuids: string[] }> {
     if (this.locked || !this.payload) {
       throw new Error('Bridge is locked');
     }
 
-    const result: ImportResult = {
+    const result: ImportResult & { affectedUuids: string[] } = {
       added: 0,
       updated: 0,
       skipped: 0,
       errors: [],
+      affectedUuids: [],
     };
 
     const lines = csvText.split('\n').map((line) => line.trim());
-    
-    // Skip header if present
-    const startIndex = lines[0]?.toLowerCase().includes('name') ? 1 : 0;
+    if (lines.length === 0) return result;
+
+    // Detect header row and column mapping
+    const firstLine = lines[0].toLowerCase();
+    let hasHeader = false;
+    let classPeriodColIndex = -1; // -1 means no class period column
+
+    // Check for header row (contains 'name' or 'student')
+    if (firstLine.includes('name') || firstLine.includes('student')) {
+      hasHeader = true;
+      const headerCols = lines[0].split(',').map((h) => h.trim().toLowerCase());
+      // Find class period column index
+      classPeriodColIndex = headerCols.findIndex((h) =>
+        ['classperiod', 'class_period', 'class', 'period'].includes(h.replace(/\s+/g, ''))
+      );
+    } else {
+      // No header: check if first data row has 3 columns
+      const cols = lines[0].split(',');
+      if (cols.length >= 3) {
+        classPeriodColIndex = 2;
+      }
+    }
+
+    const startIndex = hasHeader ? 1 : 0;
 
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i];
       if (!line) continue;
 
-      const [name, localId] = line.split(',').map((s) => s.trim());
+      const cols = line.split(',').map((s) => s.trim());
+      const name = cols[0];
+      const localId = cols[1];
+      const classPeriod = classPeriodColIndex >= 0 ? cols[classPeriodColIndex] : undefined;
 
       if (!name || !localId) {
         result.errors.push({
@@ -271,19 +299,30 @@ export class BridgeStore {
       try {
         // Check if student already exists
         const existing = this.findByLocalId(localId);
-        
+
         if (existing) {
-          // Update if name changed
+          // Build updates object
+          const updates: { name?: string; classPeriod?: string } = {};
           if (existing.name !== name) {
-            this.updateStudent(existing.uuid, { name });
+            updates.name = name;
+          }
+          // Only update classPeriod if provided and different (non-empty value)
+          if (classPeriod && classPeriod !== existing.classPeriod) {
+            updates.classPeriod = classPeriod;
+          }
+
+          if (Object.keys(updates).length > 0) {
+            this.updateStudent(existing.uuid, updates);
             result.updated++;
+            result.affectedUuids.push(existing.uuid);
           } else {
             result.skipped++;
           }
         } else {
-          // Add new student
-          this.addStudent(name, localId);
+          // Add new student (with optional classPeriod)
+          const entry = this.addStudent(name, localId, classPeriod || undefined);
           result.added++;
+          result.affectedUuids.push(entry.uuid);
         }
       } catch (err) {
         result.errors.push({

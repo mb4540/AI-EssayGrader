@@ -47,7 +47,7 @@ export interface UseBridgeReturn {
   save: () => Promise<void>;
   exportFile: () => Promise<void>;
   importFile: () => Promise<void>;
-  importCsv: (csvText: string) => Promise<ImportResult>;
+  importCsv: (csvText: string) => Promise<ImportResult & { affectedUuids: string[] }>;
 
   // Loading state
   loading: boolean;
@@ -298,8 +298,8 @@ export function useBridge(): UseBridgeReturn {
     }
   }, [supportsFileSystem]);
 
-  // Import from CSV
-  const importCsv = useCallback(async (csvText: string): Promise<ImportResult> => {
+  // Import from CSV (returns affected UUIDs for optional Neon sync)
+  const importCsv = useCallback(async (csvText: string): Promise<ImportResult & { affectedUuids: string[] }> => {
     try {
       const result = await store.importFromCsv(csvText);
       refreshStudents();

@@ -48,6 +48,7 @@ export default function Dashboard() {
     closeAssignmentModal,
     setEditMode,
     deleteId,
+    deleteAssignmentId,
     deleteAssignmentTitle,
     handleDelete,
     handleDeleteAssignment,
@@ -65,8 +66,8 @@ export default function Dashboard() {
   };
 
   const confirmDeleteAssignment = () => {
-    if (deleteAssignmentTitle) {
-      deleteAssignmentMutation(deleteAssignmentTitle);
+    if (deleteAssignmentId) {
+      deleteAssignmentMutation(deleteAssignmentId);
       cancelDelete();
     }
   };

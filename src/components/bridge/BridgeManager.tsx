@@ -1,16 +1,17 @@
 // Bridge Manager - Main UI for student identity management
 // Handles bridge creation, unlock, roster management, and import/export
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useBridge } from '../../hooks/useBridge';
-import { Lock, Plus, Upload, Download, FileText, Users, Edit } from 'lucide-react';
+import { Lock, Plus, Upload, Download, FileText, Users, Edit, Search, ArrowUpDown, ArrowUp, ArrowDown, X } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '../ui/card';
 import { Button } from '../ui/button';
 import AddStudentModal from './AddStudentModal';
 import ImportCsvModal from './ImportCsvModal';
 import EditStudentModal from './EditStudentModal';
+import ImportResultsModal, { ImportResults } from './ImportResultsModal';
 import { BridgeEntry } from '../../bridge/bridgeTypes';
-import { updateStudent } from '../../lib/api';
+import { updateStudent, updateStudentsBulk } from '../../lib/api';
 
 export default function BridgeManager() {
   const bridge = useBridge();
@@ -28,12 +29,97 @@ export default function BridgeManager() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<BridgeEntry | null>(null);
+  const [showImportResultsModal, setShowImportResultsModal] = useState(false);
+  const [importResults, setImportResults] = useState<ImportResults | null>(null);
+  const [isRetryingSave, setIsRetryingSave] = useState(false);
 
   // Class period management
   const [newClassPeriod, setNewClassPeriod] = useState('');
   const [classError, setClassError] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatus, setSyncStatus] = useState<{ success: number; failed: number; total: number } | null>(null);
+
+  // Bulk selection state
+  const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
+  const [bulkClassPeriod, setBulkClassPeriod] = useState('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+
+  // Filter, sort, and search state
+  const [filterClassPeriod, setFilterClassPeriod] = useState<string>('all');
+  const [sortColumn, setSortColumn] = useState<'localId' | 'name' | 'classPeriod'>('classPeriod');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // Compute unique class periods from students (fixes bug where imported periods don't show)
+  const uniqueClassPeriods = useMemo(() => {
+    const periods = new Set<string>();
+    bridge.students.forEach(s => {
+      if (s.classPeriod) periods.add(s.classPeriod);
+    });
+    // Also include manually added class periods
+    bridge.getClassPeriods().forEach(p => periods.add(p));
+    return Array.from(periods).sort();
+  }, [bridge.students, bridge.getClassPeriods]);
+
+  // Filter and sort students
+  const filteredAndSortedStudents = useMemo(() => {
+    let result = [...bridge.students];
+
+    // Apply search filter (semantic: matches partial name, case-insensitive)
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
+      result = result.filter(s => s.name.toLowerCase().includes(term));
+    }
+
+    // Apply class period filter
+    if (filterClassPeriod !== 'all') {
+      if (filterClassPeriod === 'unassigned') {
+        result = result.filter(s => !s.classPeriod);
+      } else {
+        result = result.filter(s => s.classPeriod === filterClassPeriod);
+      }
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let comparison = 0;
+      if (sortColumn === 'localId') {
+        comparison = a.localId.localeCompare(b.localId);
+      } else if (sortColumn === 'name') {
+        comparison = a.name.localeCompare(b.name);
+      } else if (sortColumn === 'classPeriod') {
+        const aPeriod = a.classPeriod || '';
+        const bPeriod = b.classPeriod || '';
+        comparison = aPeriod.localeCompare(bPeriod);
+        // Secondary sort by name when class periods are equal
+        if (comparison === 0) {
+          comparison = a.name.localeCompare(b.name);
+        }
+      }
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+
+    return result;
+  }, [bridge.students, searchTerm, filterClassPeriod, sortColumn, sortDirection]);
+
+  // Handle column sort click
+  const handleSortClick = (column: 'localId' | 'name' | 'classPeriod') => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = filterClassPeriod !== 'all' || searchTerm.trim() !== '';
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilterClassPeriod('all');
+    setSearchTerm('');
+  };
 
   // Handle unlock
   const handleUnlock = async (e: React.FormEvent) => {
@@ -132,6 +218,70 @@ export default function BridgeManager() {
 
     // Clear status after 5 seconds
     setTimeout(() => setSyncStatus(null), 5000);
+  };
+
+  // Handle bulk class period update
+  const handleBulkClassPeriodUpdate = async () => {
+    if (selectedStudents.size === 0) return;
+    
+    setIsBulkUpdating(true);
+    try {
+      const uuids = Array.from(selectedStudents);
+      const classPeriodValue = bulkClassPeriod || null;
+      
+      // Update local bridge entries
+      for (const uuid of uuids) {
+        bridge.updateStudent(uuid, { classPeriod: bulkClassPeriod || undefined });
+      }
+      await bridge.save();
+      
+      // Sync to Neon
+      await updateStudentsBulk(uuids, classPeriodValue);
+      
+      // Clear selection
+      setSelectedStudents(new Set());
+      setBulkClassPeriod('');
+    } catch (err) {
+      console.error('Bulk update failed:', err);
+      alert('Failed to update class periods. Please try again.');
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  // Toggle student selection
+  const toggleStudentSelection = (uuid: string) => {
+    setSelectedStudents(prev => {
+      const next = new Set(prev);
+      if (next.has(uuid)) {
+        next.delete(uuid);
+      } else {
+        next.add(uuid);
+      }
+      return next;
+    });
+  };
+
+  // Toggle all students (works with filtered list)
+  const toggleAllStudents = () => {
+    const currentFiltered = filteredAndSortedStudents;
+    const allFilteredSelected = currentFiltered.every(s => selectedStudents.has(s.uuid));
+    
+    if (allFilteredSelected && currentFiltered.length > 0) {
+      // Deselect all filtered students
+      setSelectedStudents(prev => {
+        const next = new Set(prev);
+        currentFiltered.forEach(s => next.delete(s.uuid));
+        return next;
+      });
+    } else {
+      // Select all filtered students
+      setSelectedStudents(prev => {
+        const next = new Set(prev);
+        currentFiltered.forEach(s => next.add(s.uuid));
+        return next;
+      });
+    }
   };
 
   // If locked, show unlock/create interface
@@ -448,45 +598,182 @@ export default function BridgeManager() {
               </div>
             )}
 
-            {/* Class Periods List */}
-            {bridge.getClassPeriods().length === 0 ? (
+            {/* Class Periods List - shows all unique periods from students + manually added */}
+            {uniqueClassPeriods.length === 0 ? (
               <div className="text-center py-6 text-gray-500">
-                <p className="text-sm">No class periods yet. Add one above to get started.</p>
+                <p className="text-sm">No class periods yet. Add one above or import students with class periods.</p>
               </div>
             ) : (
               <div className="space-y-2">
-                {bridge.getClassPeriods().map((period) => (
-                  <div
-                    key={period}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200"
-                  >
-                    <span className="text-sm font-medium text-gray-900">{period}</span>
-                    <button
-                      onClick={() => handleRemoveClassPeriod(period)}
-                      className="text-sm text-red-600 hover:text-red-800 hover:underline"
+                {uniqueClassPeriods.map((period) => {
+                  const studentCount = bridge.students.filter(s => s.classPeriod === period).length;
+                  const isManuallyAdded = bridge.getClassPeriods().includes(period);
+                  return (
+                    <div
+                      key={period}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200"
                     >
-                      Remove
-                    </button>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900">{period}</span>
+                        <span className="text-xs text-gray-500">({studentCount} student{studentCount !== 1 ? 's' : ''})</span>
+                      </div>
+                      {isManuallyAdded && (
+                        <button
+                          onClick={() => handleRemoveClassPeriod(period)}
+                          className="text-sm text-red-600 hover:text-red-800 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
         </Card>
 
+        {/* Bulk Action Bar */}
+        {selectedStudents.size > 0 && (
+          <Card className="shadow-xl bg-indigo-50 border-2 border-indigo-300 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-indigo-800">
+                  {selectedStudents.size} student{selectedStudents.size !== 1 ? 's' : ''} selected
+                </span>
+                <button
+                  onClick={() => setSelectedStudents(new Set())}
+                  className="text-xs text-indigo-600 hover:text-indigo-800 underline"
+                >
+                  Clear selection
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={bulkClassPeriod}
+                  onChange={(e) => setBulkClassPeriod(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">-- Select Class Period --</option>
+                  {bridge.getClassPeriods().map((period) => (
+                    <option key={period} value={period}>{period}</option>
+                  ))}
+                </select>
+                <Button
+                  onClick={handleBulkClassPeriodUpdate}
+                  disabled={isBulkUpdating || !bulkClassPeriod}
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                >
+                  {isBulkUpdating ? 'Updating...' : 'Assign Class Period'}
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
         {/* Roster Table Card */}
         <Card className="shadow-xl bg-white">
+          {/* Search and Filter Bar */}
+          <div className="p-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by student name..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
+              
+              {/* Class Period Filter */}
+              <select
+                value={filterClassPeriod}
+                onChange={(e) => setFilterClassPeriod(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+              >
+                <option value="all">All Classes ({bridge.students.length})</option>
+                {uniqueClassPeriods.map((period) => {
+                  const count = bridge.students.filter(s => s.classPeriod === period).length;
+                  return (
+                    <option key={period} value={period}>{period} ({count})</option>
+                  );
+                })}
+                <option value="unassigned">Unassigned ({bridge.students.filter(s => !s.classPeriod).length})</option>
+              </select>
+
+              {/* Clear Filters Button */}
+              {hasActiveFilters && (
+                <button
+                  onClick={clearFilters}
+                  className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md"
+                >
+                  <X className="w-4 h-4" />
+                  Clear
+                </button>
+              )}
+            </div>
+            
+            {/* Results Count */}
+            {hasActiveFilters && (
+              <p className="mt-2 text-sm text-gray-600">
+                Showing {filteredAndSortedStudents.length} of {bridge.students.length} students
+              </p>
+            )}
+          </div>
+
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Local ID
+                <th className="px-3 py-3 text-center">
+                  <input
+                    type="checkbox"
+                    checked={filteredAndSortedStudents.length > 0 && filteredAndSortedStudents.every(s => selectedStudents.has(s.uuid))}
+                    onChange={toggleAllStudents}
+                    className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                  />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Student Name
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSortClick('localId')}
+                >
+                  <div className="flex items-center gap-1">
+                    Local ID
+                    {sortColumn === 'localId' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-gray-300" />
+                    )}
+                  </div>
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Class
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSortClick('name')}
+                >
+                  <div className="flex items-center gap-1">
+                    Student Name
+                    {sortColumn === 'name' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-gray-300" />
+                    )}
+                  </div>
+                </th>
+                <th 
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleSortClick('classPeriod')}
+                >
+                  <div className="flex items-center gap-1">
+                    Class
+                    {sortColumn === 'classPeriod' ? (
+                      sortDirection === 'asc' ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />
+                    ) : (
+                      <ArrowUpDown className="w-3 h-3 text-gray-300" />
+                    )}
+                  </div>
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   UUID
@@ -497,17 +784,35 @@ export default function BridgeManager() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {bridge.students.length === 0 ? (
+              {filteredAndSortedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-gray-500">
-                    <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                    <p className="text-lg font-medium">No students yet</p>
-                    <p className="text-sm">Add students individually or import from CSV</p>
+                  <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                    {bridge.students.length === 0 ? (
+                      <>
+                        <Users className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p className="text-lg font-medium">No students yet</p>
+                        <p className="text-sm">Add students individually or import from CSV</p>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                        <p className="text-lg font-medium">No matching students</p>
+                        <p className="text-sm">Try adjusting your search or filter</p>
+                      </>
+                    )}
                   </td>
                 </tr>
               ) : (
-                bridge.students.map((student) => (
-                  <tr key={student.uuid} className="hover:bg-gray-50">
+                filteredAndSortedStudents.map((student) => (
+                  <tr key={student.uuid} className={`hover:bg-gray-50 ${selectedStudents.has(student.uuid) ? 'bg-indigo-50' : ''}`}>
+                    <td className="px-3 py-4 text-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedStudents.has(student.uuid)}
+                        onChange={() => toggleStudentSelection(student.uuid)}
+                        className="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                      />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                       {student.localId}
                     </td>
@@ -563,9 +868,103 @@ export default function BridgeManager() {
           onClose={() => setShowImportModal(false)}
           onImport={async (csvText) => {
             const result = await bridge.importCsv(csvText);
-            await bridge.save(); // Auto-save after import
+            
+            // Build import results object
+            const results: ImportResults = {
+              added: result.added,
+              updated: result.updated,
+              skipped: result.skipped,
+              errors: result.errors,
+              savedToFile: false,
+              syncedToDatabase: false,
+            };
+            
+            // Try to save to local encrypted file
+            try {
+              await bridge.save();
+              results.savedToFile = true;
+            } catch (err) {
+              results.saveError = err instanceof Error ? err.message : 'Unknown error';
+            }
+            
+            // Sync class periods to Neon for affected students
+            if (result.affectedUuids.length > 0) {
+              try {
+                const studentsToSync = result.affectedUuids
+                  .map(uuid => bridge.findByUuid(uuid))
+                  .filter((s): s is NonNullable<typeof s> => s !== null);
+                
+                const byClassPeriod = new Map<string | null, string[]>();
+                for (const student of studentsToSync) {
+                  const cp = student.classPeriod || null;
+                  if (!byClassPeriod.has(cp)) {
+                    byClassPeriod.set(cp, []);
+                  }
+                  byClassPeriod.get(cp)!.push(student.uuid);
+                }
+                
+                let totalUpdated = 0;
+                let totalInserted = 0;
+                let totalFailed = 0;
+                
+                for (const [classPeriod, uuids] of byClassPeriod) {
+                  try {
+                    const syncResult = await updateStudentsBulk(uuids, classPeriod);
+                    totalUpdated += syncResult.updated;
+                    totalInserted += syncResult.inserted;
+                    totalFailed += syncResult.failed;
+                  } catch {
+                    totalFailed += uuids.length;
+                  }
+                }
+                
+                results.syncedToDatabase = totalFailed === 0;
+                results.syncResults = { updated: totalUpdated, inserted: totalInserted, failed: totalFailed };
+              } catch (err) {
+                console.error('Failed to sync class periods to database:', err);
+              }
+            } else {
+              results.syncedToDatabase = true; // Nothing to sync
+            }
+            
+            // Show results modal
+            setImportResults(results);
+            setShowImportResultsModal(true);
+            
             return result;
           }}
+        />
+
+        <ImportResultsModal
+          isOpen={showImportResultsModal}
+          onClose={() => {
+            setShowImportResultsModal(false);
+            setImportResults(null);
+          }}
+          results={importResults || {
+            added: 0,
+            updated: 0,
+            skipped: 0,
+            errors: [],
+            savedToFile: false,
+            syncedToDatabase: false,
+          }}
+          onRetry={async () => {
+            if (!importResults) return;
+            setIsRetryingSave(true);
+            try {
+              await bridge.save();
+              setImportResults({ ...importResults, savedToFile: true, saveError: undefined });
+            } catch (err) {
+              setImportResults({
+                ...importResults,
+                saveError: err instanceof Error ? err.message : 'Unknown error',
+              });
+            } finally {
+              setIsRetryingSave(false);
+            }
+          }}
+          isRetrying={isRetryingSave}
         />
 
         <EditStudentModal

@@ -186,6 +186,7 @@ export default function ImportCsvModal({ isOpen, onClose, onImport }: ImportCsvM
                 <ul className="text-xs text-blue-700 space-y-1">
                   <li>• First row can be headers (name,localId) or data</li>
                   <li>• Each row: student name, local student ID</li>
+                  <li>• <strong>Optional 3rd column:</strong> class period (e.g., "1st Period")</li>
                   <li>• Duplicates (by local ID) will be updated or skipped</li>
                   <li>• Empty rows are ignored</li>
                 </ul>

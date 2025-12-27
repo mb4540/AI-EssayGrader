@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,8 @@ interface StudentInfoCardProps {
     setIsEditModalOpen: (isOpen: boolean) => void;
 }
 
+const CLASS_PERIOD_STORAGE_KEY = 'grader_selected_class_period';
+
 export function StudentInfoCard({
     bridge,
     selectedStudentUuid,
@@ -35,6 +38,52 @@ export function StudentInfoCard({
     setIsEditModalOpen
 }: StudentInfoCardProps) {
     const navigate = useNavigate();
+    
+    // Class period filter state (persisted to localStorage)
+    const [selectedClassPeriod, setSelectedClassPeriod] = useState<string>(() => {
+        return localStorage.getItem(CLASS_PERIOD_STORAGE_KEY) || 'all';
+    });
+
+    // Persist class period selection
+    useEffect(() => {
+        localStorage.setItem(CLASS_PERIOD_STORAGE_KEY, selectedClassPeriod);
+    }, [selectedClassPeriod]);
+
+    // Get unique class periods from students
+    const classPeriods = useMemo(() => {
+        const periods = new Set<string>();
+        bridge.students.forEach((s: any) => {
+            if (s.classPeriod) periods.add(s.classPeriod);
+        });
+        // Also include class periods from bridge.getClassPeriods() if available
+        if (bridge.getClassPeriods) {
+            bridge.getClassPeriods().forEach((p: string) => periods.add(p));
+        }
+        return Array.from(periods).sort();
+    }, [bridge.students, bridge.getClassPeriods]);
+
+    // Filter students by selected class period
+    const filteredStudents = useMemo(() => {
+        if (selectedClassPeriod === 'all') {
+            return bridge.students;
+        }
+        if (selectedClassPeriod === 'unassigned') {
+            return bridge.students.filter((s: any) => !s.classPeriod);
+        }
+        return bridge.students.filter((s: any) => s.classPeriod === selectedClassPeriod);
+    }, [bridge.students, selectedClassPeriod]);
+
+    // Clear student selection if they're not in the filtered list
+    useEffect(() => {
+        if (selectedStudentUuid && selectedClassPeriod !== 'all') {
+            const studentInFilter = filteredStudents.some((s: any) => s.uuid === selectedStudentUuid);
+            if (!studentInFilter) {
+                setSelectedStudentUuid('');
+                setStudentName('');
+                setStudentId('');
+            }
+        }
+    }, [selectedClassPeriod, filteredStudents, selectedStudentUuid, setSelectedStudentUuid, setStudentName, setStudentId]);
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
@@ -79,6 +128,36 @@ export function StudentInfoCard({
                         </div>
                     ) : (
                         <>
+                            {/* Class Period Filter */}
+                            {classPeriods.length > 0 && (
+                                <div className="mb-3">
+                                    <Label className="text-gray-600 dark:text-gray-400 text-sm">Filter by Class Period</Label>
+                                    <Select
+                                        value={selectedClassPeriod}
+                                        onValueChange={setSelectedClassPeriod}
+                                    >
+                                        <SelectTrigger className="mt-1 border-gray-300 bg-gray-50">
+                                            <SelectValue placeholder="All Students" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Students ({bridge.students.length})</SelectItem>
+                                            {classPeriods.map((period: string) => {
+                                                const count = bridge.students.filter((s: any) => s.classPeriod === period).length;
+                                                return (
+                                                    <SelectItem key={period} value={period}>
+                                                        {period} ({count})
+                                                    </SelectItem>
+                                                );
+                                            })}
+                                            <SelectItem value="unassigned">
+                                                Unassigned ({bridge.students.filter((s: any) => !s.classPeriod).length})
+                                            </SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            )}
+                            
+                            {/* Student Selector */}
                             <Select
                                 value={selectedStudentUuid}
                                 onValueChange={(uuid) => {
@@ -94,11 +173,17 @@ export function StudentInfoCard({
                                     <SelectValue placeholder="Choose a student from your roster" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {bridge.students.map((student: any) => (
-                                        <SelectItem key={student.uuid} value={student.uuid}>
-                                            {student.name} ({student.localId})
-                                        </SelectItem>
-                                    ))}
+                                    {filteredStudents.length === 0 ? (
+                                        <div className="px-3 py-2 text-sm text-gray-500 italic">
+                                            No students in this class period
+                                        </div>
+                                    ) : (
+                                        filteredStudents.map((student: any) => (
+                                            <SelectItem key={student.uuid} value={student.uuid}>
+                                                {student.name} ({student.localId})
+                                            </SelectItem>
+                                        ))
+                                    )}
                                 </SelectContent>
                             </Select>
                             {selectedStudentUuid && (

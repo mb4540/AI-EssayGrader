@@ -25,6 +25,7 @@ export function useDashboardActions() {
 
   // Delete confirmation state
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteAssignmentId, setDeleteAssignmentId] = useState<string | null>(null);
   const [deleteAssignmentTitle, setDeleteAssignmentTitle] = useState<string | null>(null);
 
   // Listen for assignment modal trigger from navigation
@@ -57,15 +58,17 @@ export function useDashboardActions() {
     setDeleteId(id);
   };
 
-  const handleDeleteAssignment = (title: string, e?: React.MouseEvent) => {
+  const handleDeleteAssignment = (assignmentId: string, title: string, e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
+    setDeleteAssignmentId(assignmentId);
     setDeleteAssignmentTitle(title);
   };
 
   const cancelDelete = () => {
     setDeleteId(null);
+    setDeleteAssignmentId(null);
     setDeleteAssignmentTitle(null);
   };
 
@@ -104,6 +107,7 @@ export function useDashboardActions() {
 
     // Delete state
     deleteId,
+    deleteAssignmentId,
     deleteAssignmentTitle,
     handleDelete,
     handleDeleteAssignment,

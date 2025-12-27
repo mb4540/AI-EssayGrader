@@ -5,7 +5,7 @@
 
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { listSubmissions, deleteSubmission, listAssignments } from '@/lib/api';
+import { listSubmissions, deleteSubmission, listAssignments, deleteAssignment } from '@/lib/api';
 import type { DashboardFilters } from '../types';
 
 const PAGE_SIZE = 20;
@@ -71,18 +71,9 @@ export function useDashboardData(filters: DashboardFilters) {
     },
   });
 
-  // Delete assignment mutation (bulk delete submissions)
+  // Delete assignment mutation (calls backend API to delete assignment + all submissions)
   const deleteAssignmentMutation = useMutation({
-    mutationFn: async (assignmentTitle: string) => {
-      const submissions = submissionsData?.submissions || [];
-      const toDelete = submissions.filter(
-        (s: any) => s.assignment_title === assignmentTitle
-      );
-      
-      await Promise.all(
-        toDelete.map((s: any) => deleteSubmission(s.submission_id))
-      );
-    },
+    mutationFn: (assignmentId: string) => deleteAssignment(assignmentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['submissions'] });
       queryClient.invalidateQueries({ queryKey: ['assignments'] });
@@ -101,6 +92,6 @@ export function useDashboardData(filters: DashboardFilters) {
     
     // Actions
     deleteSubmission: (id: string) => deleteSubmissionMutation.mutate(id),
-    deleteAssignment: (title: string) => deleteAssignmentMutation.mutate(title),
+    deleteAssignment: (assignmentId: string) => deleteAssignmentMutation.mutate(assignmentId),
   };
 }
