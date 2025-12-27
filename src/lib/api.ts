@@ -454,6 +454,74 @@ export async function updateInlineAnnotation(
   return handleResponse<{ success: boolean }>(response);
 }
 
+/**
+ * Create a new inline annotation (teacher-created)
+ */
+export interface CreateAnnotationPayload {
+  submission_id: string;
+  line_number: number;
+  start_offset: number;
+  end_offset: number;
+  quote: string;
+  category: string;
+  subcategory?: string;
+  suggestion: string;
+  severity: 'info' | 'warning' | 'error';
+  criterion_id?: string;
+  affects_grade?: boolean;
+}
+
+export async function createInlineAnnotation(payload: CreateAnnotationPayload) {
+  const response = await fetch(`${API_BASE}/annotations-inline-create`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<{
+    success: boolean;
+    annotation: {
+      annotation_id: string;
+      submission_id: string;
+      line_number: number;
+      start_offset: number;
+      end_offset: number;
+      quote: string;
+      category: string;
+      subcategory?: string;
+      suggestion: string;
+      severity: string;
+      status: string;
+      criterion_id?: string;
+      affects_grade?: boolean;
+      created_by?: string;
+      created_at: string;
+    };
+  }>(response);
+}
+
+/**
+ * Send a chat message for annotation review (LLM-assisted)
+ */
+export interface AnnotationChatPayload {
+  submission_id: string;
+  annotation_id: string;
+  teacher_prompt: string;
+}
+
+export async function sendAnnotationChat(payload: AnnotationChatPayload) {
+  const response = await fetch(`${API_BASE}/annotation-chat`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<{
+    success: boolean;
+    response: string;
+  }>(response);
+}
+
 // ============================================================================
 // Student Management API
 // ============================================================================
