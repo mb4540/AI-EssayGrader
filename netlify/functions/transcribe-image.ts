@@ -130,12 +130,32 @@ const handler: Handler = async (event) => {
 
   } catch (error) {
     console.error('Transcription error:', error);
+    
+    // Check for quota exceeded error
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isQuotaError = errorMessage.toLowerCase().includes('quota') || 
+                         errorMessage.toLowerCase().includes('rate limit') ||
+                         errorMessage.toLowerCase().includes('resource_exhausted');
+    
+    if (isQuotaError) {
+      console.error('[transcribe-image] ❌ Gemini API quota exceeded');
+      return {
+        statusCode: 429,
+        headers,
+        body: JSON.stringify({
+          error: 'API quota exceeded',
+          details: 'The Gemini API quota has been exceeded. Please try again later or check your API key limits in Google Cloud Console.',
+          quotaExceeded: true,
+        }),
+      };
+    }
+    
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
         error: 'Failed to transcribe image',
-        details: error instanceof Error ? error.message : String(error),
+        details: errorMessage,
       }),
     };
   }

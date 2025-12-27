@@ -77,6 +77,13 @@ export function useFileUpload(): UseFileUploadReturn {
       onTextExtracted(extractedText, 'image', imageDataUrl);
     } catch (error) {
       console.error('OCR failed:', error);
+      
+      // Check if it's a quota error
+      const errorObj = error as any;
+      if (errorObj?.quotaExceeded || (errorObj?.message && errorObj.message.includes('quota'))) {
+        throw new Error('API quota exceeded. Please try again later or use the legacy OCR option in settings.');
+      }
+      
       const msg = error instanceof Error ? error.message : 'Unknown error';
       throw new Error(`Failed to extract text: ${msg}`);
     } finally {

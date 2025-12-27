@@ -1,0 +1,46 @@
+I only want you to create a plan file called rubricReader-Claude45.md place it in the rubriks/rubrikReaderPlans folder.
+
+I have place 6 documents 3 pdf's and 3 .doc in the rubriks folder.  I need a new feature I can have the user load a pdf or word doc document and send the full document to the LLM and have it extract the rubric in a way that can be used by this application.  See screenshot of the function that creates and formats the rubrics.  The rubrics from the docs will come in vaious formats so review the sampling of the six documents and figure out a prompt that will identify what is rubric criteria anmd reformatr in in paragraph style.  the LLM must keep criteria and points identical to the original document for this to be useful.
+
+Ask me any clarifyquestions you might have so that this plan can be very accurate.
+
+
+
+
+
+
+
+Excellent! Now I have a good understanding. Before creating the plan, I have a few clarifying questions:
+
+Clarifying Questions:
+LLM Model Choice: Should this feature support both OpenAI (GPT-4o) and Gemini 2.5 Pro like the rest of the system, or just one model? The enhance-rubric function currently uses OpenAI.
+Upload Location: Where should the user upload the rubric document?
+In the "Create Assignment" modal (where they currently enter grading criteria)?
+As a separate "Import Rubric" feature?
+Both options?
+Output Format: After the LLM extracts the rubric, should it:
+Option A: Automatically populate the "Grading Criteria" textarea in paragraph format (like the screenshot shows)?
+Option B: Show a preview and let the teacher review/edit before accepting?
+Option C: Both - auto-populate with an "Edit" option?
+Rubric Validation: Should the system validate that the extracted rubric:
+Has point values that sum to the specified total (e.g., 100)?
+Contains recognizable grading criteria categories?
+Or just extract whatever the LLM finds and let the teacher review?
+File Storage: Should the uploaded rubric documents be:
+Stored temporarily (just for extraction, then discarded)?
+Saved permanently (like source texts) for future reference?
+Error Handling: If the LLM can't identify clear rubric criteria in the document (e.g., it's just an essay prompt without a rubric), should it:
+Return an error message?
+Try to create a default rubric based on the content?
+Let the teacher know and ask them to manually enter criteria?
+1. use the same multimodal genmini 2.5 pro 
+
+2. lets only do it in the Create Assignment modal
+
+3. Option B
+
+4. just extract whatever the LLM finds and let the teacher review.  In the preview however make sure to include the point value as a distinct item to be reviewed
+
+5. Stored temporarily (just for extraction, then discarded)
+
+6. Try to create a default rubric based on the content.  but present a warning message that the system had trouble processing the document.
