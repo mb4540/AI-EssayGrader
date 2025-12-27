@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import ContextHelp from '@/components/help/ContextHelp';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -87,11 +88,14 @@ export function StudentInfoCard({
 
     return (
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
-                    <span className="text-indigo-600 dark:text-indigo-300 text-sm">👤</span>
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                        <span className="text-indigo-600 dark:text-indigo-300 text-sm">👤</span>
+                    </div>
+                    Student Information
                 </div>
-                Student Information
+                <ContextHelp helpId="grade.studentInfo" />
             </h2>
             <div className="space-y-4">
                 <div>

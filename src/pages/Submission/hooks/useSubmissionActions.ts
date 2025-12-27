@@ -283,6 +283,15 @@ export function useSubmissionActions(state: SubmissionState) {
     };
 
     const handleNewSubmission = () => {
+        // IMPORTANT: Navigate to clean URL first to clear the URL param
+        // This prevents the useQuery from refetching the old submission
+        if (state.id) {
+            navigate('/submission', { replace: true });
+        }
+        
+        // Reset loadedSubmissionId to prevent race condition
+        state.setLoadedSubmissionId(null);
+        
         // Reset student selection but keep assignment
         state.setSelectedStudentUuid('');
         state.setStudentName('');

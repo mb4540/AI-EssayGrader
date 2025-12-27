@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { startRubricEnhancement, pollJobStatus, checkEnhancementStatus, type JobStatus } from '../lib/api/rubricJobs';
+import ContextHelp from './help/ContextHelp';
 
 interface CriteriaInputProps {
   value: string;
@@ -214,11 +215,14 @@ export default function CriteriaInput({
   return (
     <Card className={`shadow-lg border-l-4 border-amber-500 bg-white dark:bg-slate-800 ${className}`}>
       <CardHeader className="bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950 dark:to-yellow-950">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
-            <span className="text-amber-600 dark:text-amber-300 text-sm">📋</span>
+        <CardTitle className="text-lg flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900 flex items-center justify-center">
+              <span className="text-amber-600 dark:text-amber-300 text-sm">📋</span>
+            </div>
+            {title}
           </div>
-          {title}
+          <ContextHelp helpId="grade.gradingCriteria" />
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 pt-4">
