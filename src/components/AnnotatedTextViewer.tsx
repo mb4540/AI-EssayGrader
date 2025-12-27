@@ -485,6 +485,9 @@ export default function AnnotatedTextViewer({
           <Badge variant="outline" className="bg-blue-50">
             {groupedAnnotations.ai_suggested.length} AI Suggested
           </Badge>
+          <Badge variant="outline" className="bg-indigo-50">
+            {groupedAnnotations.teacher_created.length} Teacher Created
+          </Badge>
           <Badge variant="outline" className="bg-green-50">
             {groupedAnnotations.teacher_approved.length} Approved
           </Badge>
@@ -494,7 +497,15 @@ export default function AnnotatedTextViewer({
         </div>
       </div>
 
-      {/* Create Annotation Form */}
+      {/* Help text for creating annotations */}
+      {!showCreateForm && (
+        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 px-3 py-2 rounded-md border border-gray-200 dark:border-gray-700">
+          <Plus className="w-4 h-4 text-indigo-500" />
+          <span><strong>Tip:</strong> Select any text in the essay below to create your own annotation.</span>
+        </div>
+      )}
+
+      {/* Create Annotation Form (replaces help text when active) */}
       {showCreateForm && textSelection && (
         <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border-2 border-indigo-300 dark:border-indigo-600">
           <div className="flex items-center gap-2 mb-3">
