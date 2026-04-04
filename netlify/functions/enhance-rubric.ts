@@ -191,12 +191,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     if (providerName === 'gemini') {
       // Use Gemini with JSON mode
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error('GEMINI_API_KEY not configured');
-      }
-
-      const provider = getLLMProvider('gemini', apiKey, llmModel);
+      const provider = getLLMProvider('gemini', llmModel);
       const response = await provider.generate({
         systemMessage: systemPrompt,
         userMessage: `Simple grading rules:\n\n${simple_rules}`,

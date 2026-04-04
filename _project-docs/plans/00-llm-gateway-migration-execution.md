@@ -39,10 +39,10 @@ Key outcomes:
 
 Update this checklist after each phase completes. Mark `APPROVED` only after human review.
 
-| Phase | Description | Status | Commit Hash | Approved By | Date |
+| Phase | Description | Status | Commit Hash | Approved By | Date & Time |
 |---|---|---|---|---|---|
-| Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `IN PROGRESS` | | | |
-| Phase 2 | Update OpenAI provider to zero-config | `NOT STARTED` | | | |
+| Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `APPROVED` | d1172aa | User | 2026-04-04 07:32 CDT |
+| Phase 2 | Update OpenAI provider to zero-config | `IN PROGRESS` | | | |
 | Phase 3 | Consolidate hardcoded Gemini functions into factory | `NOT STARTED` | | | |
 | Phase 4 | Consolidate enhance-rubric functions to use factory | `NOT STARTED` | | | |
 | Phase 5 | Add Anthropic Claude provider | `NOT STARTED` | | | |
@@ -57,6 +57,10 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 ## Implementation Notes (deviations from plan)
 
 Record deviations here after each phase so subsequent phases can account for them.
+
+**Phase 1:**
+- `OpenAIProvider` constructor `apiKey` was also made optional (not in original plan) to satisfy TypeScript when factory passes `apiKey?: string`. This is a no-op at runtime since callers still pass explicit keys until Phase 2.
+- Gemini 3 `thinking_level` / forced `temperature: 1.0` logic was removed with the rewrite. If needed, re-add via new SDK's `thinkingConfig`.
 
 ---
 
@@ -251,7 +255,15 @@ export function getLLMProvider(
 
 ### 3.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified:**
+- `package.json` — Swapped `@google/generative-ai` → `@google/genai` (^1.0.0). npm install added 223 packages, removed 2.
+- `netlify/functions/lib/llm/gemini-provider.ts` — Full rewrite (55 → 33 lines). New SDK: `GoogleGenAI` from `@google/genai`, zero-config constructor, `client.models.generateContent()` API.
+- `netlify/functions/lib/llm/factory.ts` — `apiKey` parameter made optional. Gemini branch no longer passes apiKey.
+- `netlify/functions/lib/llm/openai-provider.ts` — Constructor `apiKey` made optional (minor addition, needed for factory compatibility).
+
+**Deviation:** The existing `gemini-provider.ts` had Gemini 3–specific logic (`temperature: 1.0`, `thinking_level: "high"` via `@ts-ignore`). This was removed in the rewrite since the old SDK's `@ts-ignore` hack doesn't apply to the new SDK. If Gemini 3 thinking support is needed later, it should be re-added using the new SDK's `thinkingConfig` API.
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged (9 pre-existing test file failures: 5 integration tests needing DB, 2 OCR error-message mismatches, 3 component/page test issues).
 
 ---
 

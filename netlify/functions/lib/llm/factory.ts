@@ -6,12 +6,11 @@ export type LLMProviderName = 'openai' | 'gemini';
 
 export function getLLMProvider(
     providerName: LLMProviderName,
-    apiKey?: string,
     model?: string
 ): LLMProvider {
     switch (providerName) {
         case 'openai':
-            return new OpenAIProvider(apiKey, model);
+            return new OpenAIProvider(model);
         case 'gemini':
         default:
             return new GeminiProvider(model);

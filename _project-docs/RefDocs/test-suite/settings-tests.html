@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Settings Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html" class="active">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>Settings Tests</h1>
+      <p>AI provider/model selection, custom prompts, handwriting provider, reset defaults, and persistence</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">12</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Logged in as a valid user</li>
+        <li>Open Settings via the gear icon in the nav bar</li>
+      </ul>
+    </div>
+
+    <!-- MODAL & TABS -->
+    <div class="test-section" id="section-modal">
+      <div class="test-section-header" onclick="toggleSection('section-modal')">
+        <h2>Modal &amp; Navigation <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SET-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-001</div>
+            <div class="test-title">Settings modal opens from gear icon</div>
+            <div class="test-steps"><ol><li>Click the gear icon in the navigation bar</li></ol></div>
+            <div class="test-expected">Settings modal opens with tabs visible (e.g., AI Provider, Grading Prompt, OCR Prompt, Rubric Prompt, etc.)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-002</div>
+            <div class="test-title">Switch between settings tabs</div>
+            <div class="test-steps"><ol><li>Click each tab in the Settings modal</li></ol></div>
+            <div class="test-expected">Content changes for each tab; previously entered data is retained when switching between tabs</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-003</div>
+            <div class="test-title">Close Settings modal</div>
+            <div class="test-steps"><ol><li>Click the X button or close button on the Settings modal</li></ol></div>
+            <div class="test-expected">Modal closes; returns to the previous page; unsaved changes are handled (either saved or discarded with warning)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AI PROVIDER -->
+    <div class="test-section" id="section-provider">
+      <div class="test-section-header" onclick="toggleSection('section-provider')">
+        <h2>AI Provider &amp; Model <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SET-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-004</div>
+            <div class="test-title">Select Gemini as AI provider</div>
+            <div class="test-steps"><ol><li>In the AI Provider tab, select "Gemini"</li><li>Save settings</li></ol></div>
+            <div class="test-expected">Gemini is selected; model dropdown shows Gemini models (e.g., gemini-2.5-pro, gemini-2.0-flash-exp); saved to localStorage as "ai_provider"</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-005</div>
+            <div class="test-title">Select OpenAI as AI provider</div>
+            <div class="test-steps"><ol><li>In the AI Provider tab, select "OpenAI"</li><li>Save settings</li></ol></div>
+            <div class="test-expected">OpenAI is selected; model dropdown shows OpenAI models (e.g., gpt-4o, gpt-4o-mini); saved to localStorage</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-006</div>
+            <div class="test-title">Select handwriting recognition provider</div>
+            <div class="test-steps"><ol><li>Find the handwriting/image transcription provider setting</li><li>Change it from default to a specific provider (Gemini or OpenAI)</li><li>Save</li></ol></div>
+            <div class="test-expected">Handwriting provider saved to localStorage as "ai_handwriting_provider"; used during image upload OCR</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-007</div>
+            <div class="test-title">Provider settings persist across page reload</div>
+            <div class="test-steps"><ol><li>Set provider to OpenAI and save</li><li>Reload the page</li><li>Open Settings again</li></ol></div>
+            <div class="test-expected">Settings modal shows OpenAI as the selected provider; localStorage values are intact</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CUSTOM PROMPTS -->
+    <div class="test-section" id="section-prompts">
+      <div class="test-section-header" onclick="toggleSection('section-prompts')">
+        <h2>Custom Prompts <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SET-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-008</div>
+            <div class="test-title">Edit custom grading prompt</div>
+            <div class="test-steps">
+              <ol>
+                <li>Navigate to the Grading Prompt tab</li>
+                <li>Modify the prompt text</li>
+                <li>Save</li>
+              </ol>
+            </div>
+            <div class="test-expected">Custom prompt saved to localStorage ("ai_grading_prompt"); used during next grading operation instead of default</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-009</div>
+            <div class="test-title">Edit custom OCR cleanup prompt</div>
+            <div class="test-steps"><ol><li>Navigate to the OCR Prompt tab</li><li>Modify the cleanup prompt</li><li>Save</li></ol></div>
+            <div class="test-expected">Custom OCR prompt saved; used during "Enhance Text" / "Clean Text" operations</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-010</div>
+            <div class="test-title">Edit custom rubric enhancement prompt</div>
+            <div class="test-steps"><ol><li>Navigate to the Rubric Prompt tab</li><li>Modify the enhancement prompt</li><li>Save</li></ol></div>
+            <div class="test-expected">Custom rubric prompt saved; used during "Enhance with AI" on rubric criteria</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RESET DEFAULTS -->
+    <div class="test-section" id="section-reset">
+      <div class="test-section-header" onclick="toggleSection('section-reset')">
+        <h2>Reset Defaults <span class="badge">2 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SET-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-011</div>
+            <div class="test-title">Reset a prompt to default</div>
+            <div class="test-steps"><ol><li>Modify a prompt (e.g., grading prompt)</li><li>Click the reset/restore default button for that prompt</li></ol></div>
+            <div class="test-expected">Prompt reverts to the default text; localStorage value is cleared for that prompt</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SET-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SET-012</div>
+            <div class="test-title">Default prompts are used when no custom prompt set</div>
+            <div class="test-steps">
+              <ol>
+                <li>Clear all custom prompts (reset to defaults)</li>
+                <li>Run a grading operation</li>
+              </ol>
+            </div>
+            <div class="test-expected">Grading uses the built-in default prompts; no errors about missing prompts; results are consistent with default behavior</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

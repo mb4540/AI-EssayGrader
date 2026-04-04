@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auth Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Authentication Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html" class="active">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>🔐 Authentication Tests</h1>
+      <p>Login, registration, password reset, and session management</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">18</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Application is running and accessible</li>
+        <li>Start from a logged-out state (clear localStorage or use incognito)</li>
+        <li>Have a valid email address for registration tests</li>
+      </ul>
+    </div>
+
+    <!-- REGISTRATION TESTS -->
+    <div class="test-section" id="section-register">
+      <div class="test-section-header" onclick="toggleSection('section-register')">
+        <h2>Registration <span class="badge">5 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="AUTH-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-001</div>
+            <div class="test-title">Navigate to registration page</div>
+            <div class="test-steps">
+              <ol>
+                <li>Go to /login</li>
+                <li>Click "Create an account" link</li>
+              </ol>
+            </div>
+            <div class="test-expected">Redirected to /register page with "Create Account" heading visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-002</div>
+            <div class="test-title">Successful registration with valid data</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter full name, email, school/district name</li>
+                <li>Enter password (8+ chars) and confirm password (matching)</li>
+                <li>Click "Create Account"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Account created, auto-login, redirect to Dashboard (/)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-003</div>
+            <div class="test-title">Registration fails with mismatched passwords</div>
+            <div class="test-steps">
+              <ol>
+                <li>Fill in all fields with valid data</li>
+                <li>Enter different values in password and confirm password</li>
+                <li>Click "Create Account"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Error message "Passwords do not match" displayed; form not submitted</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-004</div>
+            <div class="test-title">Registration fails with short password (&lt;8 chars)</div>
+            <div class="test-steps">
+              <ol>
+                <li>Fill in all fields; use a 5-character password</li>
+                <li>Click "Create Account"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Error message "Password must be at least 8 characters" or browser validation prevents submission</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-005</div>
+            <div class="test-title">Registration fails with duplicate email</div>
+            <div class="test-steps">
+              <ol>
+                <li>Use an email that is already registered</li>
+                <li>Fill in all other fields correctly</li>
+                <li>Click "Create Account"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Error message indicating email already in use; form stays on register page</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LOGIN TESTS -->
+    <div class="test-section" id="section-login">
+      <div class="test-section-header" onclick="toggleSection('section-login')">
+        <h2>Login <span class="badge">5 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="AUTH-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-006</div>
+            <div class="test-title">Login page renders correctly</div>
+            <div class="test-steps">
+              <ol>
+                <li>Navigate to /login</li>
+              </ol>
+            </div>
+            <div class="test-expected">"Welcome Back" heading, email/password fields, "Sign In" button, "Create an account" and "Forgot password?" links visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-007</div>
+            <div class="test-title">Successful login with valid credentials</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter valid email and password</li>
+                <li>Click "Sign In"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Button shows "Signing in..." then redirects to Dashboard (/); user name appears in nav</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-008</div>
+            <div class="test-title">Login fails with wrong password</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter valid email with incorrect password</li>
+                <li>Click "Sign In"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Red error banner displayed; stays on login page</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-009</div>
+            <div class="test-title">Login fails with non-existent email</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter an email that has never been registered</li>
+                <li>Click "Sign In"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Red error banner displayed; stays on login page; error message does not reveal whether email exists</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-010</div>
+            <div class="test-title">Login button disabled while request is in-flight</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter valid credentials and click "Sign In"</li>
+                <li>Observe button state during submission</li>
+              </ol>
+            </div>
+            <div class="test-expected">Button text changes to "Signing in..." and is disabled; prevents double-submission</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FORGOT PASSWORD TESTS -->
+    <div class="test-section" id="section-forgot">
+      <div class="test-section-header" onclick="toggleSection('section-forgot')">
+        <h2>Forgot Password <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="AUTH-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-011</div>
+            <div class="test-title">Navigate to forgot password page</div>
+            <div class="test-steps">
+              <ol>
+                <li>Go to /login</li>
+                <li>Click "Forgot password?" link</li>
+              </ol>
+            </div>
+            <div class="test-expected">Redirected to /forgot-password with "Reset Your Password" heading</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-012</div>
+            <div class="test-title">Submit forgot password with valid email</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter a registered email address</li>
+                <li>Click "Send Reset Link"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Green success message displayed; email field is cleared; security note visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-013">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-013</div>
+            <div class="test-title">Submit forgot password with non-existent email</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter an email that is not registered</li>
+                <li>Click "Send Reset Link"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Same success-style message shown (security: doesn't reveal if email exists); "Back to Login" link visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-014">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-014</div>
+            <div class="test-title">"Back to Login" link works from forgot password page</div>
+            <div class="test-steps">
+              <ol>
+                <li>On /forgot-password, click "Back to Login"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Navigated back to /login page</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RESET PASSWORD TESTS -->
+    <div class="test-section" id="section-reset">
+      <div class="test-section-header" onclick="toggleSection('section-reset')">
+        <h2>Reset Password <span class="badge">2 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="AUTH-015">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-015</div>
+            <div class="test-title">Reset password page with missing/invalid token</div>
+            <div class="test-steps">
+              <ol>
+                <li>Navigate to /reset-password (no token query param)</li>
+              </ol>
+            </div>
+            <div class="test-expected">"Invalid Reset Link" error page shown with link to request new reset</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-016">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-016</div>
+            <div class="test-title">Reset password with valid token (end-to-end)</div>
+            <div class="test-steps">
+              <ol>
+                <li>Request a password reset via /forgot-password</li>
+                <li>Open the reset link from email (/reset-password?token=...)</li>
+                <li>Enter new password and confirm password</li>
+                <li>Click "Reset Password"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Green success message; auto-redirect to /login after 3 seconds; can log in with new password</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LOGOUT & SESSION TESTS -->
+    <div class="test-section" id="section-session">
+      <div class="test-section-header" onclick="toggleSection('section-session')">
+        <h2>Logout &amp; Session <span class="badge">2 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="AUTH-017">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-017</div>
+            <div class="test-title">Logout from user menu</div>
+            <div class="test-steps">
+              <ol>
+                <li>While logged in, click user name in top-right nav</li>
+                <li>Click "Sign Out" in the dropdown</li>
+              </ol>
+            </div>
+            <div class="test-expected">Redirected to /login; JWT token removed from localStorage; Bridge is locked</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="AUTH-018">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">AUTH-018</div>
+            <div class="test-title">Protected route redirects when not logged in</div>
+            <div class="test-steps">
+              <ol>
+                <li>Log out (or clear localStorage)</li>
+                <li>Navigate directly to / (Dashboard)</li>
+              </ol>
+            </div>
+            <div class="test-expected">Redirected to /login; cannot access Dashboard, Grade, Students, or Help pages</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

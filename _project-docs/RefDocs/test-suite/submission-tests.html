@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Submission &amp; Grading Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Submission &amp; Grading Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html" class="active">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>📝 Submission &amp; Grading Tests</h1>
+      <p>Essay input, file upload, OCR/AI vision, AI grading, teacher override, print, and draft comparison</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">28</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Logged in as a valid user</li>
+        <li>Bridge is unlocked with at least 2 students</li>
+        <li>At least 1 assignment exists with grading criteria</li>
+        <li>Have sample files ready: a .docx essay, a .pdf essay, and a photo of handwritten text (JPG/PNG)</li>
+      </ul>
+    </div>
+
+    <!-- STUDENT & ASSIGNMENT SELECTION -->
+    <div class="test-section" id="section-student">
+      <div class="test-section-header" onclick="toggleSection('section-student')">
+        <h2>Student &amp; Assignment Selection <span class="badge">5 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SUB-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-001</div>
+            <div class="test-title">Student selector shows students when Bridge is unlocked</div>
+            <div class="test-steps"><ol><li>Navigate to /submission (Grade page)</li><li>Click the student search field</li></ol></div>
+            <div class="test-expected">Dropdown shows list of students from the Bridge with names and IDs; students are searchable</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-002</div>
+            <div class="test-title">Student selector shows warning when Bridge is locked</div>
+            <div class="test-steps"><ol><li>Lock the Bridge (log out and back in without unlocking)</li><li>Navigate to /submission</li></ol></div>
+            <div class="test-expected">"Bridge Locked" warning appears with link to Students page to unlock</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-003</div>
+            <div class="test-title">Select an assignment from dropdown</div>
+            <div class="test-steps"><ol><li>Click the assignment dropdown</li><li>Select an existing assignment</li></ol></div>
+            <div class="test-expected">Assignment is selected; grading criteria auto-fills from the assignment; total points and assignment prompt load</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-004</div>
+            <div class="test-title">Edit assignment from submission page</div>
+            <div class="test-steps"><ol><li>Select an assignment</li><li>Click the edit icon next to the assignment dropdown</li></ol></div>
+            <div class="test-expected">Edit Assignment modal opens pre-populated with the selected assignment's data</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-005</div>
+            <div class="test-title">Search/filter students by name</div>
+            <div class="test-steps"><ol><li>Type part of a student's name in the student search field</li></ol></div>
+            <div class="test-expected">Dropdown filters to show only matching students; search is case-insensitive</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ESSAY INPUT -->
+    <div class="test-section" id="section-input">
+      <div class="test-section-header" onclick="toggleSection('section-input')">
+        <h2>Essay Input Methods <span class="badge">8 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SUB-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-006</div>
+            <div class="test-title">Paste text directly into text tab</div>
+            <div class="test-steps"><ol><li>Click the "Text" tab in FileDrop</li><li>Paste or type essay text into the textarea</li><li>Click "Use This Text"</li></ol></div>
+            <div class="test-expected">Text appears in the VerbatimViewer; word count is displayed; source type is "text"</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-007</div>
+            <div class="test-title">Upload DOCX file</div>
+            <div class="test-steps"><ol><li>Click the "Document" tab in FileDrop</li><li>Select a .docx file</li></ol></div>
+            <div class="test-expected">Text is extracted from the DOCX and displayed; source type shows as "docx"; word count updates</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-008</div>
+            <div class="test-title">Upload PDF file</div>
+            <div class="test-steps"><ol><li>Click the "Document" tab in FileDrop</li><li>Select a .pdf file with text content</li></ol></div>
+            <div class="test-expected">Text is extracted from the PDF; source type shows as "pdf"</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-009</div>
+            <div class="test-title">Upload image with AI Vision enabled (default)</div>
+            <div class="test-steps"><ol><li>Click the "Image" tab in FileDrop</li><li>Ensure "AI Vision" toggle is ON</li><li>Select a photo of handwritten text (JPG/PNG)</li></ol></div>
+            <div class="test-expected">Image is sent to AI (Gemini/OpenAI) for transcription; extracted text appears; source type is "image"</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-010</div>
+            <div class="test-title">Upload image with legacy Tesseract OCR</div>
+            <div class="test-steps"><ol><li>Click the "Image" tab</li><li>Toggle OFF "AI Vision"</li><li>Select a photo of handwritten text</li></ol></div>
+            <div class="test-expected">Local Tesseract.js OCR processes the image; progress bar shown; extracted text appears</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-011</div>
+            <div class="test-title">Clean/Enhance text after OCR</div>
+            <div class="test-steps"><ol><li>After extracting text from an image, click "Enhance Text" or "Clean Text" button</li></ol></div>
+            <div class="test-expected">Text is sent to AI for cleanup; spinner shown during processing; cleaned text replaces the OCR output</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-012</div>
+            <div class="test-title">Word count displays and updates</div>
+            <div class="test-steps"><ol><li>Enter or upload text</li><li>Observe the word count display</li></ol></div>
+            <div class="test-expected">Word count shown below the text area; updates when text changes</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-013">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-013</div>
+            <div class="test-title">Upload existing image from VerbatimViewer</div>
+            <div class="test-steps"><ol><li>On a saved submission with an image source, observe the VerbatimViewer</li><li>Switch to Image tab</li></ol></div>
+            <div class="test-expected">Original uploaded image is visible; can upload a new image to replace it</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- GRADING CRITERIA -->
+    <div class="test-section" id="section-criteria">
+      <div class="test-section-header" onclick="toggleSection('section-criteria')">
+        <h2>Grading Criteria <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SUB-014">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-014</div>
+            <div class="test-title">Enter custom grading criteria</div>
+            <div class="test-steps"><ol><li>In the Grading Criteria section, type custom rules</li><li>Set total points</li></ol></div>
+            <div class="test-expected">Criteria text is accepted; total points field updates; "Enhance with AI" button is visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-015">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-015</div>
+            <div class="test-title">Enhance criteria with AI</div>
+            <div class="test-steps"><ol><li>Enter simple rubric rules (e.g., "Check grammar and organization. 100 points.")</li><li>Click "Enhance with AI" button</li></ol></div>
+            <div class="test-expected">Spinner shows during processing; simple rules are expanded into a detailed rubric with categories and levels; total points preserved</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-016">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-016</div>
+            <div class="test-title">Assignment prompt field</div>
+            <div class="test-steps"><ol><li>Observe the assignment prompt textarea</li><li>Enter or verify the prompt loads from selected assignment</li></ol></div>
+            <div class="test-expected">Assignment prompt field is visible and editable; helps AI understand assignment context</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AI GRADING -->
+    <div class="test-section" id="section-grading">
+      <div class="test-section-header" onclick="toggleSection('section-grading')">
+        <h2>AI Grading <span class="badge">5 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SUB-017">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-017</div>
+            <div class="test-title">Run Grade button disabled when prerequisites not met</div>
+            <div class="test-steps"><ol><li>Without selecting student or entering text, observe "Run Grade" button</li></ol></div>
+            <div class="test-expected">Button is disabled/grayed out; cannot be clicked</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-018">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-018</div>
+            <div class="test-title">Run Grade with complete data (single draft)</div>
+            <div class="test-steps">
+              <ol>
+                <li>Select a student</li>
+                <li>Enter grading criteria</li>
+                <li>Paste or upload essay text</li>
+                <li>Click "Run Grade"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Button shows "Grading..." with spinner; after completion: overall grade (0-100), detailed breakdown by criterion, strengths, areas for improvement, grammar/spelling findings, top 3 suggestions all appear in the Grade Panel</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-019">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-019</div>
+            <div class="test-title">AI feedback shows BulletProof breakdown</div>
+            <div class="test-steps"><ol><li>After grading, examine the Grade Panel</li></ol></div>
+            <div class="test-expected">Shows per-criterion scores with points awarded/max, level names, rationales; final calculation with raw score, percentage, and final points; calculator version displayed</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-020">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-020</div>
+            <div class="test-title">AI feedback shows feedback cards</div>
+            <div class="test-steps"><ol><li>After grading, scroll through the Grade Panel feedback section</li></ol></div>
+            <div class="test-expected">Green "Strengths" card, blue "Areas for Improvement" card, amber "Grammar/Spelling/Punctuation" cards (marked "Not Affecting Score"), and yellow "Top 3 Suggestions" card are all visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-021">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-021</div>
+            <div class="test-title">Re-grade same submission</div>
+            <div class="test-steps"><ol><li>After an initial grade, click "Run Grade" again</li></ol></div>
+            <div class="test-expected">New grading run executes; feedback updates with new results; previous results are replaced</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TEACHER OVERRIDE & SAVE -->
+    <div class="test-section" id="section-teacher">
+      <div class="test-section-header" onclick="toggleSection('section-teacher')">
+        <h2>Teacher Override &amp; Save <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SUB-022">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-022</div>
+            <div class="test-title">Enter teacher final grade</div>
+            <div class="test-steps"><ol><li>In the "Teacher Final Grade" section, enter a number 0-100</li></ol></div>
+            <div class="test-expected">Grade input accepts values 0-100; placeholder shows AI's suggested grade; "Save Final Grade" button becomes enabled</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-023">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-023</div>
+            <div class="test-title">Enter teacher comments</div>
+            <div class="test-steps"><ol><li>Type custom feedback in the "Teacher Comments" textarea</li></ol></div>
+            <div class="test-expected">Text area accepts input; "Save Final Grade" button becomes enabled</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-024">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-024</div>
+            <div class="test-title">Save Final Grade</div>
+            <div class="test-steps"><ol><li>Enter teacher grade and/or comments</li><li>Click "Save Final Grade"</li></ol></div>
+            <div class="test-expected">Button shows "Saving..." with spinner; toast notification confirms save; data persists (visible on Dashboard and when re-opening the submission)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-025">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-025</div>
+            <div class="test-title">Save button disabled when no changes</div>
+            <div class="test-steps"><ol><li>Leave teacher grade empty and teacher comments empty</li><li>Observe "Save Final Grade" button</li></ol></div>
+            <div class="test-expected">Button is disabled when both teacher grade is undefined and teacher feedback is empty</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DRAFT COMPARISON & OTHER -->
+    <div class="test-section" id="section-drafts">
+      <div class="test-section-header" onclick="toggleSection('section-drafts')">
+        <h2>Draft Comparison &amp; Other <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="SUB-026">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-026</div>
+            <div class="test-title">Switch to Draft Comparison mode</div>
+            <div class="test-steps"><ol><li>In the submission header, toggle from "Single Draft" to "Draft Comparison" mode</li></ol></div>
+            <div class="test-expected">Two essay input areas appear: "Rough Draft" and "Final Draft"; each has its own FileDrop/VerbatimViewer</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-027">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-027</div>
+            <div class="test-title">Grade with Draft Comparison (rough + final)</div>
+            <div class="test-steps"><ol><li>In Draft Comparison mode, enter rough draft and final draft text</li><li>Set criteria and select student</li><li>Click "Run Grade"</li></ol></div>
+            <div class="test-expected">AI feedback includes improvement analysis: improvement summary, growth percentage bar, areas improved, areas still needing work</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="SUB-028">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">SUB-028</div>
+            <div class="test-title">Print submission</div>
+            <div class="test-steps"><ol><li>After grading a submission, click the Print button in the header</li></ol></div>
+            <div class="test-expected">Browser print dialog opens with a formatted print view showing student info, essay text, AI feedback, and teacher grade</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Bridge Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Student Bridge Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html" class="active">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>🏫 Student Bridge Tests</h1>
+      <p>Bridge create/unlock, student management, CSV import, class periods, bulk actions, and search/filter/sort</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">18</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Logged in as a valid user</li>
+        <li>Navigate to /bridge (Students page)</li>
+        <li>For import tests: have a CSV file with columns for student name, local ID, and class period</li>
+        <li>For fresh bridge tests: clear localStorage to start without a bridge</li>
+      </ul>
+    </div>
+
+    <!-- BRIDGE CREATE/UNLOCK -->
+    <div class="test-section" id="section-bridge">
+      <div class="test-section-header" onclick="toggleSection('section-bridge')">
+        <h2>Bridge Create &amp; Unlock <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="BRG-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-001</div>
+            <div class="test-title">Create a new bridge</div>
+            <div class="test-steps">
+              <ol>
+                <li>On /bridge with no existing bridge, select "Create New Bridge" mode</li>
+                <li>Enter a passphrase, district name, school name, and teacher name</li>
+                <li>Submit the form</li>
+              </ol>
+            </div>
+            <div class="test-expected">Bridge is created; student roster appears (empty); passphrase is stored encrypted locally; student management UI becomes available</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-002</div>
+            <div class="test-title">Unlock existing bridge with correct passphrase</div>
+            <div class="test-steps">
+              <ol>
+                <li>Log out and back in (bridge becomes locked on logout)</li>
+                <li>Navigate to /bridge</li>
+                <li>Enter the correct passphrase</li>
+                <li>Click unlock</li>
+              </ol>
+            </div>
+            <div class="test-expected">Bridge unlocks; previously added students are visible in the roster; student names are decrypted</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-003</div>
+            <div class="test-title">Unlock fails with wrong passphrase</div>
+            <div class="test-steps"><ol><li>On /bridge, enter an incorrect passphrase</li><li>Click unlock</li></ol></div>
+            <div class="test-expected">Error message displayed; bridge remains locked; students are not visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-004</div>
+            <div class="test-title">Bridge locks on logout</div>
+            <div class="test-steps"><ol><li>With bridge unlocked, log out via user menu</li><li>Log back in</li><li>Navigate to /bridge</li></ol></div>
+            <div class="test-expected">Bridge shows as locked; requires passphrase to unlock again (FERPA compliance)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STUDENT MANAGEMENT -->
+    <div class="test-section" id="section-students">
+      <div class="test-section-header" onclick="toggleSection('section-students')">
+        <h2>Student Management <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="BRG-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-005</div>
+            <div class="test-title">Add student manually</div>
+            <div class="test-steps">
+              <ol>
+                <li>Click "Add Student" button</li>
+                <li>Enter student name, local ID, and class period</li>
+                <li>Click save/add</li>
+              </ol>
+            </div>
+            <div class="test-expected">Student appears in the roster with name, ID, class period, and a generated UUID; student is also synced to cloud database</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-006</div>
+            <div class="test-title">Edit student</div>
+            <div class="test-steps">
+              <ol>
+                <li>Click the edit icon on a student row</li>
+                <li>Change the student's name or class period</li>
+                <li>Click save</li>
+              </ol>
+            </div>
+            <div class="test-expected">Edit modal opens with current data; changes save and are reflected in the roster; cloud sync occurs</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-007</div>
+            <div class="test-title">Import students from CSV</div>
+            <div class="test-steps">
+              <ol>
+                <li>Click "Import CSV" button</li>
+                <li>Select a CSV file with student names, IDs, and class periods</li>
+                <li>Confirm the import</li>
+              </ol>
+            </div>
+            <div class="test-expected">Import Results modal shows summary (added, skipped, errors); new students appear in the roster with assigned class periods</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-008</div>
+            <div class="test-title">Export student roster</div>
+            <div class="test-steps"><ol><li>Click the "Export" / download button on the Bridge page</li></ol></div>
+            <div class="test-expected">A file downloads containing the student roster data (names, IDs, class periods)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CLASS PERIODS -->
+    <div class="test-section" id="section-class">
+      <div class="test-section-header" onclick="toggleSection('section-class')">
+        <h2>Class Period Management <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="BRG-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-009</div>
+            <div class="test-title">Add a new class period</div>
+            <div class="test-steps"><ol><li>In the class period management area, enter a new class period name</li><li>Click add</li></ol></div>
+            <div class="test-expected">New class period appears in the list; available for filtering and assignment</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-010</div>
+            <div class="test-title">Bulk assign class period to selected students</div>
+            <div class="test-steps">
+              <ol>
+                <li>Select multiple students using checkboxes</li>
+                <li>Choose a class period from the bulk action dropdown</li>
+                <li>Click apply/update</li>
+              </ol>
+            </div>
+            <div class="test-expected">All selected students are updated with the chosen class period; changes sync to cloud</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-011</div>
+            <div class="test-title">Imported class periods appear in filters</div>
+            <div class="test-steps"><ol><li>Import students with various class periods via CSV</li><li>Check the class period filter dropdown</li></ol></div>
+            <div class="test-expected">All unique class periods from imported students appear in the filter dropdown (including "Unassigned" option)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SEARCH, FILTER, SORT -->
+    <div class="test-section" id="section-search">
+      <div class="test-section-header" onclick="toggleSection('section-search')">
+        <h2>Search, Filter &amp; Sort <span class="badge">5 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="BRG-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-012</div>
+            <div class="test-title">Search students by name</div>
+            <div class="test-steps"><ol><li>Type a partial name in the search box</li></ol></div>
+            <div class="test-expected">Roster filters in real-time to show only students matching the search term (case-insensitive)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-013">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-013</div>
+            <div class="test-title">Filter students by class period</div>
+            <div class="test-steps"><ol><li>Select a specific class period from the filter dropdown</li></ol></div>
+            <div class="test-expected">Only students in that class period are shown; "Unassigned" option shows students without a class period</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-014">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-014</div>
+            <div class="test-title">Sort students by name</div>
+            <div class="test-steps"><ol><li>Click the "Name" column header</li></ol></div>
+            <div class="test-expected">Students sort alphabetically by name; clicking again reverses the sort direction (A-Z / Z-A)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-015">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-015</div>
+            <div class="test-title">Sort students by class period</div>
+            <div class="test-steps"><ol><li>Click the "Class Period" column header</li></ol></div>
+            <div class="test-expected">Students sort by class period; within the same period, students sort by name (secondary sort)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-016">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-016</div>
+            <div class="test-title">Sort students by local ID</div>
+            <div class="test-steps"><ol><li>Click the "ID" column header</li></ol></div>
+            <div class="test-expected">Students sort by their local ID; click toggles between ascending and descending</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- CLOUD SYNC -->
+    <div class="test-section" id="section-sync">
+      <div class="test-section-header" onclick="toggleSection('section-sync')">
+        <h2>Cloud Sync <span class="badge">2 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="BRG-017">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-017</div>
+            <div class="test-title">Sync students to cloud database</div>
+            <div class="test-steps"><ol><li>After adding or importing students, trigger a cloud sync</li></ol></div>
+            <div class="test-expected">Sync status shows success/failed counts; students are stored in the cloud database (grader.students table)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="BRG-018">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">BRG-018</div>
+            <div class="test-title">Retry failed sync</div>
+            <div class="test-steps"><ol><li>If initial sync fails for some students, click "Retry" button</li></ol></div>
+            <div class="test-expected">Failed students are re-synced; status updates to reflect new results</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

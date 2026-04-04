@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Dashboard Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html" class="active">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>📊 Dashboard Tests</h1>
+      <p>View modes, filtering, sorting, statistics, export, and submission management</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">20</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Logged in as a valid user</li>
+        <li>At least 3-5 submissions exist (from different students, assignments, and dates)</li>
+        <li>Bridge is unlocked with students having different class periods</li>
+        <li>At least 2 assignments exist</li>
+      </ul>
+    </div>
+
+    <!-- VIEW MODES -->
+    <div class="test-section" id="section-views">
+      <div class="test-section-header" onclick="toggleSection('section-views')">
+        <h2>View Modes <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="DASH-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-001</div>
+            <div class="test-title">Default view is "By Student"</div>
+            <div class="test-steps"><ol><li>Navigate to Dashboard (/)</li></ol></div>
+            <div class="test-expected">Submissions are grouped by student name; "By Student" view mode is active/selected</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-002</div>
+            <div class="test-title">Switch to "By Assignment" view</div>
+            <div class="test-steps"><ol><li>Click the "By Assignment" view mode toggle</li></ol></div>
+            <div class="test-expected">Submissions regroup by assignment title; assignment headers show edit/delete buttons; submission count per assignment visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-003</div>
+            <div class="test-title">Switch to "By Class" view</div>
+            <div class="test-steps"><ol><li>Click the "By Class" view mode toggle</li></ol></div>
+            <div class="test-expected">Submissions grouped by class period, then by student within each class; only visible if Bridge is unlocked with class periods</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-004</div>
+            <div class="test-title">Empty state when no submissions</div>
+            <div class="test-steps"><ol><li>Use a new account with no submissions</li><li>Navigate to Dashboard</li></ol></div>
+            <div class="test-expected">"No submissions found. Create your first submission to get started." message displayed</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- FILTERING -->
+    <div class="test-section" id="section-filtering">
+      <div class="test-section-header" onclick="toggleSection('section-filtering')">
+        <h2>Filtering <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="DASH-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-005</div>
+            <div class="test-title">Filter by class period</div>
+            <div class="test-steps"><ol><li>Select a specific class period from the filter dropdown</li></ol></div>
+            <div class="test-expected">Only submissions from students in that class period are shown; count updates</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-006</div>
+            <div class="test-title">Date range filter - set start date</div>
+            <div class="test-steps"><ol><li>Set a start date in the date range filter</li></ol></div>
+            <div class="test-expected">Only submissions on or after that date are shown</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-007</div>
+            <div class="test-title">Date range filter - presets (Today, This Week, etc.)</div>
+            <div class="test-steps"><ol><li>Click a date preset button (e.g., "This Week")</li></ol></div>
+            <div class="test-expected">Start and end dates are auto-set; submissions filtered to that range</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-008</div>
+            <div class="test-title">Clear date range filter</div>
+            <div class="test-steps"><ol><li>Set a date range filter</li><li>Click the "Clear" button</li></ol></div>
+            <div class="test-expected">Date fields are cleared; all submissions show again</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SORTING -->
+    <div class="test-section" id="section-sorting">
+      <div class="test-section-header" onclick="toggleSection('section-sorting')">
+        <h2>Sorting <span class="badge">2 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="DASH-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-009</div>
+            <div class="test-title">Toggle sort direction (newest/oldest first)</div>
+            <div class="test-steps"><ol><li>Click the sort direction toggle button</li></ol></div>
+            <div class="test-expected">Submission order reverses; newest-first becomes oldest-first or vice versa</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-010</div>
+            <div class="test-title">Sorting persists when changing view modes</div>
+            <div class="test-steps"><ol><li>Set sort to oldest-first</li><li>Switch from "By Student" to "By Assignment" view</li></ol></div>
+            <div class="test-expected">Sort direction is maintained across view mode changes</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- STATISTICS -->
+    <div class="test-section" id="section-stats">
+      <div class="test-section-header" onclick="toggleSection('section-stats')">
+        <h2>Statistics <span class="badge">2 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="DASH-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-011</div>
+            <div class="test-title">Dashboard statistics display correctly</div>
+            <div class="test-steps"><ol><li>On Dashboard, observe the statistics summary bar</li></ol></div>
+            <div class="test-expected">Shows total submissions count, graded count, average grade, and total assignments; numbers match actual data</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-012</div>
+            <div class="test-title">Statistics update when filters change</div>
+            <div class="test-steps"><ol><li>Apply a date range filter or class period filter</li><li>Observe the stats</li></ol></div>
+            <div class="test-expected">Statistics recalculate to reflect only the filtered submissions</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- SUBMISSION ACTIONS -->
+    <div class="test-section" id="section-actions">
+      <div class="test-section-header" onclick="toggleSection('section-actions')">
+        <h2>Submission Actions <span class="badge">5 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="DASH-013">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-013</div>
+            <div class="test-title">View a submission from Dashboard</div>
+            <div class="test-steps"><ol><li>Click on a submission row or "View" button</li></ol></div>
+            <div class="test-expected">Navigated to /submission/:id with the submission data pre-loaded (student name, essay, grades)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-014">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-014</div>
+            <div class="test-title">Delete a submission (with confirmation)</div>
+            <div class="test-steps"><ol><li>Click delete icon on a submission</li><li>Confirm deletion in the modal</li></ol></div>
+            <div class="test-expected">Confirmation modal appears; after confirming, submission is removed from list; data is deleted from server</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-015">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-015</div>
+            <div class="test-title">Cancel delete submission</div>
+            <div class="test-steps"><ol><li>Click delete icon on a submission</li><li>Click "Cancel" in the confirmation modal</li></ol></div>
+            <div class="test-expected">Modal closes; submission is still visible in the list</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-016">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-016</div>
+            <div class="test-title">Delete an assignment (By Assignment view)</div>
+            <div class="test-steps"><ol><li>Switch to "By Assignment" view</li><li>Click delete on an assignment header</li><li>Confirm deletion</li></ol></div>
+            <div class="test-expected">Confirmation shows assignment name and submission count; after confirming, assignment and all its submissions are removed</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-017">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-017</div>
+            <div class="test-title">Edit assignment from "By Assignment" view</div>
+            <div class="test-steps"><ol><li>Switch to "By Assignment" view</li><li>Click the edit icon on an assignment header</li></ol></div>
+            <div class="test-expected">CreateAssignmentModal opens in edit mode, pre-populated with assignment data</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="test-section" id="section-export">
+      <div class="test-section-header" onclick="toggleSection('section-export')">
+        <h2>Export <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="DASH-018">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-018</div>
+            <div class="test-title">Export CSV button visible</div>
+            <div class="test-steps"><ol><li>On Dashboard with submissions, look for the Export button</li></ol></div>
+            <div class="test-expected">Export/Download button is visible in the Dashboard header area</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-019">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-019</div>
+            <div class="test-title">Export CSV downloads file</div>
+            <div class="test-steps"><ol><li>Click the Export/CSV button</li></ol></div>
+            <div class="test-expected">A .csv file downloads containing submission data (student names resolved from Bridge, grades, dates)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="DASH-020">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">DASH-020</div>
+            <div class="test-title">CSV file contains correct data</div>
+            <div class="test-steps"><ol><li>Open the downloaded CSV file</li><li>Verify the content</li></ol></div>
+            <div class="test-expected">CSV has headers and rows matching displayed submissions; student names, AI grades, teacher grades, assignment titles, and dates are present</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

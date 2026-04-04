@@ -39,15 +39,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
 
     // Initialize LLM Provider (default to Gemini)
     const providerName = (llmProvider as LLMProviderName) || 'gemini';
-    const apiKey = providerName === 'gemini'
-      ? process.env.GEMINI_API_KEY
-      : process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      throw new Error(`${providerName.toUpperCase()} API key not configured`);
-    }
-
-    const provider = getLLMProvider(providerName, apiKey, llmModel);
+    const provider = getLLMProvider(providerName, llmModel);
     
     // Performance logging - start
     const startTime = Date.now();
