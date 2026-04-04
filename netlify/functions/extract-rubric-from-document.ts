@@ -1,19 +1,16 @@
 import { Handler } from '@netlify/functions';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getLLMProvider } from './lib/llm/factory';
 import mammoth from 'mammoth';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
 /**
- * IMPORTANT: This function is LOCKED to Gemini 2.5 Pro for document extraction.
+ * IMPORTANT: This function is LOCKED to Gemini for document extraction.
  * Gemini is a multimodal LLM optimized for document understanding and provides
  * superior rubric extraction from PDF/DOCX files compared to other models.
  * 
  * The LLM provider setting in AI Prompt Settings does NOT affect this function.
  * It will always use Gemini regardless of user's global LLM preference.
  */
-
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 interface RubricLevel {
   levelName: string;
@@ -164,21 +161,13 @@ export const handler: Handler = async (event) => {
     const fileSizeKB = Math.round(fileBuffer.length / 1024);
     console.log(`[extract-rubric] File size: ${fileSizeKB}KB`);
     
-    // Get Gemini model (default to gemini-2.0-flash-exp)
-    const model = genAI.getGenerativeModel({ 
-      model: modelName,
-      generationConfig: {
-        responseMimeType: "application/json"
-      }
-    });
-
     // Use custom prompt from request or fallback to default
     const systemPrompt = extractionPrompt || DEFAULT_EXTRACTION_PROMPT;
     
-    let promptParts: any[] = [systemPrompt];
+    let userPromptParts: string[] = [];
     
     if (totalPoints) {
-      promptParts.push(`Expected total points: ${totalPoints}`);
+      userPromptParts.push(`Expected total points: ${totalPoints}`);
     }
 
     // Process based on file type
@@ -280,25 +269,23 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    // Send PDF to Gemini vision API
-    promptParts.push("Analyze the PDF document below and extract the rubric.");
-    promptParts.push({
-      inlineData: {
-        data: pdfBase64,
-        mimeType: "application/pdf"
-      }
-    });
+    // Send PDF to Gemini via factory
+    userPromptParts.push('Analyze the PDF document below and extract the rubric.');
 
-    // Call Gemini
-    const result = await model.generateContent(promptParts);
-    const responseText = result.response.text();
+    const provider = getLLMProvider('gemini', modelName);
+    const result = await provider.generate({
+      systemMessage: systemPrompt,
+      userMessage: userPromptParts.join('\n'),
+      jsonMode: true,
+      inlineData: [{ data: pdfBase64, mimeType: 'application/pdf' }],
+    });
+    const responseText = result.content;
     const rubricData: RubricResponse = JSON.parse(responseText);
 
     // Performance logging - end
     const duration = Date.now() - startTime;
-    const tokenUsage = result.response.usageMetadata;
-    const promptTokens = tokenUsage?.promptTokenCount || 0;
-    const completionTokens = tokenUsage?.candidatesTokenCount || 0;
+    const promptTokens = result.usage?.promptTokens || 0;
+    const completionTokens = result.usage?.completionTokens || 0;
     const totalTokens = promptTokens + completionTokens;
     
     console.log(`[extract-rubric] Completed in ${duration}ms`);

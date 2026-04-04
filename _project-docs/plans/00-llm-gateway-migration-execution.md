@@ -42,8 +42,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase | Description | Status | Commit Hash | Approved By | Date & Time |
 |---|---|---|---|---|---|
 | Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `APPROVED` | d1172aa | User | 2026-04-04 07:32 CDT |
-| Phase 2 | Update OpenAI provider to zero-config | `IN PROGRESS` | | | |
-| Phase 3 | Consolidate hardcoded Gemini functions into factory | `NOT STARTED` | | | |
+| Phase 2 | Update OpenAI provider to zero-config | `APPROVED` | 361ac11 | User | 2026-04-04 07:38 CDT |
+| Phase 3 | Consolidate hardcoded Gemini functions into factory | `IN PROGRESS` | | | |
 | Phase 4 | Consolidate enhance-rubric functions to use factory | `NOT STARTED` | | | |
 | Phase 5 | Add Anthropic Claude provider | `NOT STARTED` | | | |
 | Phase 6 | Update frontend Settings UI and API calls | `NOT STARTED` | | | |
@@ -61,6 +61,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 1:**
 - `OpenAIProvider` constructor `apiKey` was also made optional (not in original plan) to satisfy TypeScript when factory passes `apiKey?: string`. This is a no-op at runtime since callers still pass explicit keys until Phase 2.
 - Gemini 3 `thinking_level` / forced `temperature: 1.0` logic was removed with the rewrite. If needed, re-add via new SDK's `thinkingConfig`.
+
+**Phase 2:** No deviations.
 
 ---
 
@@ -333,7 +335,17 @@ Three files currently call `getLLMProvider(providerName, apiKey, llmModel)`:
 
 ### 4.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified:**
+- `netlify/functions/lib/llm/openai-provider.ts` — Constructor changed from `apiKey?: string` to no `apiKey` param. `new OpenAI()` reads env automatically.
+- `netlify/functions/lib/llm/factory.ts` — `getLLMProvider(providerName, model?)` — `apiKey` param removed entirely.
+- `netlify/functions/grade-bulletproof-background.ts` — Removed 10-line apiKey lookup block (including DEBUG env key logging). Now single line: `getLLMProvider(providerName, llmModel)`.
+- `netlify/functions/enhance-text.ts` — Removed 7-line apiKey lookup block. Now single line.
+- `netlify/functions/enhance-rubric.ts` — Removed Gemini apiKey lookup (4 lines). OpenAI raw branch untouched (Phase 4).
+- `netlify/functions/enhance-rubric-background.ts` — Same as enhance-rubric.ts.
+
+**Grep audit confirmed:** `process.env.GEMINI_API_KEY` / `process.env.OPENAI_API_KEY` only remain in raw-SDK functions (Phase 3), enhance-rubric OpenAI branch (Phase 4), health-check, and legacy files.
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
 
 ---
 

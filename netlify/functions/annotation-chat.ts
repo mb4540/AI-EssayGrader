@@ -4,7 +4,7 @@
  */
 
 import type { Handler, HandlerEvent } from '@netlify/functions';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getLLMProvider } from './lib/llm/factory';
 import { sql } from './db';
 import { authenticateRequest } from './lib/auth';
 
@@ -158,28 +158,15 @@ ${surroundingLines}
 ## Teacher's Question
 ${teacher_prompt}`;
 
-    // Call Gemini 2.5 Pro
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'GEMINI_API_KEY not configured' }),
-      };
-    }
-
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.5-pro',
-      systemInstruction: systemPrompt,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1024,
-      },
+    // Call LLM via factory
+    const provider = getLLMProvider('gemini', 'gemini-2.5-pro');
+    const result = await provider.generate({
+      systemMessage: systemPrompt,
+      userMessage: userMessage,
+      temperature: 0.7,
+      maxOutputTokens: 1024,
     });
-
-    const result = await model.generateContent(userMessage);
-    const response = result.response.text();
+    const response = result.content;
 
     return {
       statusCode: 200,
