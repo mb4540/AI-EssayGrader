@@ -48,7 +48,7 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 5 | Add Anthropic Claude provider | `APPROVED` | b71cf31 | Mike Berry | 2026-04-04 08:05 CDT |
 | Phase 6 | Update frontend Settings UI and API calls | `APPROVED` | 11a2600 | Mike Berry | 2026-04-04 08:11 CDT |
 | Phase 7 | Update .env.example, health-check, and documentation | `APPROVED` | bd75551 | Mike Berry | 2026-04-04 13:41 CDT |
-| Phase 8 | Final verification and Gateway activation | `IN PROGRESS` | | | |
+| Phase 8 | Final verification and Gateway activation | `COMPLETE` | 346b1a1 | | |
 
 **Status values:** `NOT STARTED` → `IN PROGRESS` → `COMPLETE` → `APPROVED`
 
@@ -73,6 +73,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 6:** No deviations.
 
 **Phase 7:** No deviations.
+
+**Phase 8:** Steps 1-2 (local verification + grep audit) completed with zero issues. Steps 3-6 (deploy, remove keys, e2e test, merge) are manual actions pending user execution.
 
 ---
 
@@ -929,7 +931,15 @@ grep -r "process.env.OPENAI_API_KEY" netlify/functions/ --include="*.ts" | grep 
 
 ### 10.3 Implementation Notes
 
-_(to be filled during execution)_
+**Local verification (Steps 1-2) completed:**
+- `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
+- Grep audit: zero `new GoogleGenerativeAI`, zero `@google/generative-ai` imports, zero raw `new OpenAI(` (excluding provider + legacy `grade.ts`), zero `process.env.GEMINI_API_KEY` / `process.env.OPENAI_API_KEY` (excluding health-check + legacy).
+
+**Remaining manual steps (Steps 3-6):**
+- Step 3: Push `aiGatewaySwitch` branch, deploy to Netlify preview — **pending user action**
+- Step 4: Remove manual API keys from Netlify dashboard — **pending user action**
+- Step 5: Test Gateway-managed keys on preview deploy — **pending user action**
+- Step 6: Merge to main — **pending user action**
 
 ---
 
