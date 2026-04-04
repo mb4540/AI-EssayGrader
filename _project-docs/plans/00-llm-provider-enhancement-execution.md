@@ -49,8 +49,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 4 | Add streaming support (`generateStream`) | `APPROVED` | 259da2b | Mike Berry | 2026-04-04 14:23 CDT |
 | Phase 5 | Update Settings UI with model selector dropdown | `APPROVED` | eec2f2c | Mike Berry | 2026-04-04 14:30 CDT |
 | Phase 6 | Create AI Gateway rules file | `APPROVED` | d9e9f3b | Mike Berry | 2026-04-04 14:40 CDT |
-| Phase 7 | Update health-check, .env.example, and documentation | `IN PROGRESS` | | | |
-| Phase 8 | Final verification and regression testing | `NOT STARTED` | | | |
+| Phase 7 | Update health-check, .env.example, and documentation | `APPROVED` | b5e727f | Mike Berry | 2026-04-04 14:46 CDT |
+| Phase 8 | Final verification and regression testing | `IN PROGRESS` | | | |
 
 **Status values:** `NOT STARTED` → `IN PROGRESS` → `COMPLETE` → `APPROVED`
 
@@ -71,6 +71,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 5:** No deviations. Created `src/lib/model-registry.ts` with 16 models. SettingsModal now has dual provider+model dropdowns. `api.ts` reads `ai_model` directly from localStorage instead of hardcoded ternary. Bundle size increase: +1.7 kB (1,628 → 1,630 kB).
 
 **Phase 6:** Deviation: `ai-gateway.md` already existed (committed in Phase 1 as part of the comparison doc commit) but contained GenAIWidgets' version verbatim. Rewrote entirely for AI-EssayGrader: factory pattern examples, `@google/genai` SDK references, FERPA compliance section, model registry references, provider capability matrix. 338 → 255 lines (more concise, project-specific).
+
+**Phase 7:** No deviations. Health-check now returns `model_registry.total_models` and `model_registry.providers`. README updated with multi-provider info, LLM Provider Layer section, and corrected environment setup instructions.
 
 ---
 
@@ -992,7 +994,16 @@ Add a section about the LLM provider layer:
 
 ### 9.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (3):**
+- `netlify/functions/health-check.ts` — Added `import { MODEL_REGISTRY } from './lib/llm/models'`. Added `model_registry` block to success response with `total_models` and `providers` array. 83 → 88 lines.
+- `.env.example` — Added "Frontend Settings" section documenting `ai_provider` and `ai_model` localStorage keys with reference to `src/lib/model-registry.ts`. 35 → 42 lines.
+- `README.md` — Updated Features (multi-provider), Tech Stack (Netlify AI Gateway), Prerequisites (removed OpenAI key requirement), Environment Variables (Gateway auto-injection), Troubleshooting (AI/LLM section). Added new "LLM Provider Layer" section with 7 bullet points. 271 → 290 lines.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** None.
+
+**Verification:** `npx tsc --noEmit` — zero errors. `npm run build` — succeeds. `npm test` — 588 passing. No regressions.
 
 ---
 
