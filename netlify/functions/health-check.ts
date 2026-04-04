@@ -14,6 +14,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           env_check: {
             DATABASE_URL: 'NOT SET',
             OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET',
+            GEMINI_API_KEY: process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET',
+            ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET',
+            NETLIFY_AI_GATEWAY_KEY: process.env.NETLIFY_AI_GATEWAY_KEY ? 'SET' : 'NOT SET',
           }
         }),
       };
@@ -47,6 +50,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         environment: {
           DATABASE_URL: 'SET (hidden)',
           OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET',
+          GEMINI_API_KEY: process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET',
+          ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET',
+          NETLIFY_AI_GATEWAY_KEY: process.env.NETLIFY_AI_GATEWAY_KEY ? 'SET' : 'NOT SET',
           NODE_VERSION: process.version,
         }
       }),
@@ -64,6 +70,9 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
         environment: {
           DATABASE_URL: process.env.DATABASE_URL ? 'SET (but connection failed)' : 'NOT SET',
           OPENAI_API_KEY: process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET',
+          GEMINI_API_KEY: process.env.GEMINI_API_KEY ? 'SET' : 'NOT SET',
+          ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET',
+          NETLIFY_AI_GATEWAY_KEY: process.env.NETLIFY_AI_GATEWAY_KEY ? 'SET' : 'NOT SET',
         }
       }),
     };

@@ -46,8 +46,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 3 | Consolidate hardcoded Gemini functions into factory | `APPROVED` | 5767019 | Mike Berry | 2026-04-04 07:54 CDT |
 | Phase 4 | Consolidate enhance-rubric functions to use factory | `APPROVED` | 4c0eec1 | Mike Berry | 2026-04-04 08:00 CDT |
 | Phase 5 | Add Anthropic Claude provider | `APPROVED` | b71cf31 | Mike Berry | 2026-04-04 08:05 CDT |
-| Phase 6 | Update frontend Settings UI and API calls | `IN PROGRESS` | | | |
-| Phase 7 | Update .env.example, health-check, and documentation | `NOT STARTED` | | | |
+| Phase 6 | Update frontend Settings UI and API calls | `APPROVED` | 11a2600 | Mike Berry | 2026-04-04 08:11 CDT |
+| Phase 7 | Update .env.example, health-check, and documentation | `IN PROGRESS` | | | |
 | Phase 8 | Final verification and Gateway activation | `NOT STARTED` | | | |
 
 **Status values:** `NOT STARTED` → `IN PROGRESS` → `COMPLETE` → `APPROVED`
@@ -69,6 +69,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 4:** No deviations.
 
 **Phase 5:** No deviations.
+
+**Phase 6:** No deviations.
 
 ---
 
@@ -777,7 +779,11 @@ const llmModel = llmProvider === 'gemini'
 
 ### 8.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (2):**
+- `src/components/SettingsModal.tsx` — Added `'anthropic'` to provider type union, Select options, localStorage loader, and model details. Replaced yellow "API Key Requirement" warning with green "Powered by Netlify AI Gateway" info box. Removed API key references from model details for all providers.
+- `src/lib/api.ts` — Updated model mapping to include Anthropic: `gemini` → `gemini-2.5-pro`, `anthropic` → `claude-sonnet-4-5-20250929`, default → `gpt-4o`.
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
 
 ---
 
