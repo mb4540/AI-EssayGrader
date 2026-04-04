@@ -46,8 +46,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 1 | Create shared model registry and types | `APPROVED` | 543721c | Mike Berry | 2026-04-04 14:07 CDT |
 | Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `APPROVED` | 8bce009 | Mike Berry | 2026-04-04 14:11 CDT |
 | Phase 3 | Add multi-turn conversation support to providers | `APPROVED` | 2036d83 | Mike Berry | 2026-04-04 14:17 CDT |
-| Phase 4 | Add streaming support (`generateStream`) | `IN PROGRESS` | | | |
-| Phase 5 | Update Settings UI with model selector dropdown | `NOT STARTED` | | | |
+| Phase 4 | Add streaming support (`generateStream`) | `APPROVED` | 259da2b | Mike Berry | 2026-04-04 14:23 CDT |
+| Phase 5 | Update Settings UI with model selector dropdown | `IN PROGRESS` | | | |
 | Phase 6 | Create AI Gateway rules file | `NOT STARTED` | | | |
 | Phase 7 | Update health-check, .env.example, and documentation | `NOT STARTED` | | | |
 | Phase 8 | Final verification and regression testing | `NOT STARTED` | | | |
@@ -65,6 +65,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 2:** No deviations.
 
 **Phase 3:** No deviations. `annotation-chat.ts` uses single-turn only — no migration needed (backward compatible).
+
+**Phase 4:** No deviations. All three providers now have `generateStream()`. Extracted helper methods (`buildContents`/`getSystemInstruction` in Gemini, `buildMessages` in Anthropic, `buildMessages`/`buildTokenParam` in OpenAI) to share logic between `generate()` and `generateStream()`. OpenAI `buildTokenParam` helper was created but `generate()` still uses its inline version — minor duplication, can be cleaned up later.
 
 ---
 
@@ -719,7 +721,17 @@ Note: Extract `buildMessages()` as a private helper to share between `generate()
 
 ### 6.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (4):**
+- `netlify/functions/lib/llm/types.ts` — Added `LLMStreamChunk` interface (`content: string`, `done: boolean`). Added optional `generateStream?()` method to `LLMProvider` interface. 37 → 43 lines.
+- `netlify/functions/lib/llm/openai-provider.ts` — Added `LLMStreamChunk` import. Added private `buildMessages()` and `buildTokenParam()` helpers. Added `generateStream()` that uses OpenAI streaming API (`stream: true`). 55 → 96 lines.
+- `netlify/functions/lib/llm/gemini-provider.ts` — Added `LLMStreamChunk` import. Extracted `buildContents()` and `getSystemInstruction()` as private helpers (shared by `generate()` and `generateStream()`). Added `generateStream()` using `client.models.generateContentStream()`. 61 → 91 lines.
+- `netlify/functions/lib/llm/anthropic-provider.ts` — Added `LLMStreamChunk` import. Extracted `buildMessages()` as private helper (shared by `generate()` and `generateStream()`). Added `generateStream()` using `client.messages.stream()` with `content_block_delta` event handling. 50 → 76 lines.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** The plan mentioned a separate `streaming.ts` file in the New Files Needed table, but streaming types were small enough to add directly to `types.ts` (just `LLMStreamChunk`). No separate file was needed.
+
+**Verification:** `npx tsc --noEmit` — zero errors. `npm run build` — succeeds (index.js 1,628 kB). `npm test` — 588 passing, 4 skipped, 2 pre-existing failures. No regressions.
 
 ---
 

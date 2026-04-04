@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { X, Save, RotateCcw, Cpu, Brain } from 'lucide-react';
 import { ELA_DOCUMENT_TYPES } from '@/lib/documentTypes';
+import { getModelsByProvider, getDefaultModel, PROVIDER_LABELS } from '@/lib/model-registry';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -193,9 +194,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [selectedDocType, setSelectedDocType] = useState('personal_narrative');
   const [docTypePrompt, setDocTypePrompt] = useState('');
 
-  // LLM Settings - Simplified to single provider choice
+  // LLM Settings
   const [llmProvider, setLlmProvider] = useState<'gemini' | 'openai' | 'anthropic'>('gemini');
-  
+  const [llmModel, setLlmModel] = useState('gemini-2.5-pro');
+
   // Handwriting Settings
   const [handwritingProvider, setHandwritingProvider] = useState('default');
 
@@ -213,13 +215,21 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     // Load LLM settings
     const savedProvider = localStorage.getItem('ai_provider');
+    const savedModel = localStorage.getItem('ai_model');
     const savedHandwriting = localStorage.getItem('ai_handwriting_provider');
 
     // Default to Gemini if not set
     if (savedProvider === 'openai' || savedProvider === 'gemini' || savedProvider === 'anthropic') {
       setLlmProvider(savedProvider);
+      if (savedModel) {
+        setLlmModel(savedModel);
+      } else {
+        const defaultModel = getDefaultModel(savedProvider);
+        setLlmModel(defaultModel?.id || 'gemini-2.5-pro');
+      }
     } else {
       setLlmProvider('gemini');
+      setLlmModel('gemini-2.5-pro');
     }
     if (savedHandwriting) setHandwritingProvider(savedHandwriting);
   }, []);
@@ -247,6 +257,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
     // Save LLM settings
     localStorage.setItem('ai_provider', llmProvider);
+    localStorage.setItem('ai_model', llmModel);
     localStorage.setItem('ai_handwriting_provider', handwritingProvider);
 
     alert('Settings saved! Note: These prompts are stored locally in your browser.');
@@ -321,49 +332,61 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               </div>
 
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>AI Model</Label>
-                  <Select value={llmProvider} onValueChange={(v: 'gemini' | 'openai' | 'anthropic') => setLlmProvider(v)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="gemini">Gemini 2.5 Pro (Default)</SelectItem>
-                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
-                      <SelectItem value="anthropic">Anthropic Claude Sonnet</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-gray-500">
-                    Select which AI model to use for grading and feedback.
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Provider</Label>
+                    <Select value={llmProvider} onValueChange={(v: 'gemini' | 'openai' | 'anthropic') => {
+                      setLlmProvider(v);
+                      const defaultModel = getDefaultModel(v);
+                      setLlmModel(defaultModel?.id || '');
+                    }}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(['gemini', 'openai', 'anthropic'] as const).map((p) => (
+                          <SelectItem key={p} value={p}>{PROVIDER_LABELS[p]}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Model</Label>
+                    <Select value={llmModel} onValueChange={setLlmModel}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getModelsByProvider(llmProvider).map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name}{m.isDefault ? ' (Default)' : ''}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
+                <p className="text-sm text-gray-500">
+                  Choose from {getModelsByProvider(llmProvider).length} models. Select a provider, then pick a specific model.
+                </p>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Model Details</h4>
-                  {llmProvider === 'gemini' && (
-                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                      <p><strong>Model:</strong> gemini-2.5-pro</p>
-                      <p><strong>Best for:</strong> High-quality grading and detailed feedback</p>
+                {(() => {
+                  const selectedModel = getModelsByProvider(llmProvider).find(m => m.id === llmModel);
+                  return selectedModel?.description ? (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-1">Model Details</h4>
+                      <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                        <p><strong>Model:</strong> {selectedModel.id}</p>
+                        <p><strong>Best for:</strong> {selectedModel.description}</p>
+                      </div>
                     </div>
-                  )}
-                  {llmProvider === 'openai' && (
-                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                      <p><strong>Model:</strong> gpt-4o</p>
-                      <p><strong>Best for:</strong> Structured outputs and strict schema validation</p>
-                    </div>
-                  )}
-                  {llmProvider === 'anthropic' && (
-                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                      <p><strong>Model:</strong> claude-sonnet-4-5-20250929</p>
-                      <p><strong>Best for:</strong> Nuanced feedback and contextual understanding</p>
-                    </div>
-                  )}
-                </div>
+                  ) : null;
+                })()}
 
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
                   <h4 className="font-medium text-green-800 dark:text-green-200 mb-1">Powered by Netlify AI Gateway</h4>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    API keys are managed automatically. No manual configuration required.
+                    Choose from 16 models across 3 providers. API keys are managed automatically.
                   </p>
                 </div>
               </div>
