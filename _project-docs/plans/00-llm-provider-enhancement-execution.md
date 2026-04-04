@@ -44,8 +44,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase | Description | Status | Commit Hash | Approved By | Date |
 |---|---|---|---|---|---|
 | Phase 1 | Create shared model registry and types | `APPROVED` | 543721c | Mike Berry | 2026-04-04 14:07 CDT |
-| Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `IN PROGRESS` | | | |
-| Phase 3 | Add multi-turn conversation support to providers | `NOT STARTED` | | | |
+| Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `APPROVED` | 8bce009 | Mike Berry | 2026-04-04 14:11 CDT |
+| Phase 3 | Add multi-turn conversation support to providers | `IN PROGRESS` | | | |
 | Phase 4 | Add streaming support (`generateStream`) | `NOT STARTED` | | | |
 | Phase 5 | Update Settings UI with model selector dropdown | `NOT STARTED` | | | |
 | Phase 6 | Create AI Gateway rules file | `NOT STARTED` | | | |
@@ -61,6 +61,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 Record deviations here after each phase so subsequent phases can account for them.
 
 **Phase 1:** No deviations. Created `models.ts` with 16 models (7 OpenAI, 4 Gemini, 5 Anthropic) and updated `factory.ts` with model/provider mismatch validation. No barrel `index.ts` exists — callers import directly.
+
+**Phase 2:** No deviations.
 
 ---
 
@@ -402,7 +404,14 @@ export class OpenAIProvider implements LLMProvider {
 
 ### 4.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (1):**
+- `netlify/functions/lib/llm/openai-provider.ts` — Added `import { isCompletionTokensModel } from './models'`. Added 6-line `tokenParam` block that uses `max_completion_tokens` for GPT-5+/GPT-4.1/O3/O4 models and `max_tokens` for older models. Spread `...tokenParam` into the API call. 42 → 51 lines.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** None.
+
+**Verification:** `npx tsc --noEmit` — zero errors. `npm run build` — succeeds (index.js 1,628 kB). `npm test` — 588 passing, 4 skipped, 2 pre-existing failures. No regressions.
 
 ---
 

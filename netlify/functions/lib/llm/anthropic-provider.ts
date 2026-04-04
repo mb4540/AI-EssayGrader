@@ -11,13 +11,25 @@ export class AnthropicProvider implements LLMProvider {
     }
 
     async generate(request: LLMRequest): Promise<LLMResponse> {
+        let systemContent: string;
+        let userMessages: Array<{ role: 'user' | 'assistant'; content: string }>;
+
+        if (request.messages) {
+            const systemMsg = request.messages.find(m => m.role === 'system');
+            systemContent = systemMsg?.content || '';
+            userMessages = request.messages
+                .filter(m => m.role !== 'system')
+                .map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+        } else {
+            systemContent = request.systemMessage;
+            userMessages = [{ role: 'user', content: request.userMessage }];
+        }
+
         const response = await this.client.messages.create({
             model: this.model,
             max_tokens: request.maxOutputTokens ?? 4096,
-            system: request.systemMessage,
-            messages: [
-                { role: 'user', content: request.userMessage }
-            ],
+            system: systemContent,
+            messages: userMessages,
             temperature: request.temperature,
         });
 

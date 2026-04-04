@@ -26,13 +26,17 @@ export class OpenAIProvider implements LLMProvider {
               ? { max_tokens: request.maxOutputTokens }
               : {};
 
+        const messages = request.messages
+            ? request.messages.map(m => ({ role: m.role, content: m.content }))
+            : [
+                { role: 'system' as const, content: request.systemMessage },
+                { role: 'user' as const, content: request.userMessage },
+              ];
+
         const response = await this.client.chat.completions.create({
             model: this.model,
             response_format,
-            messages: [
-                { role: 'system', content: request.systemMessage },
-                { role: 'user', content: request.userMessage }
-            ],
+            messages,
             temperature: request.temperature,
             ...tokenParam,
         });

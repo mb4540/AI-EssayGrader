@@ -3,9 +3,15 @@ export interface InlineData {
   mimeType: string;
 }
 
+export interface LLMMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
 export interface LLMRequest {
   systemMessage: string;
   userMessage: string;
+  messages?: LLMMessage[];
   jsonMode?: boolean;
   temperature?: number;
   inlineData?: InlineData[];
