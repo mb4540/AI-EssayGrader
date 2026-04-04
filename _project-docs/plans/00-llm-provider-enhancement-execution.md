@@ -43,8 +43,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 
 | Phase | Description | Status | Commit Hash | Approved By | Date |
 |---|---|---|---|---|---|
-| Phase 1 | Create shared model registry and types | `IN PROGRESS` | | | |
-| Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `NOT STARTED` | | | |
+| Phase 1 | Create shared model registry and types | `APPROVED` | 543721c | Mike Berry | 2026-04-04 14:07 CDT |
+| Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `IN PROGRESS` | | | |
 | Phase 3 | Add multi-turn conversation support to providers | `NOT STARTED` | | | |
 | Phase 4 | Add streaming support (`generateStream`) | `NOT STARTED` | | | |
 | Phase 5 | Update Settings UI with model selector dropdown | `NOT STARTED` | | | |
@@ -59,6 +59,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 ## Implementation Notes (deviations from plan)
 
 Record deviations here after each phase so subsequent phases can account for them.
+
+**Phase 1:** No deviations. Created `models.ts` with 16 models (7 OpenAI, 4 Gemini, 5 Anthropic) and updated `factory.ts` with model/provider mismatch validation. No barrel `index.ts` exists — callers import directly.
 
 ---
 
@@ -309,7 +311,17 @@ export function getLLMProvider(
 
 ### 3.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files created (1):**
+- `netlify/functions/lib/llm/models.ts` — 85 lines. `ModelDefinition` interface with `capabilities` and `parameterStyle`. `MODEL_REGISTRY` array with 16 models (7 OpenAI, 4 Gemini, 5 Anthropic). Helper functions: `getModelsByProvider`, `getDefaultModel`, `getModelById`, `isCompletionTokensModel`.
+
+**Files modified (1):**
+- `netlify/functions/lib/llm/factory.ts` — Added `import { getModelById } from './models'`. Added 7-line validation block that warns (does not throw) when a model ID belongs to a different provider than requested. 22 → 31 lines.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** None. No barrel `index.ts` exists so Step 2 was skipped (plan noted it as optional).
+
+**Verification:** `npx tsc --noEmit` — zero errors. `npm run build` — succeeds (index.js 1,628 kB). `npm test` — 588 passing, 4 skipped, 2 pre-existing failures (OCR error message mismatch). No regressions.
 
 ---
 

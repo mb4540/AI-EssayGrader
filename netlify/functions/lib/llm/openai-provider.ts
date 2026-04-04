@@ -1,5 +1,6 @@
 import { OpenAI } from 'openai';
 import { LLMProvider, LLMRequest, LLMResponse } from './types';
+import { isCompletionTokensModel } from './models';
 
 export class OpenAIProvider implements LLMProvider {
     private client: OpenAI;
@@ -18,6 +19,13 @@ export class OpenAIProvider implements LLMProvider {
             response_format = { type: 'json_object' };
         }
 
+        // GPT-5+, GPT-4.1, O3, O4 use max_completion_tokens; older models use max_tokens
+        const tokenParam = isCompletionTokensModel(this.model)
+            ? { max_completion_tokens: request.maxOutputTokens ?? 4096 }
+            : request.maxOutputTokens
+              ? { max_tokens: request.maxOutputTokens }
+              : {};
+
         const response = await this.client.chat.completions.create({
             model: this.model,
             response_format,
@@ -26,6 +34,7 @@ export class OpenAIProvider implements LLMProvider {
                 { role: 'user', content: request.userMessage }
             ],
             temperature: request.temperature,
+            ...tokenParam,
         });
 
         const content = response.choices[0]?.message?.content || '';
