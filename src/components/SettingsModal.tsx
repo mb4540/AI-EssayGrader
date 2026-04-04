@@ -194,7 +194,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [docTypePrompt, setDocTypePrompt] = useState('');
 
   // LLM Settings - Simplified to single provider choice
-  const [llmProvider, setLlmProvider] = useState<'gemini' | 'openai'>('gemini');
+  const [llmProvider, setLlmProvider] = useState<'gemini' | 'openai' | 'anthropic'>('gemini');
   
   // Handwriting Settings
   const [handwritingProvider, setHandwritingProvider] = useState('default');
@@ -216,7 +216,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     const savedHandwriting = localStorage.getItem('ai_handwriting_provider');
 
     // Default to Gemini if not set
-    if (savedProvider === 'openai' || savedProvider === 'gemini') {
+    if (savedProvider === 'openai' || savedProvider === 'gemini' || savedProvider === 'anthropic') {
       setLlmProvider(savedProvider);
     } else {
       setLlmProvider('gemini');
@@ -323,13 +323,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>AI Model</Label>
-                  <Select value={llmProvider} onValueChange={(v: 'gemini' | 'openai') => setLlmProvider(v)}>
+                  <Select value={llmProvider} onValueChange={(v: 'gemini' | 'openai' | 'anthropic') => setLlmProvider(v)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="gemini">Gemini 2.5 Pro (Default)</SelectItem>
-                      <SelectItem value="openai">OpenAI GPT-4o (Fallback)</SelectItem>
+                      <SelectItem value="openai">OpenAI GPT-4o</SelectItem>
+                      <SelectItem value="anthropic">Anthropic Claude Sonnet</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-gray-500">
@@ -339,26 +340,30 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
 
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <h4 className="font-medium text-blue-800 dark:text-blue-200 mb-2">Model Details</h4>
-                  {llmProvider === 'gemini' ? (
+                  {llmProvider === 'gemini' && (
                     <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                       <p><strong>Model:</strong> gemini-2.5-pro</p>
                       <p><strong>Best for:</strong> High-quality grading and detailed feedback</p>
-                      <p><strong>API Key:</strong> GEMINI_API_KEY required in Netlify environment</p>
                     </div>
-                  ) : (
+                  )}
+                  {llmProvider === 'openai' && (
                     <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
                       <p><strong>Model:</strong> gpt-4o</p>
-                      <p><strong>Best for:</strong> Fallback option when Gemini is unavailable</p>
-                      <p><strong>API Key:</strong> OPENAI_API_KEY required in Netlify environment</p>
+                      <p><strong>Best for:</strong> Structured outputs and strict schema validation</p>
+                    </div>
+                  )}
+                  {llmProvider === 'anthropic' && (
+                    <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                      <p><strong>Model:</strong> claude-sonnet-4-5-20250929</p>
+                      <p><strong>Best for:</strong> Nuanced feedback and contextual understanding</p>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                  <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">API Key Requirement</h4>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    Ensure you have added the corresponding API key ({llmProvider === 'openai' ? 'OPENAI_API_KEY' : 'GEMINI_API_KEY'})
-                    to your Netlify environment variables.
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <h4 className="font-medium text-green-800 dark:text-green-200 mb-1">Powered by Netlify AI Gateway</h4>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    API keys are managed automatically. No manual configuration required.
                   </p>
                 </div>
               </div>

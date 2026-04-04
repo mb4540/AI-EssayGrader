@@ -45,8 +45,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 2 | Update OpenAI provider to zero-config | `APPROVED` | 361ac11 | Mike Berry | 2026-04-04 07:38 CDT |
 | Phase 3 | Consolidate hardcoded Gemini functions into factory | `APPROVED` | 5767019 | Mike Berry | 2026-04-04 07:54 CDT |
 | Phase 4 | Consolidate enhance-rubric functions to use factory | `APPROVED` | 4c0eec1 | Mike Berry | 2026-04-04 08:00 CDT |
-| Phase 5 | Add Anthropic Claude provider | `IN PROGRESS` | | | |
-| Phase 6 | Update frontend Settings UI and API calls | `NOT STARTED` | | | |
+| Phase 5 | Add Anthropic Claude provider | `APPROVED` | b71cf31 | Mike Berry | 2026-04-04 08:05 CDT |
+| Phase 6 | Update frontend Settings UI and API calls | `IN PROGRESS` | | | |
 | Phase 7 | Update .env.example, health-check, and documentation | `NOT STARTED` | | | |
 | Phase 8 | Final verification and Gateway activation | `NOT STARTED` | | | |
 
@@ -67,6 +67,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 3:** No deviations. All 4 raw Gemini SDK functions migrated to factory as planned. `netlify dev` should now work since `@google/generative-ai` is no longer imported anywhere.
 
 **Phase 4:** No deviations.
+
+**Phase 5:** No deviations.
 
 ---
 
@@ -684,7 +686,12 @@ export function getLLMProvider(
 
 ### 7.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files created/modified (3):**
+- `package.json` — Added `@anthropic-ai/sdk` (^0.39.0). npm install added 9 packages.
+- `netlify/functions/lib/llm/anthropic-provider.ts` — **New file** (37 lines). Implements `LLMProvider` interface using `@anthropic-ai/sdk`. Zero-config constructor (`new Anthropic()` reads env automatically). Default model: `claude-sonnet-4-5-20250929`. Extracts text blocks from response, maps `input_tokens`/`output_tokens` to unified usage format.
+- `netlify/functions/lib/llm/factory.ts` — Added `'anthropic'` to `LLMProviderName` union. Added `AnthropicProvider` import and case in switch.
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
 
 ---
 
