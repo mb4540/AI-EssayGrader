@@ -41,10 +41,10 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 
 | Phase | Description | Status | Commit Hash | Approved By | Date & Time |
 |---|---|---|---|---|---|
-| Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `APPROVED` | d1172aa | User | 2026-04-04 07:32 CDT |
-| Phase 2 | Update OpenAI provider to zero-config | `APPROVED` | 361ac11 | User | 2026-04-04 07:38 CDT |
-| Phase 3 | Consolidate hardcoded Gemini functions into factory | `IN PROGRESS` | | | |
-| Phase 4 | Consolidate enhance-rubric functions to use factory | `NOT STARTED` | | | |
+| Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `APPROVED` | d1172aa | Mike Berry | 2026-04-04 07:32 CDT |
+| Phase 2 | Update OpenAI provider to zero-config | `APPROVED` | 361ac11 | Mike Berry | 2026-04-04 07:38 CDT |
+| Phase 3 | Consolidate hardcoded Gemini functions into factory | `APPROVED` | 5767019 | Mike Berry | 2026-04-04 07:54 CDT |
+| Phase 4 | Consolidate enhance-rubric functions to use factory | `IN PROGRESS` | | | |
 | Phase 5 | Add Anthropic Claude provider | `NOT STARTED` | | | |
 | Phase 6 | Update frontend Settings UI and API calls | `NOT STARTED` | | | |
 | Phase 7 | Update .env.example, health-check, and documentation | `NOT STARTED` | | | |
@@ -63,6 +63,8 @@ Record deviations here after each phase so subsequent phases can account for the
 - Gemini 3 `thinking_level` / forced `temperature: 1.0` logic was removed with the rewrite. If needed, re-add via new SDK's `thinkingConfig`.
 
 **Phase 2:** No deviations.
+
+**Phase 3:** No deviations. All 4 raw Gemini SDK functions migrated to factory as planned. `netlify dev` should now work since `@google/generative-ai` is no longer imported anywhere.
 
 ---
 
@@ -468,7 +470,19 @@ transcription = result.content;
 
 ### 5.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (6):**
+- `netlify/functions/lib/llm/types.ts` — Added `InlineData` interface and `inlineData?: InlineData[]`, `maxOutputTokens?: number` to `LLMRequest`.
+- `netlify/functions/lib/llm/gemini-provider.ts` — `generate()` now builds a contents array with text + inline data parts. Added `maxOutputTokens` to config.
+- `netlify/functions/annotation-chat.ts` — Replaced `GoogleGenerativeAI` import + raw SDK block (20 lines) with `getLLMProvider('gemini', 'gemini-2.5-pro')` factory call (6 lines).
+- `netlify/functions/transcribe-image.ts` — Removed `GoogleGenerativeAI` and `OpenAI` imports. Replaced `GEMINI_API_KEY` check + raw multimodal block with factory call using `inlineData`. Token usage now reads from `result.usage`.
+- `netlify/functions/extract-rubric-from-document.ts` — Removed top-level `const genAI = new GoogleGenerativeAI(...)`. Replaced `getGenerativeModel()` + `generateContent(promptParts)` with factory call using `systemMessage`, `userMessage` (joined text parts), `jsonMode: true`, and `inlineData` for PDF.
+- `netlify/functions/extract-rubric-background.ts` — Same changes as extract-rubric-from-document.ts.
+
+**Grep audit:** Zero `@google/generative-ai` imports and zero `new GoogleGenerativeAI` in active files.
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
+
+**Important for Phase 4:** `extract-rubric-*` functions now demonstrate the pattern for multimodal + JSON mode via factory. The `enhance-rubric` OpenAI structured output branch is the last remaining raw SDK usage.
 
 ---
 

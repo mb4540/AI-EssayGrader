@@ -11,9 +11,16 @@ export class OpenAIProvider implements LLMProvider {
     }
 
     async generate(request: LLMRequest): Promise<LLMResponse> {
+        let response_format: any = undefined;
+        if (request.jsonSchema) {
+            response_format = { type: 'json_schema', json_schema: request.jsonSchema };
+        } else if (request.jsonMode) {
+            response_format = { type: 'json_object' };
+        }
+
         const response = await this.client.chat.completions.create({
             model: this.model,
-            response_format: request.jsonMode ? { type: 'json_object' } : undefined,
+            response_format,
             messages: [
                 { role: 'system', content: request.systemMessage },
                 { role: 'user', content: request.userMessage }

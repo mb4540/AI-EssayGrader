@@ -10,6 +10,11 @@ export interface LLMRequest {
   temperature?: number;
   inlineData?: InlineData[];
   maxOutputTokens?: number;
+  jsonSchema?: {
+    name: string;
+    strict: boolean;
+    schema: Record<string, unknown>;
+  };
 }
 
 export interface LLMResponse {
