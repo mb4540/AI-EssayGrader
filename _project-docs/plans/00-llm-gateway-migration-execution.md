@@ -44,8 +44,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `APPROVED` | d1172aa | Mike Berry | 2026-04-04 07:32 CDT |
 | Phase 2 | Update OpenAI provider to zero-config | `APPROVED` | 361ac11 | Mike Berry | 2026-04-04 07:38 CDT |
 | Phase 3 | Consolidate hardcoded Gemini functions into factory | `APPROVED` | 5767019 | Mike Berry | 2026-04-04 07:54 CDT |
-| Phase 4 | Consolidate enhance-rubric functions to use factory | `IN PROGRESS` | | | |
-| Phase 5 | Add Anthropic Claude provider | `NOT STARTED` | | | |
+| Phase 4 | Consolidate enhance-rubric functions to use factory | `APPROVED` | 4c0eec1 | Mike Berry | 2026-04-04 08:00 CDT |
+| Phase 5 | Add Anthropic Claude provider | `IN PROGRESS` | | | |
 | Phase 6 | Update frontend Settings UI and API calls | `NOT STARTED` | | | |
 | Phase 7 | Update .env.example, health-check, and documentation | `NOT STARTED` | | | |
 | Phase 8 | Final verification and Gateway activation | `NOT STARTED` | | | |
@@ -65,6 +65,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 2:** No deviations.
 
 **Phase 3:** No deviations. All 4 raw Gemini SDK functions migrated to factory as planned. `netlify dev` should now work since `@google/generative-ai` is no longer imported anywhere.
+
+**Phase 4:** No deviations.
 
 ---
 
@@ -575,7 +577,17 @@ tokensUsed = (response.usage?.promptTokens ?? 0) + (response.usage?.completionTo
 
 ### 6.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (4):**
+- `netlify/functions/lib/llm/types.ts` — Added `jsonSchema?: { name, strict, schema }` to `LLMRequest`.
+- `netlify/functions/lib/llm/openai-provider.ts` — `generate()` now builds `response_format` from `jsonSchema` (priority) or `jsonMode`. Replaced inline ternary with explicit if/else block.
+- `netlify/functions/enhance-rubric.ts` — Removed `import OpenAI` and `ChatCompletionCreateParamsNonStreaming`. Replaced 50-line Gemini/OpenAI branching block with unified 10-line factory call. Both providers now route through `getLLMProvider()`. OpenAI uses `jsonSchema`, Gemini uses `jsonMode`.
+- `netlify/functions/enhance-rubric-background.ts` — Same refactor as enhance-rubric.ts.
+
+**Net code reduction:** -49 lines across both enhance-rubric files.
+
+**Grep audit:** `new OpenAI(` only in `grade.ts` (legacy) and `openai-provider.ts` (the provider class itself).
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
 
 ---
 

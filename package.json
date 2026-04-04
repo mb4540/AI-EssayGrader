@@ -21,6 +21,7 @@
     "check:user": "node scripts/check-test-user.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
     "@google/genai": "^1.0.0",
     "@hookform/resolvers": "^3.3.2",
     "@neondatabase/serverless": "^1.0.2",
