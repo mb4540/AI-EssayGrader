@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lessons Learned — FastAI Grader End-of-Year Report</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-logo">FastAI Grader <span>/ 2025–2026 Report</span></div>
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="goals.html">Goals</a>
+      <a href="features.html">Features</a>
+      <a href="outcomes.html">Outcomes</a>
+      <a href="lessons.html" class="active">Lessons</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero">
+  <h1>Lessons Learned &amp; Next Steps</h1>
+  <p>Key insights from the year and a roadmap for continuing in 2026–2027.</p>
+</section>
+
+<div class="container">
+
+  <!-- Lessons Learned -->
+  <div class="card">
+    <h2>Lessons Learned</h2>
+
+    <div style="display:flex; flex-direction:column; gap:1.25rem; margin-top:.5rem;">
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--accent); color:#fff; border-radius:50%; min-width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex-shrink:0;">1</div>
+        <div>
+          <h3 style="margin:0 0 .35rem;">Start with the pain point, not the feature list</h3>
+          <p style="margin:0;">The original specification proposed a comprehensive platform. Classroom reality showed that one feature — grading with quality feedback — solved the biggest problem. Building that one thing well was more valuable than building everything partially.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--accent); color:#fff; border-radius:50%; min-width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex-shrink:0;">2</div>
+        <div>
+          <h3 style="margin:0 0 .35rem;">Pilot early, pivot quickly</h3>
+          <p style="margin:0;">The Oct–Dec pilot cycle surfaced the pivot opportunity within weeks. By January, development was fully focused on the highest-impact feature set.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--accent); color:#fff; border-radius:50%; min-width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex-shrink:0;">3</div>
+        <div>
+          <h3 style="margin:0 0 .35rem;">Teacher-in-control is non-negotiable</h3>
+          <p style="margin:0;">Every AI output in the system is a draft. The teacher reviews, approves, edits, or rejects. This principle was in the original proposal and remained central to the final product.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--accent); color:#fff; border-radius:50%; min-width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex-shrink:0;">4</div>
+        <div>
+          <h3 style="margin:0 0 .35rem;">FERPA compliance requires architectural commitment</h3>
+          <p style="margin:0;">The Student Identity Bridge — encrypting all student data locally and sending only anonymous UUIDs to the cloud — was more complex to build than a simple database, but it ensures genuine FERPA compliance rather than policy-based compliance.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--accent); color:#fff; border-radius:50%; min-width:40px; height:40px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1.05rem; flex-shrink:0;">5</div>
+        <div>
+          <h3 style="margin:0 0 .35rem;">A second user validates the design</h3>
+          <p style="margin:0;">When a second teacher (AP World History) adopted the tool without modifications, it confirmed that the rubric-driven architecture generalized beyond ELA — an outcome that exceeded the original single-classroom scope.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Next Year -->
+  <div class="card">
+    <h2>Recommendations for 2026–2027</h2>
+    <p>The FastAI Grader is stable, deployed, and in active use. Recommended next steps for the coming school year:</p>
+
+    <div class="two-col" style="margin-top:1rem;">
+
+      <div style="border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem;">
+        <p class="section-label">High Priority</p>
+        <h3 style="margin-top:0;">Batch Upload</h3>
+        <p>Allow teachers to upload an entire class set of essays at once. Design is complete — implementation is pending.</p>
+      </div>
+
+      <div style="border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem;">
+        <p class="section-label">High Priority</p>
+        <h3 style="margin-top:0;">Expand Adoption</h3>
+        <p>Onboard additional teachers within the ELA department and other subject areas, building on the AP World History success.</p>
+      </div>
+
+      <div style="border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem;">
+        <p class="section-label">Medium Priority</p>
+        <h3 style="margin-top:0;">Analytics</h3>
+        <p>Add per-rubric-criterion trend views to support data-informed re-teaching decisions across class periods.</p>
+      </div>
+
+      <div style="border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem;">
+        <p class="section-label">Medium Priority</p>
+        <h3 style="margin-top:0;">Student Revision Tracking</h3>
+        <p>Track improvement across multiple drafts of the same assignment to demonstrate growth over time.</p>
+      </div>
+
+      <div style="border:1px solid var(--border); border-radius:var(--radius); padding:1.1rem;">
+        <p class="section-label">Pending District Approval</p>
+        <h3 style="margin-top:0;">Canvas Integration</h3>
+        <p>Revisit LMS integration if district IT approves API access — reduces manual export/upload steps for teachers.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Closing -->
+  <div class="card" style="text-align:center; padding:2.25rem;">
+    <div class="highlight-box" style="text-align:left; max-width:700px; margin:0 auto 1.5rem;">
+      <strong>Bottom line:</strong> A professional development goal that started as a broad AI platform proposal became a focused, impactful classroom tool — because teacher and developer stayed close to the real problem and were willing to change course when evidence demanded it.
+    </div>
+    <p style="color:var(--text-muted); margin-bottom:.5rem;">
+      <em>Prepared by Shana Busby with development support from Mike Berry.</em>
+    </p>
+    <p style="color:var(--text-muted); font-size:.88rem;">
+      Application source code maintained at GitHub under private repository.<br>
+      Live application: <a href="https://ai-essaygrader.netlify.app" target="_blank">ai-essaygrader.netlify.app</a>
+    </p>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp;
+  Development support by Mike Berry
+</footer>
+
+</body>
+</html>

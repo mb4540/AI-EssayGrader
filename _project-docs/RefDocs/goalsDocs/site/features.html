@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Features Built — FastAI Grader End-of-Year Report</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-logo">FastAI Grader <span>/ 2025–2026 Report</span></div>
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="goals.html">Goals</a>
+      <a href="features.html" class="active">Features</a>
+      <a href="outcomes.html">Outcomes</a>
+      <a href="lessons.html">Lessons</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero">
+  <h1>What Was Built</h1>
+  <p>A complete feature-by-feature summary of the FastAI Grader application as deployed for the 2025–2026 school year.</p>
+</section>
+
+<div class="container">
+
+  <div class="two-col">
+
+    <!-- Core Grading Engine -->
+    <div class="card">
+      <h2>Core Grading Engine</h2>
+      <ul>
+        <li>
+          <strong>BulletProof Grading System</strong> — Deterministic, auditable scoring using decimal-precision math (decimal.js). The LLM extracts rubric evaluations as structured JSON; a TypeScript calculator computes final scores with zero floating-point errors.
+        </li>
+        <li>
+          <strong>Multi-Provider LLM Support</strong> — 16 models across OpenAI, Gemini, and Anthropic via Netlify AI Gateway. Teachers select their preferred provider in Settings.
+        </li>
+        <li>
+          <strong>Background Grading</strong> — Trigger → background → polling architecture eliminates timeout issues on long essays. Grading completes reliably regardless of essay length.
+        </li>
+        <li>
+          <strong>Rubric-Driven (Not ELAR-Specific)</strong> — Grading prompts are fully rubric-driven, making the system usable for any subject area. A second teacher (AP World History) has also adopted the tool.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Inline Annotations -->
+    <div class="card">
+      <h2>Inline Annotations &amp; Feedback</h2>
+      <ul>
+        <li>
+          <strong>Two-Pass Annotation System</strong> — Pass 1: general grading. Pass 2: criterion-specific inline feedback with line numbers, quotes, and suggestions.
+        </li>
+        <li>
+          <strong>Teacher Review Workflow</strong> — Each AI annotation can be approved, edited, or rejected. "Approve All" available for bulk action.
+        </li>
+        <li>
+          <strong>Annotation Chat</strong> — Teachers can ask follow-up questions about specific annotations.
+        </li>
+        <li>
+          <strong>Print Integration</strong> — Annotated PDFs with yellow highlights, inline corrections, strengths, improvement areas, and teacher comments returned to students.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Student Identity Bridge -->
+    <div class="card">
+      <h2>Student Identity Bridge (FERPA)</h2>
+      <ul>
+        <li>
+          <strong>Zero PII in Cloud</strong> — Student names and district IDs are never transmitted to the server.
+        </li>
+        <li>
+          <strong>AES-256-GCM Encryption</strong> — Student data encrypted locally with a teacher-chosen passphrase.
+        </li>
+        <li>
+          <strong>User-Scoped Isolation</strong> — Each teacher's bridge is keyed to their user ID, preventing cross-teacher data exposure on shared computers.
+        </li>
+        <li>
+          <strong>Class Period Organization</strong> — Students organized by period with filtering throughout the application.
+        </li>
+        <li>
+          <strong>CSV Import</strong> — Bulk student roster import from CSV files.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Input Methods -->
+    <div class="card">
+      <h2>Multiple Input Methods</h2>
+      <ul>
+        <li>
+          <strong>Handwritten Essay Support</strong> — AI Vision transcription using Gemini 2.5 Pro or GPT-4o for handwritten essay photos.
+        </li>
+        <li>
+          <strong>DOCX Upload</strong> — Client-side Word document parsing via mammoth.
+        </li>
+        <li>
+          <strong>Plain Text</strong> — Direct paste for typed essays.
+        </li>
+        <li>
+          <strong>Local OCR Fallback</strong> — Tesseract.js for offline handwriting recognition.
+        </li>
+      </ul>
+    </div>
+
+    <!-- Dashboard -->
+    <div class="card">
+      <h2>Dashboard &amp; Management</h2>
+      <ul>
+        <li><strong>Submission Dashboard</strong> — Search, filter by assignment and class period, date range filtering, sorting.</li>
+        <li><strong>Statistics Cards</strong> — Total assignments, total submissions, pending review, graded today.</li>
+        <li><strong>Three View Modes</strong> — By Student, By Assignment, By Class.</li>
+        <li><strong>CSV Export</strong> — Full data export for gradebook integration.</li>
+        <li><strong>Assignment Management</strong> — Create, edit, delete assignments with rubric configuration.</li>
+      </ul>
+    </div>
+
+    <!-- Auth & Quality -->
+    <div class="card">
+      <h2>Authentication, Multi-Tenancy &amp; Quality</h2>
+      <ul>
+        <li><strong>Custom JWT Authentication</strong> — Secure login with bcrypt password hashing.</li>
+        <li><strong>Multi-Tenant Architecture</strong> — Each teacher's data is fully isolated by tenant ID.</li>
+        <li><strong>Password Reset</strong> — Email-based password recovery flow.</li>
+        <li><strong>582+ Automated Tests</strong> — ~60% code coverage across unit and integration tests.</li>
+        <li><strong>Version History</strong> — Immutable audit trail for all grade changes.</li>
+        <li><strong>Help System</strong> — Contextual help icons throughout the application with a dedicated Help page.</li>
+        <li><strong>Production Deployed</strong> — Live at <a href="https://ai-essaygrader.netlify.app" target="_blank">ai-essaygrader.netlify.app</a> with continuous deployment.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Tech Architecture -->
+  <div class="card">
+    <h2>Technical Architecture</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:25%">Layer</th>
+            <th>Technology</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Frontend</strong></td><td>React + Vite, TypeScript, Tailwind CSS, shadcn/ui</td></tr>
+          <tr><td><strong>Backend</strong></td><td>Netlify Functions (serverless, Node.js)</td></tr>
+          <tr><td><strong>Database</strong></td><td>Neon Postgres (serverless, 7 tables, 21 indexes)</td></tr>
+          <tr><td><strong>AI / LLM</strong></td><td>Netlify AI Gateway — 16 models across OpenAI, Gemini, Anthropic</td></tr>
+          <tr><td><strong>OCR</strong></td><td>Gemini 2.5 Pro Vision (primary), Tesseract.js (fallback)</td></tr>
+          <tr><td><strong>Document Parsing</strong></td><td>mammoth (DOCX), client-side</td></tr>
+          <tr><td><strong>Authentication</strong></td><td>Custom JWT with bcrypt, multi-tenant</td></tr>
+          <tr><td><strong>Privacy</strong></td><td>Student Identity Bridge (AES-256-GCM, zero PII in cloud)</td></tr>
+          <tr><td><strong>Testing</strong></td><td>Vitest, 582+ tests, ~60% coverage</td></tr>
+          <tr><td><strong>Hosting</strong></td><td>Netlify (continuous deployment from GitHub)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp;
+  Development support by Mike Berry
+</footer>
+
+</body>
+</html>

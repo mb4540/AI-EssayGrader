@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FastAI Grader — End-of-Year Report 2025–2026</title>
+  <style>
+    /* ===== Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:     #1a5fa8;
+      --primary-dark:#134a87;
+      --accent:      #2eaa72;
+      --accent-light:#eaf7f2;
+      --bg:          #ffffff;
+      --border:      #d0d8e8;
+      --text:        #1e2430;
+      --muted:       #4a5568;
+    }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.6;
+      color: var(--text);
+      background: #fff;
+    }
+
+    a { color: var(--primary); text-decoration: none; }
+
+    /* ===== Page breaks ===== */
+    .page-break  { page-break-after: always; break-after: page; }
+    .avoid-break { page-break-inside: avoid; break-inside: avoid; }
+
+    /* ===== Cover page ===== */
+    .cover {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 3.5rem 4rem;
+      background: #fff;
+      color: #000;
+    }
+
+    .cover-top {
+      text-align: center;
+    }
+
+    .cover-district {
+      font-size: 10pt;
+      font-weight: 700;
+      letter-spacing: .35em;
+      text-transform: uppercase;
+      color: #000;
+      margin-bottom: .55rem;
+    }
+
+    .cover-dot-row {
+      font-size: 10pt;
+      color: #000;
+      margin-bottom: .55rem;
+    }
+
+    .cover-report-type {
+      font-size: 8.5pt;
+      font-weight: 600;
+      letter-spacing: .25em;
+      text-transform: uppercase;
+      color: #000;
+    }
+
+    .cover-rule {
+      border: none;
+      border-top: 1.5px solid #000;
+      margin: 2.5rem 0;
+    }
+
+    .cover-middle {
+      text-align: center;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .cover h1 {
+      font-size: 36pt;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #000;
+      margin-bottom: .3rem;
+    }
+
+    .cover-subtitle {
+      font-size: 20pt;
+      font-weight: 400;
+      color: #000;
+      margin-bottom: 2rem;
+    }
+
+    .cover-detail-line {
+      font-size: 11pt;
+      color: #000;
+      margin-bottom: .3rem;
+    }
+
+    .cover-mid-dots {
+      font-size: 13pt;
+      color: #000;
+      line-height: 1;
+      margin: .9rem 0;
+      letter-spacing: .5em;
+    }
+
+    .cover-bottom {
+      border-top: 1.5px solid #000;
+      padding-top: 1.25rem;
+    }
+
+    .cover-teacher-label {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: #000;
+      margin-bottom: .3rem;
+    }
+
+    .cover-teacher-name {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: .15rem;
+    }
+
+    .cover-teacher-detail {
+      font-size: 10pt;
+      color: #333;
+    }
+
+    /* ===== Section page headers ===== */
+    .section-header {
+      background: var(--primary);
+      color: #fff;
+      padding: .9rem 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-header .sec-num {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .65;
+      margin-bottom: .25rem;
+    }
+
+    .section-header h2 {
+      font-size: 16pt;
+      font-weight: 700;
+    }
+
+    .section-header p {
+      font-size: 9.5pt;
+      opacity: .8;
+      margin-top: .3rem;
+    }
+
+    /* ===== Body area ===== */
+    .body-area {
+      padding: 0 2rem 1.5rem;
+    }
+
+    /* ===== Cards ===== */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 1.1rem 1.3rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .card h3 {
+      font-size: 11pt;
+      color: var(--primary);
+      margin-bottom: .55rem;
+      padding-bottom: .35rem;
+      border-bottom: 1.5px solid var(--border);
+    }
+
+    .card p  { color: var(--muted); margin-bottom: .5rem; font-size: 10pt; }
+    .card ul { padding-left: 1.25rem; color: var(--muted); font-size: 10pt; }
+    .card li { margin-bottom: .3rem; }
+
+    /* ===== Stats strip ===== */
+    .stats-strip {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: .65rem;
+      margin-bottom: 1.1rem;
+    }
+
+    .stat-box {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .75rem .5rem;
+      text-align: center;
+    }
+
+    .stat-box .num {
+      font-size: 18pt;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-box.green .num { color: var(--accent); }
+
+    .stat-box .lbl {
+      font-size: 7pt;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      line-height: 1.3;
+      margin-top: .25rem;
+    }
+
+    /* ===== Tables ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 9.5pt;
+      margin-bottom: 1rem;
+    }
+
+    th {
+      background: var(--primary);
+      color: #fff;
+      text-align: left;
+      padding: .5rem .75rem;
+      font-weight: 600;
+      font-size: 9pt;
+    }
+
+    td {
+      padding: .5rem .75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background: #f8f9fc; }
+
+    /* ===== Badges ===== */
+    .badge {
+      display: inline-block;
+      padding: .15rem .55rem;
+      border-radius: 999px;
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: .04em;
+      white-space: nowrap;
+    }
+    .badge-exceeded  { background: #d4f4e7; color: #1a7a4e; }
+    .badge-met       { background: #ddeeff; color: #1a5fa8; }
+    .badge-adapted   { background: #fef3e2; color: #925c00; }
+    .badge-not-built { background: #eef0f3; color: #5a6478; }
+
+    /* ===== Highlight box ===== */
+    .highlight {
+      background: var(--accent-light);
+      border-left: 4px solid var(--accent);
+      padding: .75rem 1rem;
+      border-radius: 0 6px 6px 0;
+      margin: .75rem 0;
+      font-size: 10pt;
+      color: var(--text);
+    }
+
+    /* ===== Two-col ===== */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .9rem;
+    }
+
+    /* ===== Goal blocks ===== */
+    .goal-block {
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 1rem 1.1rem;
+      margin-bottom: .9rem;
+    }
+
+    .goal-block.exceeded { border-color: var(--accent); }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: .4rem;
+      flex-wrap: wrap;
+      gap: .3rem;
+    }
+
+    .goal-header h3 {
+      font-size: 10.5pt;
+      color: var(--text);
+      margin: 0;
+      border: none;
+      padding: 0;
+    }
+
+    .goal-quote {
+      font-style: italic;
+      color: var(--muted);
+      font-size: 9.5pt;
+      margin-bottom: .5rem;
+    }
+
+    /* ===== Timeline ===== */
+    .timeline { list-style: none; padding: 0; position: relative; }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 12px; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--border);
+    }
+
+    .timeline li {
+      position: relative;
+      padding: 0 0 1.1rem 2.1rem;
+    }
+
+    .timeline li::before {
+      content: '';
+      position: absolute;
+      left: 5px; top: 5px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    .tl-period {
+      font-size: 8pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--accent);
+    }
+
+    .tl-body { color: var(--muted); font-size: 9.5pt; }
+
+    /* ===== Numbered list (lessons) ===== */
+    .lesson-list { list-style: none; padding: 0; }
+
+    .lesson-list li {
+      display: flex;
+      gap: .85rem;
+      align-items: flex-start;
+      margin-bottom: .9rem;
+    }
+
+    .lesson-num {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      min-width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 10pt;
+      flex-shrink: 0;
+    }
+
+    .lesson-body strong {
+      display: block;
+      font-size: 10.5pt;
+      margin-bottom: .2rem;
+      color: var(--text);
+    }
+
+    .lesson-body p {
+      font-size: 9.5pt;
+      color: var(--muted);
+      margin: 0;
+    }
+
+    /* ===== Next steps grid ===== */
+    .next-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+      margin-top: .75rem;
+    }
+
+    .next-item {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .8rem .95rem;
+    }
+
+    .next-item .priority {
+      font-size: 7.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--accent);
+      margin-bottom: .2rem;
+    }
+
+    .next-item strong {
+      display: block;
+      font-size: 10pt;
+      margin-bottom: .2rem;
+    }
+
+    .next-item p { font-size: 9pt; color: var(--muted); margin: 0; }
+
+    /* ===== Footer strip ===== */
+    .page-footer {
+      margin-top: 1.5rem;
+      padding: .5rem 2rem;
+      border-top: 1px solid #000;
+      background: #fff;
+      color: #333;
+      font-size: 8.5pt;
+      text-align: center;
+    }
+
+    .page-footer strong { color: #000; }
+
+    /* ===== Print ===== */
+    @media print {
+      @page { margin: .55in .65in; size: letter; }
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .cover { min-height: auto; padding: 2.5rem; }
+      .page-break { page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- =========================================================
+     COVER PAGE
+     ========================================================= -->
+<div class="cover">
+
+  <div class="cover-top">
+    <div class="cover-district">M A N S F I E L D &nbsp; I S D</div>
+    <div class="cover-dot-row">&middot;</div>
+    <div class="cover-report-type">P R O F E S S I O N A L &nbsp; D E V E L O P M E N T &nbsp; E N D - O F - Y E A R &nbsp; R E P O R T</div>
+  </div>
+
+  <div class="cover-middle">
+    <hr class="cover-rule">
+    <h1>FastAI Grader</h1>
+    <div class="cover-subtitle">End-of-Year Report</div>
+    <div class="cover-detail-line">AI-Assisted Essay Grading</div>
+    <div class="cover-detail-line">School Year 2025–2026</div>
+    <div class="cover-mid-dots">&middot; &middot;</div>
+    <div class="cover-detail-line">Grade 6 ELA</div>
+    <div class="cover-detail-line">April 2026</div>
+    <hr class="cover-rule">
+  </div>
+
+  <div class="cover-bottom">
+    <div class="cover-teacher-label">Teacher</div>
+    <div class="cover-teacher-name">Shana Busby</div>
+    <div class="cover-teacher-detail">Grade 6 ELA, Mansfield ISD</div>
+  </div>
+
+</div>
+<div class="page-break"></div>
+
+
+<!-- =========================================================
+     SECTION 1 — EXECUTIVE SUMMARY
+     ========================================================= -->
+<div class="section-header">
+  <div class="sec-num">Section 1</div>
+  <h2>Executive Summary</h2>
+</div>
+
+<div class="body-area" style="font-size:9.5pt; line-height:1.55;">
+
+  <p style="color:var(--muted); margin-bottom:.6rem;">
+    At the start of the 2025–2026 school year, Shana Busby proposed a professional development goal centered on designing and piloting an AI-assisted reading and grading workflow for her Grade 6 ELA classes. The original vision described a broad platform encompassing book-based lesson planning, STAAR item import, Canvas/Google Docs publishing, adaptive learning, analytics dashboards, and AI-assisted grading — all delivered through a teacher-only tool with no student-facing interface.
+  </p>
+  <p style="color:var(--muted); margin-bottom:.6rem;">
+    Through iterative classroom piloting during the fall semester, Shana and her developer partner discovered that the <strong>essay grading and high-quality student feedback</strong> component delivered the most meaningful time savings and instructional value. Based on this real-world evidence, the project <strong>pivoted</strong> to focus entirely on building a production-grade AI essay grading platform — and that pivot paid off.
+  </p>
+  <p style="color:var(--text); margin-bottom:1.1rem;">
+    <strong>The result is a deployed, FERPA-compliant web application used daily in Shana's classroom</strong> that provides rubric-driven AI grading, inline text annotations, teacher-controlled feedback, and a secure student identity system — reducing grading turnaround from days to minutes while maintaining high-fidelity, evidence-based feedback for students.
+  </p>
+
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.4rem;">Professional Development Goals — At a Glance</p>
+  <table style="margin-bottom:1rem;">
+    <thead>
+      <tr>
+        <th>Goal</th>
+        <th>Focus Area</th>
+        <th>Outcome</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Goal 1</strong></td>
+        <td>Curriculum Design Leadership</td>
+        <td><span class="badge badge-met">Met</span></td>
+      </tr>
+      <tr>
+        <td><strong>Goal 2</strong></td>
+        <td>Assessment Literacy</td>
+        <td><span class="badge badge-met">Met</span></td>
+      </tr>
+      <tr>
+        <td><strong>Goal 3</strong></td>
+        <td>Feedback &amp; Grading Efficiency</td>
+        <td><span class="badge badge-exceeded">Exceeded</span></td>
+      </tr>
+      <tr>
+        <td><strong>Goal 4</strong></td>
+        <td>Data-Informed Adjustments</td>
+        <td><span class="badge badge-met">Met</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.4rem;">Artifacts Available for Administration Review</p>
+  <ol style="padding-left:1.3rem; color:var(--muted); font-size:9.5pt;">
+    <li style="margin-bottom:.25rem;"><strong>Application</strong> — Live at ai-essaygrader.netlify.app (login credentials available from Shana)</li>
+    <li style="margin-bottom:.25rem;"><strong>Graded Essay Samples</strong> — Printed annotated PDFs with AI-generated feedback and teacher approvals</li>
+    <li style="margin-bottom:.25rem;"><strong>Rubric Library</strong> — Assignment rubrics created and refined throughout the year</li>
+    <li style="margin-bottom:.25rem;"><strong>Dashboard Data</strong> — Submission counts, grading statistics, and class period views</li>
+    <li style="margin-bottom:.25rem;"><strong>CSV Exports</strong> — Full submission data for gradebook integration</li>
+    <li><strong>This Report</strong> — End-of-year summary with comparison to original goals</li>
+  </ol>
+
+</div>
+
+<div class="page-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp; Development support by Mike Berry
+</div>
+<div class="page-break"></div>
+
+
+<!-- =========================================================
+     SECTION 2 — GOALS VS. OUTCOME
+     ========================================================= -->
+<div class="section-header">
+  <div class="sec-num">Section 2</div>
+  <h2>Original Goals vs. Final Outcome</h2>
+</div>
+
+<div class="body-area" style="font-size:9.5pt; line-height:1.5;">
+
+  <div style="margin-bottom:.5rem; display:flex; flex-wrap:wrap; gap:.4rem; align-items:center;">
+    <span style="font-size:8.5pt; color:var(--muted); font-weight:600;">Status Key:</span>
+    <span class="badge badge-exceeded">Exceeded</span>
+    <span class="badge badge-met">Met</span>
+    <span class="badge badge-adapted">Adapted</span>
+    <span class="badge badge-not-built">Not Built</span>
+  </div>
+
+  <table style="margin-bottom:.9rem;">
+    <thead>
+      <tr>
+        <th style="width:22%">Goal Area</th>
+        <th style="width:29%">Proposed</th>
+        <th style="width:38%">What Was Built</th>
+        <th style="width:11%">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>AI-Assisted Essay Grading</strong></td><td>AI suggests grades + comments tied to rubrics</td><td>Multi-provider LLM grading (Gemini, OpenAI, Anthropic) with BulletProof decimal-accurate scoring, rubric-driven feedback, teacher override</td><td><span class="badge badge-exceeded">Exceeded</span></td></tr>
+      <tr><td><strong>Evidence-Based Feedback</strong></td><td>Feedback referencing text evidence, returned via Canvas</td><td>Inline annotations with line-by-line AI feedback, approve/edit/reject workflow, printable annotated PDFs</td><td><span class="badge badge-exceeded">Exceeded</span></td></tr>
+      <tr><td><strong>Rubric Management</strong></td><td>Create/edit rubrics aligned to TEKS</td><td>Full rubric system: manual creation, AI enhancement, document upload &amp; extraction (PDF/DOCX), rubric library per assignment</td><td><span class="badge badge-exceeded">Exceeded</span></td></tr>
+      <tr><td><strong>Teacher-in-Control</strong></td><td>AI drafts; teacher reviews/approves</td><td>Complete teacher override on all grades and feedback, version history audit trail, teacher edits saved separately</td><td><span class="badge badge-met">Met</span></td></tr>
+      <tr><td><strong>FERPA / Privacy</strong></td><td>Student data stays in approved systems</td><td>Student Identity Bridge with AES-256-GCM encryption, zero PII in cloud, UUID-only storage, user-scoped data isolation</td><td><span class="badge badge-exceeded">Exceeded</span></td></tr>
+      <tr><td><strong>Multiple Input Methods</strong></td><td>Import student work from Canvas/Docs</td><td>Direct upload: handwritten photos (AI Vision OCR via Gemini 2.5 Pro), DOCX files, plain text paste</td><td><span class="badge badge-adapted">Adapted</span></td></tr>
+      <tr><td><strong>Dashboard &amp; Data Views</strong></td><td>Simple TEKS-by-skill summaries</td><td>Dashboard with search, filters, date ranges, class period organization, statistics cards, CSV export</td><td><span class="badge badge-adapted">Adapted</span></td></tr>
+      <tr><td><strong>SSO / Authentication</strong></td><td>Google or Microsoft SSO</td><td>Custom JWT authentication with email/password; multi-tenant support</td><td><span class="badge badge-adapted">Adapted</span></td></tr>
+      <tr><td><strong>Book-Based Lesson Planning</strong></td><td>RAG-powered lesson generation</td><td>Explored then intentionally abandoned — cost and complexity outweighed benefit</td><td><span class="badge badge-not-built">Not Built</span></td></tr>
+      <tr><td><strong>STAAR Item Import</strong></td><td>Parse STAAR items from URLs/PDFs</td><td>Not implemented — pivot to grading focus</td><td><span class="badge badge-not-built">Not Built</span></td></tr>
+      <tr><td><strong>Canvas/Google Docs Integration</strong></td><td>Publish assignments, sync grades</td><td>Not implemented — teachers use print/export instead</td><td><span class="badge badge-not-built">Not Built</span></td></tr>
+      <tr><td><strong>Adaptive Learning</strong></td><td>Personalized content by learning style</td><td>Not implemented — outside the grading focus</td><td><span class="badge badge-not-built">Not Built</span></td></tr>
+      <tr><td><strong>TEKS Mastery Tracking</strong></td><td>Aggregate performance by TEKS strand</td><td>Not implemented as standalone; rubric criteria can align to standards</td><td><span class="badge badge-not-built">Not Built</span></td></tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.4rem;">Why We Pivoted</p>
+  <p style="color:var(--muted); margin-bottom:.4rem;">The original proposal envisioned a comprehensive platform. During the October–December pilot cycle, three key insights redirected development:</p>
+  <ul style="padding-left:1.2rem; color:var(--muted);">
+    <li style="margin-bottom:.3rem;"><strong>Grading was the bottleneck.</strong> Shana spent the majority of her non-instructional time grading essays and writing feedback. Solving the grading problem had the highest return on time invested.</li>
+    <li style="margin-bottom:.3rem;"><strong>LMS integration added friction, not efficiency.</strong> Canvas API integrations required district IT approval and significant development time for a workflow manageable via print/export.</li>
+    <li style="margin-bottom:.3rem;"><strong>Quality feedback was the student impact lever.</strong> The inline annotation system produced better feedback than Shana could write manually in a fraction of the time.</li>
+  </ul>
+  <p style="color:var(--text); margin-top:.5rem; font-size:9.5pt;">The decision to pivot was a deliberate, <strong>data-informed instructional adjustment</strong> — exactly the kind of reflective practice outlined in the original professional development goals.</p>
+
+</div>
+
+<div class="page-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp; Development support by Mike Berry
+</div>
+<div class="page-break"></div>
+
+
+<!-- =========================================================
+     SECTION 3 — WHAT WAS BUILT
+     ========================================================= -->
+<div class="section-header">
+  <div class="sec-num">Section 3</div>
+  <h2>What Was Built</h2>
+</div>
+
+<div class="body-area" style="font-size:9.5pt; line-height:1.5;">
+
+  <div class="two-col" style="gap:.6rem; margin-bottom:.8rem;">
+
+    <div>
+      <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.3rem; border-bottom:1px solid var(--border); padding-bottom:.2rem;">Core Grading Engine</p>
+      <ul style="padding-left:1.2rem; color:var(--muted);">
+        <li style="margin-bottom:.25rem;"><strong>BulletProof Grading</strong> — Deterministic decimal-precision scoring (decimal.js). LLM extracts rubric JSON; TypeScript computes with zero floating-point errors.</li>
+        <li style="margin-bottom:.25rem;"><strong>Multi-Provider LLM</strong> — 16 models across OpenAI, Gemini, and Anthropic via Netlify AI Gateway.</li>
+        <li style="margin-bottom:.25rem;"><strong>Background Grading</strong> — Trigger → background → polling eliminates timeouts on long essays.</li>
+        <li><strong>Rubric-Driven</strong> — Not ELAR-specific; a second teacher (AP World History) adopted it without modifications.</li>
+      </ul>
+    </div>
+
+    <div>
+      <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.3rem; border-bottom:1px solid var(--border); padding-bottom:.2rem;">Inline Annotations &amp; Feedback</p>
+      <ul style="padding-left:1.2rem; color:var(--muted);">
+        <li style="margin-bottom:.25rem;"><strong>Two-Pass System</strong> — Pass 1: general grading. Pass 2: criterion-specific inline feedback with line numbers, quotes, and suggestions.</li>
+        <li style="margin-bottom:.25rem;"><strong>Teacher Review Workflow</strong> — Approve, edit, or reject each annotation. "Approve All" for bulk action.</li>
+        <li style="margin-bottom:.25rem;"><strong>Annotation Chat</strong> — Teachers can ask follow-up questions about specific annotations.</li>
+        <li><strong>Print Integration</strong> — Annotated PDFs with highlights, corrections, strengths, and improvement areas.</li>
+      </ul>
+    </div>
+
+    <div>
+      <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.3rem; border-bottom:1px solid var(--border); padding-bottom:.2rem;">Student Identity Bridge (FERPA)</p>
+      <ul style="padding-left:1.2rem; color:var(--muted);">
+        <li style="margin-bottom:.25rem;"><strong>Zero PII in Cloud</strong> — Student names and district IDs are never transmitted to the server.</li>
+        <li style="margin-bottom:.25rem;"><strong>AES-256-GCM Encryption</strong> — Student data encrypted locally with a teacher-chosen passphrase.</li>
+        <li style="margin-bottom:.25rem;"><strong>User-Scoped Isolation</strong> — Each teacher's bridge is keyed to their user ID.</li>
+        <li style="margin-bottom:.25rem;"><strong>Class Period Organization</strong> — Students organized by period with filtering throughout.</li>
+        <li><strong>CSV Import</strong> — Bulk student roster import.</li>
+      </ul>
+    </div>
+
+    <div>
+      <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.3rem; border-bottom:1px solid var(--border); padding-bottom:.2rem;">Multiple Input Methods</p>
+      <ul style="padding-left:1.2rem; color:var(--muted);">
+        <li style="margin-bottom:.25rem;"><strong>Handwritten Essay Support</strong> — AI Vision transcription using Gemini 2.5 Pro or GPT-4o.</li>
+        <li style="margin-bottom:.25rem;"><strong>DOCX Upload</strong> — Client-side Word document parsing via mammoth.</li>
+        <li style="margin-bottom:.25rem;"><strong>Plain Text</strong> — Direct paste for typed essays.</li>
+        <li><strong>Local OCR Fallback</strong> — Tesseract.js for offline handwriting recognition.</li>
+      </ul>
+    </div>
+
+    <div>
+      <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.3rem; border-bottom:1px solid var(--border); padding-bottom:.2rem;">Dashboard &amp; Management</p>
+      <ul style="padding-left:1.2rem; color:var(--muted);">
+        <li style="margin-bottom:.25rem;"><strong>Submission Dashboard</strong> — Search, filter by assignment, class period, date range.</li>
+        <li style="margin-bottom:.25rem;"><strong>Statistics Cards</strong> — Total assignments, submissions, pending review, graded today.</li>
+        <li style="margin-bottom:.25rem;"><strong>Three View Modes</strong> — By Student, By Assignment, By Class.</li>
+        <li style="margin-bottom:.25rem;"><strong>CSV Export</strong> — Full data export for gradebook integration.</li>
+        <li><strong>Assignment Management</strong> — Create, edit, delete assignments with rubric configuration.</li>
+      </ul>
+    </div>
+
+    <div>
+      <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.3rem; border-bottom:1px solid var(--border); padding-bottom:.2rem;">Auth, Multi-Tenancy &amp; Quality</p>
+      <ul style="padding-left:1.2rem; color:var(--muted);">
+        <li style="margin-bottom:.25rem;"><strong>Custom JWT Authentication</strong> — Secure login with bcrypt password hashing.</li>
+        <li style="margin-bottom:.25rem;"><strong>Multi-Tenant Architecture</strong> — Each teacher's data fully isolated by tenant ID.</li>
+        <li style="margin-bottom:.25rem;"><strong>582+ Automated Tests</strong> — ~60% code coverage across unit and integration tests.</li>
+        <li style="margin-bottom:.25rem;"><strong>Version History</strong> — Immutable audit trail for all grade changes.</li>
+        <li><strong>Production Deployed</strong> — ai-essaygrader.netlify.app with continuous deployment.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.4rem; border-bottom:1px solid var(--border); padding-bottom:.2rem; page-break-before:always; padding-top:1rem;">Technical Architecture</p>
+  <table style="margin-bottom:0;">
+    <thead>
+      <tr>
+        <th style="width:22%">Layer</th>
+        <th>Technology</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Frontend</strong></td><td>React + Vite, TypeScript, Tailwind CSS, shadcn/ui</td></tr>
+      <tr><td><strong>Backend</strong></td><td>Netlify Functions (serverless, Node.js)</td></tr>
+      <tr><td><strong>Database</strong></td><td>Neon Postgres (serverless, 7 tables, 21 indexes)</td></tr>
+      <tr><td><strong>AI / LLM</strong></td><td>Netlify AI Gateway — 16 models across OpenAI, Gemini, Anthropic</td></tr>
+      <tr><td><strong>OCR</strong></td><td>Gemini 2.5 Pro Vision (primary), Tesseract.js (fallback)</td></tr>
+      <tr><td><strong>Privacy</strong></td><td>Student Identity Bridge (AES-256-GCM, zero PII in cloud)</td></tr>
+      <tr><td><strong>Testing</strong></td><td>Vitest, 582+ tests, ~60% coverage</td></tr>
+      <tr><td><strong>Hosting</strong></td><td>Netlify (continuous deployment from GitHub)</td></tr>
+    </tbody>
+  </table>
+
+</div>
+
+<div class="page-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp; Development support by Mike Berry
+</div>
+<div class="page-break"></div>
+
+
+<!-- =========================================================
+     SECTION 4 — OUTCOMES & STUDENT BENEFITS
+     ========================================================= -->
+<div class="section-header">
+  <div class="sec-num">Section 4</div>
+  <h2>Outcomes &amp; Impact</h2>
+</div>
+
+<div class="body-area" style="font-size:9.5pt; line-height:1.5;">
+
+  <!-- Goal 1 -->
+  <div style="margin-bottom:.75rem; padding-bottom:.75rem; border-bottom:1px solid var(--border);">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.2rem;">
+      <strong style="font-size:10pt;">Goal 1 — Curriculum Design Leadership</strong>
+      <span class="badge badge-met">Met</span>
+    </div>
+    <p style="font-style:italic; color:var(--muted); margin-bottom:.3rem; font-size:9pt;">"Develop the ability to quickly produce and refine TEKS-aligned lesson materials tied to the actual texts used in class."</p>
+    <p style="color:var(--muted); margin-bottom:.2rem;">While the application did not include a lesson plan generator, Shana developed curriculum design skills through creating detailed rubrics for each assignment type — articulating clear, TEKS-aligned expectations for every writing assignment.</p>
+    <p style="color:var(--muted); font-size:9pt;"><strong>Evidence:</strong> A library of rubrics created in the application, each with criteria tied to Grade 6 ELA expectations.</p>
+  </div>
+
+  <!-- Goal 2 -->
+  <div style="margin-bottom:.75rem; padding-bottom:.75rem; border-bottom:1px solid var(--border);">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.2rem;">
+      <strong style="font-size:10pt;">Goal 2 — Assessment Literacy</strong>
+      <span class="badge badge-met">Met</span>
+    </div>
+    <p style="font-style:italic; color:var(--muted); margin-bottom:.3rem; font-size:9pt;">"Curate and adapt STAAR-formatted questions and rubrics; ensure items explicitly reference TEKS strands."</p>
+    <p style="color:var(--muted); margin-bottom:.2rem;">STAAR item import was not built, but assessment literacy grew significantly through creating and testing rubrics across 13 ELA document types, evaluating how each criterion aligned to TEKS strands.</p>
+    <p style="color:var(--muted); font-size:9pt;"><strong>Evidence:</strong> Rubric documents uploaded and extracted; side-by-side comparison of AI-scored vs. teacher-scored essays demonstrating rubric calibration.</p>
+  </div>
+
+  <!-- Goal 3 -->
+  <div style="margin-bottom:.75rem; padding-bottom:.75rem; border-bottom:1px solid var(--border);">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.2rem;">
+      <strong style="font-size:10pt;">Goal 3 — Feedback &amp; Grading Efficiency</strong>
+      <span class="badge badge-exceeded">Exceeded</span>
+    </div>
+    <p style="font-style:italic; color:var(--muted); margin-bottom:.3rem; font-size:9pt;">"Adopt an AI-assisted grading workflow (teacher-in-control) that returns consistent, evidence-based comments to students."</p>
+    <p style="color:var(--text); margin-bottom:.2rem;"><strong>Fully achieved and exceeded.</strong> Grading turnaround reduced from 10–15 minutes manually to <strong>2–3 minutes with AI assist + teacher review</strong>. Inline annotations reference exact quotes with specific improvement suggestions.</p>
+    <p style="color:var(--muted); font-size:9pt;"><strong>Evidence:</strong> Graded essay samples with AI annotations and teacher approvals; annotated PDFs returned to students.</p>
+  </div>
+
+  <!-- Goal 4 -->
+  <div style="margin-bottom:.9rem; padding-bottom:.75rem; border-bottom:1px solid var(--border);">
+    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.2rem;">
+      <strong style="font-size:10pt;">Goal 4 — Data-Informed Adjustments</strong>
+      <span class="badge badge-met">Met</span>
+    </div>
+    <p style="font-style:italic; color:var(--muted); margin-bottom:.3rem; font-size:9pt;">"Use artifacts and simple dashboards to monitor student progress and select targeted re-teaching or enrichment."</p>
+    <p style="color:var(--muted); margin-bottom:.2rem;">The Dashboard provides submission-level data with filtering by student, assignment, class period, and date range. CSV export enables integration with existing gradebook tools.</p>
+    <p style="color:var(--muted); font-size:9pt;"><strong>Evidence:</strong> Dashboard screenshots showing class-level views, statistics cards, and filtered submission lists.</p>
+  </div>
+
+  <!-- Student Benefits -->
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.4rem; page-break-before:always; padding-top:1rem;">Student Benefits Achieved</p>
+  <table style="margin-bottom:.6rem;">
+    <thead>
+      <tr>
+        <th>Proposed Benefit</th>
+        <th style="width:12%">Achieved?</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Clearer instructions and rubrics aligned to TEKS</td>
+        <td><span class="badge badge-exceeded">Yes</span></td>
+        <td>Detailed rubrics with criteria, performance levels, and point values for every assignment</td>
+      </tr>
+      <tr>
+        <td>Faster, more consistent feedback pointing to specific passages</td>
+        <td><span class="badge badge-exceeded">Yes</span></td>
+        <td>Inline annotations reference exact quotes with specific improvement suggestions</td>
+      </tr>
+      <tr>
+        <td>Differentiated materials via Canvas/Docs</td>
+        <td><span class="badge badge-not-built">No</span></td>
+        <td>Pivot to grading focus; differentiation was not the primary time-savings lever</td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="color:var(--muted); font-size:9pt; margin-bottom:.9rem;"><strong>Additional benefits:</strong> Higher-quality feedback (more detailed and consistent), faster turnaround enabling quicker revision cycles, and fair rubric-based scoring with mathematical precision.</p>
+
+  <!-- Timeline -->
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.4rem;">Timeline Retrospective</p>
+  <table style="margin-bottom:0;">
+    <thead>
+      <tr><th style="width:28%">Period</th><th>Activity</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Aug – Sep 2025</strong></td><td>Set-up: Neon database, Netlify deployment, initial grading prototype. Baseline established for grading turnaround time.</td></tr>
+      <tr><td><strong>Oct – Dec 2025</strong></td><td>Pilot Cycle 1: Built BulletProof scoring, inline annotations, Student Bridge, Dashboard. Discovered grading was highest-value feature. Made pivot decision.</td></tr>
+      <tr><td><strong>Jan – Mar 2026</strong></td><td>Pilot Cycle 2: Refined rubric system, added AI Vision (Image-to-Text), class period organization. Second teacher (AP World History) adopted the tool.</td></tr>
+      <tr><td><strong>Apr – May 2026</strong></td><td>End-of-year report completed. Application stable and in daily use.</td></tr>
+    </tbody>
+  </table>
+
+</div>
+
+<div class="page-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp; Development support by Mike Berry
+</div>
+<div class="page-break"></div>
+
+
+<!-- =========================================================
+     SECTION 5 — LESSONS LEARNED & NEXT STEPS
+     ========================================================= -->
+<div class="section-header">
+  <div class="sec-num">Section 5</div>
+  <h2>Lessons Learned &amp; Next Steps</h2>
+</div>
+
+<div class="body-area" style="font-size:9.5pt; line-height:1.5;">
+
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.5rem;">Lessons Learned</p>
+  <ol style="padding-left:1.3rem; color:var(--muted); margin-bottom:1.1rem;">
+    <li style="margin-bottom:.5rem;">
+      <strong>Start with the pain point, not the feature list.</strong>
+      Classroom reality showed that one feature — grading with quality feedback — solved the biggest problem. Building that one thing well was more valuable than building everything partially.
+    </li>
+    <li style="margin-bottom:.5rem;">
+      <strong>Pilot early, pivot quickly.</strong>
+      The Oct–Dec pilot cycle surfaced the pivot opportunity within weeks. By January, development was fully focused on the highest-impact feature set.
+    </li>
+    <li style="margin-bottom:.5rem;">
+      <strong>Teacher-in-control is non-negotiable.</strong>
+      Every AI output in the system is a draft. The teacher reviews, approves, edits, or rejects. This principle was in the original proposal and remained central to the final product.
+    </li>
+    <li style="margin-bottom:.5rem;">
+      <strong>FERPA compliance requires architectural commitment.</strong>
+      The Student Identity Bridge — encrypting all student data locally and sending only anonymous UUIDs to the cloud — ensures genuine FERPA compliance rather than policy-based compliance.
+    </li>
+    <li>
+      <strong>A second user validates the design.</strong>
+      When a second teacher (AP World History) adopted the tool without modifications, it confirmed the rubric-driven architecture generalized beyond ELA — exceeding the original single-classroom scope.
+    </li>
+  </ol>
+
+  <p style="font-size:9pt; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--primary); margin-bottom:.5rem;">Recommendations for 2026–2027</p>
+  <p style="color:var(--muted); margin-bottom:.5rem;">The FastAI Grader is stable, deployed, and in active use. Recommended next steps:</p>
+  <table style="margin-bottom:1rem;">
+    <thead>
+      <tr><th style="width:20%">Priority</th><th style="width:25%">Item</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="badge badge-exceeded" style="font-size:7pt;">High</span></td><td><strong>Batch Upload</strong></td><td>Allow teachers to upload an entire class set of essays at once. Design complete — implementation pending.</td></tr>
+      <tr><td><span class="badge badge-exceeded" style="font-size:7pt;">High</span></td><td><strong>Expand Adoption</strong></td><td>Onboard additional ELA and cross-subject teachers, building on the AP World History success.</td></tr>
+      <tr><td><span class="badge badge-met" style="font-size:7pt;">Medium</span></td><td><strong>Analytics</strong></td><td>Add per-rubric-criterion trend views to support data-informed re-teaching decisions.</td></tr>
+      <tr><td><span class="badge badge-met" style="font-size:7pt;">Medium</span></td><td><strong>Revision Tracking</strong></td><td>Track improvement across multiple drafts of the same assignment to demonstrate student growth.</td></tr>
+      <tr><td><span class="badge badge-adapted" style="font-size:7pt;">Pending</span></td><td><strong>Canvas Integration</strong></td><td>Revisit LMS integration if district IT approves API access — reduces manual export/upload steps.</td></tr>
+    </tbody>
+  </table>
+
+  <p style="color:var(--text); font-size:9.5pt; margin-bottom:.5rem;">
+    <strong>Bottom line:</strong> A professional development goal that started as a broad AI platform proposal became a focused, impactful classroom tool — because teacher and developer stayed close to the real problem and were willing to change course when evidence demanded it.
+  </p>
+  <p style="color:var(--muted); font-size:9pt;">
+    <em>Prepared by Shana Busby with development support from Mike Berry.</em> &nbsp;·&nbsp;
+    Live application: ai-essaygrader.netlify.app
+  </p>
+
+</div>
+
+</body>
+</html>

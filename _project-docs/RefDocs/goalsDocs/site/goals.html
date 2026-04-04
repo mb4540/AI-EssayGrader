@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Goals — FastAI Grader End-of-Year Report</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <div class="site-logo">FastAI Grader <span>/ 2025–2026 Report</span></div>
+    <nav>
+      <a href="index.html">Overview</a>
+      <a href="goals.html" class="active">Goals</a>
+      <a href="features.html">Features</a>
+      <a href="outcomes.html">Outcomes</a>
+      <a href="lessons.html">Lessons</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero">
+  <h1>Original Goals vs. Final Outcome</h1>
+  <p>What was proposed, what was built, and why the project pivoted to where it needed to go.</p>
+</section>
+
+<div class="container">
+
+  <!-- Legend -->
+  <div class="card" style="padding:1.1rem 1.75rem;">
+    <div style="display:flex; flex-wrap:wrap; gap:1rem; align-items:center;">
+      <span style="font-weight:600; font-size:.9rem; color:var(--text-muted);">Status Key:</span>
+      <span class="badge badge-exceeded">Exceeded</span>
+      <span class="badge badge-met">Met</span>
+      <span class="badge badge-adapted">Adapted</span>
+      <span class="badge badge-not-built">Not Built</span>
+    </div>
+  </div>
+
+  <!-- Comparison Matrix -->
+  <div class="card">
+    <h2>Goal Comparison Matrix</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:22%">Original Goal Area</th>
+            <th style="width:32%">Proposed</th>
+            <th style="width:36%">What Was Built</th>
+            <th style="width:10%">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>AI-Assisted Essay Grading</strong></td>
+            <td>AI suggests grades + comments tied to rubrics</td>
+            <td>Multi-provider LLM grading (Gemini, OpenAI, Anthropic) with BulletProof decimal-accurate scoring, rubric-driven feedback, teacher override</td>
+            <td><span class="badge badge-exceeded">Exceeded</span></td>
+          </tr>
+          <tr>
+            <td><strong>Evidence-Based Feedback</strong></td>
+            <td>Feedback referencing text evidence, returned via Canvas</td>
+            <td>Inline annotations with line-by-line AI feedback, approve/edit/reject workflow, printable annotated PDFs</td>
+            <td><span class="badge badge-exceeded">Exceeded</span></td>
+          </tr>
+          <tr>
+            <td><strong>Rubric Management</strong></td>
+            <td>Create/edit rubrics aligned to TEKS</td>
+            <td>Full rubric system: manual creation, AI enhancement, document upload &amp; extraction (PDF/DOCX), rubric library per assignment</td>
+            <td><span class="badge badge-exceeded">Exceeded</span></td>
+          </tr>
+          <tr>
+            <td><strong>Teacher-in-Control</strong></td>
+            <td>AI drafts; teacher reviews/approves</td>
+            <td>Complete teacher override on all grades and feedback, version history audit trail, teacher edits saved separately</td>
+            <td><span class="badge badge-met">Met</span></td>
+          </tr>
+          <tr>
+            <td><strong>FERPA / Privacy Compliance</strong></td>
+            <td>Student data stays in approved systems</td>
+            <td>Student Identity Bridge with AES-256-GCM encryption, zero PII in cloud, UUID-only storage, user-scoped data isolation</td>
+            <td><span class="badge badge-exceeded">Exceeded</span></td>
+          </tr>
+          <tr>
+            <td><strong>Multiple Input Methods</strong></td>
+            <td>Import student work from Canvas/Docs</td>
+            <td>Direct upload: handwritten photos (AI Vision OCR via Gemini 2.5 Pro), DOCX files, plain text paste</td>
+            <td><span class="badge badge-adapted">Adapted</span></td>
+          </tr>
+          <tr>
+            <td><strong>Dashboard &amp; Data Views</strong></td>
+            <td>Simple TEKS-by-skill summaries</td>
+            <td>Dashboard with search, filters, date ranges, class period organization, statistics cards, CSV export</td>
+            <td><span class="badge badge-adapted">Adapted</span></td>
+          </tr>
+          <tr>
+            <td><strong>Book-Based Lesson Planning</strong></td>
+            <td>RAG-powered lesson generation from uploaded books</td>
+            <td>Explored through Phase 4, then intentionally abandoned — cost and complexity outweighed benefit</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>STAAR Item Import</strong></td>
+            <td>Parse STAAR items from URLs/PDFs, map to TEKS</td>
+            <td>Not implemented — pivot to grading focus</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>Canvas/Google Docs Integration</strong></td>
+            <td>Publish assignments, sync grades, import submissions</td>
+            <td>Not implemented — teachers use print/export instead</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>Adaptive Learning</strong></td>
+            <td>Personalized content by learning style</td>
+            <td>Not implemented — outside the grading focus</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>TEKS Mastery Tracking</strong></td>
+            <td>Aggregate performance by TEKS strand</td>
+            <td>Not implemented as standalone; rubric criteria can align to standards</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>Vector Store / RAG Architecture</strong></td>
+            <td>Embeddings, FAISS/Weaviate, retrieval pipeline</td>
+            <td>Not implemented — grading workflow proved more valuable without this complexity</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>SIS Integration</strong></td>
+            <td>Pull student demographics from district SIS</td>
+            <td>Not implemented — Bridge system handles student identity locally</td>
+            <td><span class="badge badge-not-built">Not Built</span></td>
+          </tr>
+          <tr>
+            <td><strong>SSO / District Authentication</strong></td>
+            <td>Google or Microsoft SSO</td>
+            <td>Custom JWT authentication with email/password; multi-tenant support</td>
+            <td><span class="badge badge-adapted">Adapted</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Why We Pivoted -->
+  <div class="card">
+    <h2>Why We Pivoted</h2>
+    <p>
+      The original proposal envisioned a comprehensive platform touching lesson planning, assessment creation, LMS integration, adaptive learning, and grading. During the October–December pilot cycle, three key insights emerged that redirected development.
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:1rem; margin-top:1rem;">
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--primary); color:#fff; border-radius:50%; min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem;">1</div>
+        <div>
+          <h3 style="margin-top:0;">Grading was the bottleneck</h3>
+          <p>Shana spent the majority of her non-instructional time grading essays and writing feedback — not creating lesson plans or importing STAAR items. Solving the grading problem had the highest return on time invested.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--primary); color:#fff; border-radius:50%; min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem;">2</div>
+        <div>
+          <h3 style="margin-top:0;">LMS integration added friction, not efficiency</h3>
+          <p>Building Canvas API integrations would have required district IT approval, OAuth scoping, and significant development time — for a workflow that could be accomplished by printing or exporting graded output and uploading it manually.</p>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:1rem; align-items:flex-start;">
+        <div style="background:var(--primary); color:#fff; border-radius:50%; min-width:36px; height:36px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:1rem;">3</div>
+        <div>
+          <h3 style="margin-top:0;">Quality feedback was the student impact lever</h3>
+          <p>Students benefited most from detailed, evidence-based comments on their writing. The inline annotation system — where AI highlights specific passages and the teacher approves or edits each comment — produced better feedback than Shana could write manually in a fraction of the time.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="highlight-box" style="margin-top:1.5rem;">
+      The decision to pivot was a deliberate, <strong>data-informed instructional adjustment</strong> — exactly the kind of reflective practice outlined in the original professional development goals.
+    </div>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <strong>Shana Busby</strong> &nbsp;·&nbsp; Grade 6 ELA, Mansfield ISD &nbsp;·&nbsp; 2025–2026 &nbsp;·&nbsp;
+  Development support by Mike Berry
+</footer>
+
+</body>
+</html>
