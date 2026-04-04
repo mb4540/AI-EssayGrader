@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assignment Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Assignment Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html" class="active">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>📋 Assignment Tests</h1>
+      <p>Create, edit, document type, rubric import, rubric AI enhancement, and criteria input</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">16</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Logged in as a valid user</li>
+        <li>Have a PDF or DOCX file containing a rubric for import tests</li>
+        <li>Dashboard accessible</li>
+      </ul>
+    </div>
+
+    <!-- CREATE ASSIGNMENT -->
+    <div class="test-section" id="section-create">
+      <div class="test-section-header" onclick="toggleSection('section-create')">
+        <h2>Create Assignment <span class="badge">6 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="ASGN-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-001</div>
+            <div class="test-title">Open Create Assignment modal</div>
+            <div class="test-steps"><ol><li>On Dashboard, click the "New Assignment" or "+" button</li></ol></div>
+            <div class="test-expected">Modal opens with "New Assignment" heading, blue/indigo gradient header, all form fields visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-002</div>
+            <div class="test-title">Create assignment with minimum required fields</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter an assignment title (e.g., "Persuasive Essay #1")</li>
+                <li>Leave all other fields at defaults</li>
+                <li>Click "Create Assignment"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Green success message with assignment title appears; button changes to "OK" to dismiss; assignment appears in Dashboard's assignment dropdown</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-003</div>
+            <div class="test-title">Create assignment with all fields populated</div>
+            <div class="test-steps">
+              <ol>
+                <li>Enter title, select document type, add description, assignment prompt, grading criteria, and set total points</li>
+                <li>Click "Create Assignment"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Assignment created successfully; all data persists when editing the assignment later</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-004</div>
+            <div class="test-title">Create assignment fails without title</div>
+            <div class="test-steps">
+              <ol>
+                <li>Leave the title field empty</li>
+                <li>Click "Create Assignment"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Create button is disabled when title is empty; alert shown if somehow submitted</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-005</div>
+            <div class="test-title">Document type dropdown shows all ELA types</div>
+            <div class="test-steps"><ol><li>Click the Document Type dropdown in the modal</li></ol></div>
+            <div class="test-expected">Dropdown shows multiple ELA document types (e.g., Personal Narrative, Persuasive Essay, Research Paper, etc.)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-006</div>
+            <div class="test-title">Cancel/close modal without saving</div>
+            <div class="test-steps"><ol><li>Open Create Assignment modal</li><li>Enter some data</li><li>Click "Cancel" or the X button</li></ol></div>
+            <div class="test-expected">Modal closes; no assignment is created; form is reset for next open</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- EDIT ASSIGNMENT -->
+    <div class="test-section" id="section-edit">
+      <div class="test-section-header" onclick="toggleSection('section-edit')">
+        <h2>Edit Assignment <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="ASGN-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-007</div>
+            <div class="test-title">Edit modal pre-populates existing data</div>
+            <div class="test-steps"><ol><li>Open edit for an existing assignment (from Dashboard "By Assignment" view or Submission page)</li></ol></div>
+            <div class="test-expected">Modal shows "Edit Assignment" heading; title, document type, description, prompt, criteria, and total points all pre-filled with saved values</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-008</div>
+            <div class="test-title">Update assignment saves changes</div>
+            <div class="test-steps"><ol><li>Edit an assignment: change the title and criteria</li><li>Click "Update Assignment"</li></ol></div>
+            <div class="test-expected">Success message shown; changes persist; Dashboard and Submission page reflect updated data</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-009</div>
+            <div class="test-title">Total points preserved correctly in edit mode</div>
+            <div class="test-steps"><ol><li>Create assignment with 50 total points</li><li>Open edit modal for that assignment</li></ol></div>
+            <div class="test-expected">Total points field shows 50 (not the default 100); value type is correct (number, not string)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RUBRIC IMPORT -->
+    <div class="test-section" id="section-rubric-import">
+      <div class="test-section-header" onclick="toggleSection('section-rubric-import')">
+        <h2>Rubric Import <span class="badge">4 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="ASGN-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-010</div>
+            <div class="test-title">Upload rubric document (PDF)</div>
+            <div class="test-steps">
+              <ol>
+                <li>In Create Assignment modal, locate "Import Rubric" section</li>
+                <li>Click file input and select a PDF containing a rubric</li>
+                <li>Click "Extract Rubric"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Button shows "Extracting..." with spinner; after processing, Rubric Preview Modal appears with extracted criteria</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-011</div>
+            <div class="test-title">Upload rubric document (DOCX)</div>
+            <div class="test-steps">
+              <ol>
+                <li>Select a DOCX file containing a rubric</li>
+                <li>Click "Extract Rubric"</li>
+              </ol>
+            </div>
+            <div class="test-expected">DOCX is converted to PDF then processed; Rubric Preview Modal shows extracted criteria</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-012</div>
+            <div class="test-title">Accept extracted rubric from preview</div>
+            <div class="test-steps"><ol><li>After extraction, review the Rubric Preview Modal</li><li>Click "Accept" or equivalent button</li></ol></div>
+            <div class="test-expected">Extracted rubric text fills the Grading Criteria field; total points update if extracted; success message "Rubric extracted successfully!" shown</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-013">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-013</div>
+            <div class="test-title">Rubric file validation (type and size)</div>
+            <div class="test-steps"><ol><li>Try to upload a non-PDF/DOCX file (e.g., .txt or .jpg)</li><li>Try to upload a file larger than 5MB</li></ol></div>
+            <div class="test-expected">Alert: "Please upload a PDF or Word document" for invalid type; "File size must be less than 5MB" for oversized file; file is rejected</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RUBRIC ENHANCEMENT -->
+    <div class="test-section" id="section-rubric-enhance">
+      <div class="test-section-header" onclick="toggleSection('section-rubric-enhance')">
+        <h2>Rubric AI Enhancement <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="ASGN-014">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-014</div>
+            <div class="test-title">Enhance simple rules into detailed rubric</div>
+            <div class="test-steps">
+              <ol>
+                <li>In the Grading Criteria field, type: "Check grammar, organization, evidence. 100 points."</li>
+                <li>Click "Enhance with AI" button</li>
+              </ol>
+            </div>
+            <div class="test-expected">Spinner during processing; simple rules transformed into structured rubric with categories, levels, and point values; total points preserved at 100</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-015">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-015</div>
+            <div class="test-title">Enhancement preserves custom total points</div>
+            <div class="test-steps">
+              <ol>
+                <li>Set total points to 50</li>
+                <li>Enter simple rubric rules</li>
+                <li>Click "Enhance with AI"</li>
+              </ol>
+            </div>
+            <div class="test-expected">Enhanced rubric category points sum to 50 (not 100); total points field still shows 50</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="ASGN-016">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">ASGN-016</div>
+            <div class="test-title">Warning shown for unrecognized rubric format</div>
+            <div class="test-steps"><ol><li>Enter criteria that don't follow standard rubric format</li><li>Create the assignment</li></ol></div>
+            <div class="test-expected">Yellow warning banner: "Assignment saved but rubric format not recognized. Use 'Enhance with AI' or enter rubric in standard format." with OK button</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

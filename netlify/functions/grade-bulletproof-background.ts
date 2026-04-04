@@ -150,18 +150,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     // Initialize LLM Provider (default to Gemini)
     const providerName = (llmProvider as LLMProviderName) || 'gemini';
 
-    // DEBUG: Log available env keys
-    console.log('Available Env Keys:', Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('URL')));
-
-    const apiKey = providerName === 'gemini'
-      ? process.env.GEMINI_API_KEY
-      : process.env.OPENAI_API_KEY;
-
-    if (!apiKey) {
-      throw new Error(`${providerName.toUpperCase()} API key not configured`);
-    }
-
-    const provider = getLLMProvider(providerName, apiKey, llmModel);
+    const provider = getLLMProvider(providerName, llmModel);
     console.log(`Using LLM Provider: ${providerName} (${llmModel || 'default'})`);
 
     const essayText = draft_mode === 'comparison' ? final_draft_text : verbatim_text;

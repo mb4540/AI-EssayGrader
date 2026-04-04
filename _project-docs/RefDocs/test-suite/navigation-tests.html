@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Navigation Tests - EssayEase Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">Navigation &amp; Layout Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html" class="active">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>🧭 Navigation &amp; Layout Tests</h1>
+      <p>Top navigation bar, user menu, routing, branding, and page layout</p>
+    </div>
+
+    <div class="summary-bar">
+      <div class="summary-item total"><div class="count" id="total-count">12</div><div class="label">Total</div></div>
+      <div class="summary-item pass"><div class="count" id="pass-count">0</div><div class="label">Passed</div></div>
+      <div class="summary-item fail"><div class="count" id="fail-count">0</div><div class="label">Failed</div></div>
+      <div class="summary-item skip"><div class="count" id="skip-count">0</div><div class="label">Skipped</div></div>
+    </div>
+
+    <div class="preconditions">
+      <h3>Preconditions</h3>
+      <ul>
+        <li>Logged in as a valid user</li>
+        <li>On the Dashboard page (/)</li>
+      </ul>
+    </div>
+
+    <!-- NAV BAR -->
+    <div class="test-section" id="section-navbar">
+      <div class="test-section-header" onclick="toggleSection('section-navbar')">
+        <h2>Navigation Bar <span class="badge">6 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="NAV-001">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-001</div>
+            <div class="test-title">Navigation bar displays all links</div>
+            <div class="test-steps"><ol><li>Observe the top navigation bar</li></ol></div>
+            <div class="test-expected">Logo, "EssayEase by Gift of Time" title, subtitle, and links for Dashboard, Grade, Students, Help, Settings gear icon, and user name are all visible</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-002">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-002</div>
+            <div class="test-title">Dashboard link navigates to /</div>
+            <div class="test-steps"><ol><li>Click "Dashboard" in the nav bar</li></ol></div>
+            <div class="test-expected">Navigated to / showing Dashboard page with submission list or empty state</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-003">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-003</div>
+            <div class="test-title">Grade link navigates to /submission</div>
+            <div class="test-steps"><ol><li>Click "Grade" in the nav bar</li></ol></div>
+            <div class="test-expected">Navigated to /submission showing submission form with student info, criteria, essay input</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-004">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-004</div>
+            <div class="test-title">Students link navigates to /bridge</div>
+            <div class="test-steps"><ol><li>Click "Students" in the nav bar</li></ol></div>
+            <div class="test-expected">Navigated to /bridge showing Bridge Manager (create/unlock or student roster)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-005">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-005</div>
+            <div class="test-title">Help link navigates to /help</div>
+            <div class="test-steps"><ol><li>Click "Help" in the nav bar</li></ol></div>
+            <div class="test-expected">Navigated to /help showing Help Guide with quick start, feature sections</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-006">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-006</div>
+            <div class="test-title">Logo/title click navigates to Dashboard</div>
+            <div class="test-steps"><ol><li>From any page, click the "EssayEase by Gift of Time" title in the nav</li></ol></div>
+            <div class="test-expected">Navigated back to Dashboard (/)</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- USER MENU -->
+    <div class="test-section" id="section-usermenu">
+      <div class="test-section-header" onclick="toggleSection('section-usermenu')">
+        <h2>User Menu <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="NAV-007">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-007</div>
+            <div class="test-title">User menu opens on click</div>
+            <div class="test-steps"><ol><li>Click the user name in the top-right corner of the nav bar</li></ol></div>
+            <div class="test-expected">Dropdown appears showing full name, email, role, and "Sign Out" button</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-008">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-008</div>
+            <div class="test-title">User menu closes when clicking outside</div>
+            <div class="test-steps"><ol><li>Open the user menu</li><li>Click anywhere outside the dropdown</li></ol></div>
+            <div class="test-expected">Dropdown closes</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-009">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-009</div>
+            <div class="test-title">Settings gear icon opens Settings modal</div>
+            <div class="test-steps"><ol><li>Click the gear (Settings) icon in the nav bar</li></ol></div>
+            <div class="test-expected">Settings modal opens with tabs for AI provider, prompts, and model configuration</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- LAYOUT & BRANDING -->
+    <div class="test-section" id="section-layout">
+      <div class="test-section-header" onclick="toggleSection('section-layout')">
+        <h2>Layout &amp; Branding <span class="badge">3 tests</span></h2>
+        <span class="toggle-icon">&#9660;</span>
+      </div>
+      <div class="test-section-body">
+
+        <div class="test-row" data-test="NAV-010">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-010</div>
+            <div class="test-title">Nav bar is sticky on scroll</div>
+            <div class="test-steps"><ol><li>Scroll down on a page with enough content</li></ol></div>
+            <div class="test-expected">Navigation bar stays fixed at the top of the viewport</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-011">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-011</div>
+            <div class="test-title">GoT logo image loads correctly</div>
+            <div class="test-steps"><ol><li>Observe the logo image in the top-left of the nav</li></ol></div>
+            <div class="test-expected">GoTIcon.png is displayed (not broken image icon); image is approximately 40x40px</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+        <div class="test-row" data-test="NAV-012">
+          <div class="test-check"><input type="checkbox"></div>
+          <div class="test-content">
+            <div class="test-id">NAV-012</div>
+            <div class="test-title">Privacy notice on register page</div>
+            <div class="test-steps"><ol><li>Navigate to /register</li><li>Scroll to bottom of form</li></ol></div>
+            <div class="test-expected">Blue info box visible with text about "Privacy First" and encrypted student names</div>
+            <div class="status-controls">
+              <button class="status-btn" onclick="setStatus(this,'pass')">Pass</button>
+              <button class="status-btn" onclick="setStatus(this,'fail')">Fail</button>
+              <button class="status-btn" onclick="setStatus(this,'skip')">Skip</button>
+            </div>
+            <div class="test-notes"><textarea placeholder="Notes..."></textarea></div>
+          </div>
+          <div class="test-status"><span class="status-label pending">Pending</span></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="test-utils.js"></script>
+</body>
+</html>

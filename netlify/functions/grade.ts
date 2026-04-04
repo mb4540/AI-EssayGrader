@@ -1,3 +1,4 @@
+// LEGACY: Uses direct OpenAI SDK. Use grade-bulletproof-background.ts instead.
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { OpenAI } from 'openai';
 import { sql } from './db';

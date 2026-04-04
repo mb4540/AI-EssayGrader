@@ -69,7 +69,7 @@ export async function startGradingJob(data: GradeRequest) {
 
   // Get LLM settings (default to Gemini 2.5 Pro)
   const llmProvider = localStorage.getItem('ai_provider') || 'gemini';
-  const llmModel = llmProvider === 'gemini' ? 'gemini-2.5-pro' : 'gpt-4o';
+  const llmModel = localStorage.getItem('ai_model') || 'gemini-2.5-pro';
 
   const response = await fetch(`${API_BASE}/grade-bulletproof-trigger`, {
     method: 'POST',

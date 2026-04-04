@@ -1,6 +1,4 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import OpenAI from 'openai';
-import type { ChatCompletionCreateParamsNonStreaming } from 'openai/resources/chat/completions';
 import { getLLMProvider, LLMProviderName } from './lib/llm/factory';
 
 /**
@@ -186,61 +184,19 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     console.log(`[enhance-rubric] Input rules length: ${simple_rules.length} characters`);
     console.log(`[enhance-rubric] Target total points: ${totalPoints}`);
 
-    let content: string | undefined;
-    let tokensUsed = 0;
+    const model = llmModel || (providerName === 'gemini' ? 'gemini-2.5-pro' : 'gpt-4o-2024-08-06');
+    const provider = getLLMProvider(providerName, model);
 
-    if (providerName === 'gemini') {
-      // Use Gemini with JSON mode
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error('GEMINI_API_KEY not configured');
-      }
+    const response = await provider.generate({
+      systemMessage: systemPrompt,
+      userMessage: `Simple grading rules:\n\n${simple_rules}`,
+      temperature: 0.7,
+      jsonMode: providerName === 'gemini',
+      jsonSchema: providerName === 'openai' ? { name: 'rubric', strict: true, schema: RUBRIC_SCHEMA } : undefined,
+    });
 
-      const provider = getLLMProvider('gemini', apiKey, llmModel);
-      const response = await provider.generate({
-        systemMessage: systemPrompt,
-        userMessage: `Simple grading rules:\n\n${simple_rules}`,
-        temperature: 0.7,
-        jsonMode: true,
-      });
-
-      content = response.content.trim();
-      tokensUsed = response.usage.promptTokens + response.usage.completionTokens;
-      
-    } else {
-      // Use OpenAI with structured outputs for stricter validation
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error('OPENAI_API_KEY not configured');
-      }
-
-      const openai = new OpenAI({ apiKey });
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-2024-08-06', // Structured outputs require this specific model or newer
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: `Simple grading rules:\n\n${simple_rules}`,
-          },
-        ],
-        response_format: {
-          type: 'json_schema',
-          json_schema: {
-            name: 'rubric',
-            strict: true,
-            schema: RUBRIC_SCHEMA
-          }
-        },
-        temperature: 0.7,
-      });
-
-      content = completion.choices[0]?.message?.content?.trim();
-      tokensUsed = completion.usage?.total_tokens || 0;
-    }
+    const content = response.content.trim();
+    const tokensUsed = (response.usage?.promptTokens ?? 0) + (response.usage?.completionTokens ?? 0);
     if (!content) {
       throw new Error('No rubric generated');
     }

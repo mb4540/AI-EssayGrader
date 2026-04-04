@@ -6,13 +6,10 @@
  */
 
 import { Handler, HandlerEvent } from '@netlify/functions';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getLLMProvider } from './lib/llm/factory';
 import mammoth from 'mammoth';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { updateJob, getJob } from './lib/rubric-job-storage';
-
-// Initialize Gemini client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 interface RubricLevel {
   levelName: string;
@@ -158,21 +155,13 @@ const handler: Handler = async (event: HandlerEvent) => {
     const fileBuffer = Buffer.from(file, 'base64');
     const fileSizeKB = Math.round(fileBuffer.length / 1024);
 
-    // Get Gemini model
-    const model = genAI.getGenerativeModel({
-      model: modelName,
-      generationConfig: {
-        responseMimeType: 'application/json',
-      },
-    });
-
     // Use custom prompt or fallback to default
     const systemPrompt = extractionPrompt || DEFAULT_EXTRACTION_PROMPT;
 
-    let promptParts: any[] = [systemPrompt];
+    let userPromptParts: string[] = [];
 
     if (totalPoints) {
-      promptParts.push(`Expected total points: ${totalPoints}`);
+      userPromptParts.push(`Expected total points: ${totalPoints}`);
     }
 
     // Process based on file type
@@ -270,35 +259,33 @@ const handler: Handler = async (event: HandlerEvent) => {
       return { statusCode: 200, body: JSON.stringify({ success: true }) };
     }
 
-    // Send PDF to Gemini
+    // Send PDF to Gemini via factory
     console.log(`[extract-rubric-background] Preparing Gemini request...`);
     console.log(`[extract-rubric-background] Model: ${modelName}`);
     console.log(`[extract-rubric-background] PDF size: ${Math.round(pdfBase64.length / 1024)}KB`);
     
-    promptParts.push('Analyze the PDF document below and extract the rubric.');
-    promptParts.push({
-      inlineData: {
-        data: pdfBase64,
-        mimeType: 'application/pdf',
-      },
-    });
+    userPromptParts.push('Analyze the PDF document below and extract the rubric.');
 
-    // Call Gemini
     console.log(`[extract-rubric-background] Calling Gemini API...`);
     const geminiStartTime = Date.now();
-    const result = await model.generateContent(promptParts);
+    const provider = getLLMProvider('gemini', modelName);
+    const result = await provider.generate({
+      systemMessage: systemPrompt,
+      userMessage: userPromptParts.join('\n'),
+      jsonMode: true,
+      inlineData: [{ data: pdfBase64, mimeType: 'application/pdf' }],
+    });
     const geminiDuration = Date.now() - geminiStartTime;
     console.log(`[extract-rubric-background] Gemini API responded in ${geminiDuration}ms`);
     
-    const responseText = result.response.text();
+    const responseText = result.content;
     console.log(`[extract-rubric-background] Response length: ${responseText.length} chars`);
     const rubricData: RubricResponse = JSON.parse(responseText);
 
     // Performance logging - end
     const duration = Date.now() - startTime;
-    const tokenUsage = result.response.usageMetadata;
-    const promptTokens = tokenUsage?.promptTokenCount || 0;
-    const completionTokens = tokenUsage?.candidatesTokenCount || 0;
+    const promptTokens = result.usage?.promptTokens || 0;
+    const completionTokens = result.usage?.completionTokens || 0;
     const totalTokens = promptTokens + completionTokens;
 
     console.log(`[extract-rubric-background] ✅ Job ${jobId} completed in ${duration}ms`);

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EssayEase - End-User Test Suite</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <div>
+        <div class="nav-title">EssayEase Test Suite</div>
+        <div class="nav-subtitle">End-User Application-Level Tests</div>
+      </div>
+      <div class="nav-links">
+        <a href="index.html" class="active">Home</a>
+        <a href="auth-tests.html">Auth</a>
+        <a href="navigation-tests.html">Nav</a>
+        <a href="dashboard-tests.html">Dashboard</a>
+        <a href="submission-tests.html">Grading</a>
+        <a href="assignment-tests.html">Assignments</a>
+        <a href="bridge-tests.html">Students</a>
+        <a href="settings-tests.html">Settings</a>
+        <a href="annotations-tests.html">Annotations</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="page-wrapper">
+    <div class="page-header">
+      <h1>EssayEase End-User Test Suite</h1>
+      <p>Manual acceptance tests covering every user-facing feature. Open each section to execute tests and track results.</p>
+    </div>
+
+    <!-- Overall Summary -->
+    <div class="summary-bar">
+      <div class="summary-item total">
+        <div class="count">138</div>
+        <div class="label">Total Tests</div>
+      </div>
+      <div class="summary-item pass">
+        <div class="count">--</div>
+        <div class="label">Passed</div>
+      </div>
+      <div class="summary-item fail">
+        <div class="count">--</div>
+        <div class="label">Failed</div>
+      </div>
+      <div class="summary-item skip">
+        <div class="count">--</div>
+        <div class="label">Skipped</div>
+      </div>
+    </div>
+
+    <!-- Preconditions -->
+    <div class="preconditions">
+      <h3>Global Preconditions (before running any tests)</h3>
+      <ul>
+        <li>Application is deployed and accessible (local dev or production URL)</li>
+        <li>At least one test account exists (or use the Register tests first)</li>
+        <li>Browser is Chrome, Firefox, Safari, or Edge (latest version)</li>
+        <li>JavaScript is enabled</li>
+        <li>Network connectivity is available (for API calls)</li>
+        <li>Test with a clean browser session (clear localStorage before starting)</li>
+      </ul>
+    </div>
+
+    <!-- Test Suite Cards -->
+    <h2 style="font-size:18px; font-weight:700; margin-bottom:4px;">Test Suites</h2>
+    <p class="text-muted text-sm mb-4">Click a suite to view and execute its tests.</p>
+
+    <div class="suite-grid">
+
+      <a href="auth-tests.html" class="suite-card">
+        <div class="card-icon">🔐</div>
+        <h3>Authentication</h3>
+        <p>Login, register, forgot password, reset password, logout, session management</p>
+        <div class="card-count">18 tests</div>
+      </a>
+
+      <a href="navigation-tests.html" class="suite-card">
+        <div class="card-icon">🧭</div>
+        <h3>Navigation &amp; Layout</h3>
+        <p>Top nav links, user menu, protected routes, responsive layout, branding</p>
+        <div class="card-count">12 tests</div>
+      </a>
+
+      <a href="dashboard-tests.html" class="suite-card">
+        <div class="card-icon">📊</div>
+        <h3>Dashboard</h3>
+        <p>View modes, filtering, sorting, date range, stats, CSV export, delete confirmations</p>
+        <div class="card-count">20 tests</div>
+      </a>
+
+      <a href="submission-tests.html" class="suite-card">
+        <div class="card-icon">📝</div>
+        <h3>Submission &amp; Grading</h3>
+        <p>Essay input, file upload, OCR, AI grading, teacher override, print, draft comparison</p>
+        <div class="card-count">28 tests</div>
+      </a>
+
+      <a href="assignment-tests.html" class="suite-card">
+        <div class="card-icon">📋</div>
+        <h3>Assignments</h3>
+        <p>Create, edit, document type, rubric import, rubric AI enhancement, criteria input</p>
+        <div class="card-count">16 tests</div>
+      </a>
+
+      <a href="bridge-tests.html" class="suite-card">
+        <div class="card-icon">🏫</div>
+        <h3>Student Bridge</h3>
+        <p>Create/unlock bridge, add/edit/delete students, CSV import, class periods, bulk actions</p>
+        <div class="card-count">18 tests</div>
+      </a>
+
+      <a href="settings-tests.html" class="suite-card">
+        <div class="card-icon">⚙️</div>
+        <h3>Settings</h3>
+        <p>AI provider/model selection, custom prompts, reset defaults, persistence</p>
+        <div class="card-count">12 tests</div>
+      </a>
+
+      <a href="annotations-tests.html" class="suite-card">
+        <div class="card-icon">📌</div>
+        <h3>Annotations</h3>
+        <p>Inline annotations, approve/reject/edit, add new, AI chat, annotation overlay</p>
+        <div class="card-count">14 tests</div>
+      </a>
+
+    </div>
+
+    <!-- Execution Notes -->
+    <div style="margin-top:32px; padding:16px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px;">
+      <h3 style="font-size:14px; font-weight:700; margin-bottom:8px;">How to Use This Test Suite</h3>
+      <ol style="font-size:13px; color:#475569; padding-left:20px;">
+        <li>Start with <strong>Authentication</strong> tests to ensure you can log in.</li>
+        <li>Then run <strong>Student Bridge</strong> tests to set up student data.</li>
+        <li>Run <strong>Assignment</strong> tests to create assignments.</li>
+        <li>Run <strong>Submission &amp; Grading</strong> tests with real essay content.</li>
+        <li>Use the checkboxes and status buttons on each page to track progress.</li>
+        <li>Add notes in the text areas for any issues found.</li>
+        <li>Results are stored in your browser's localStorage (per page).</li>
+      </ol>
+    </div>
+
+    <p style="margin-top:24px; font-size:12px; color:#94a3b8; text-align:center;">
+      EssayEase Test Suite v1.0 &mdash; Generated April 2025
+    </p>
+  </div>
+
+</body>
+</html>

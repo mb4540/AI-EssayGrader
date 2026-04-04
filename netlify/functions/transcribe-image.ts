@@ -1,6 +1,5 @@
 import { Handler } from '@netlify/functions';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
+import { getLLMProvider } from './lib/llm/factory';
 
 /**
  * IMPORTANT: This function is LOCKED to Gemini 2.5 Pro for image transcription.
@@ -59,14 +58,6 @@ const handler: Handler = async (event) => {
 
     // ALWAYS use Gemini 2.5 Pro (multimodal LLM optimized for vision)
     // Ignore any provider parameter - this function is locked to Gemini
-    if (!process.env.GEMINI_API_KEY) {
-      console.error('[transcribe-image] Missing GEMINI_API_KEY');
-      return {
-        statusCode: 500,
-        headers,
-        body: JSON.stringify({ error: 'GEMINI_API_KEY is not configured' }),
-      };
-    }
 
     // Extract base64 data and mime type
     // Expected format: "data:image/png;base64,iVBOR..."
@@ -84,26 +75,19 @@ const handler: Handler = async (event) => {
 
     console.log(`[transcribe-image] Image type: ${mimeType}, size: ~${imageSizeKB}KB`);
 
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
-
-    const result = await model.generateContent([
-      SYSTEM_PROMPT,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType: mimeType
-        }
-      }
-    ]);
+    const provider = getLLMProvider('gemini', 'gemini-2.5-pro');
+    const result = await provider.generate({
+      systemMessage: SYSTEM_PROMPT,
+      userMessage: '',
+      inlineData: [{ data: base64Data, mimeType }],
+    });
     
-    transcription = result.response.text();
+    transcription = result.content;
     
     // Performance logging - end
     const duration = Date.now() - startTime;
-    const tokenUsage = result.response.usageMetadata;
-    const promptTokens = tokenUsage?.promptTokenCount || 0;
-    const completionTokens = tokenUsage?.candidatesTokenCount || 0;
+    const promptTokens = result.usage?.promptTokens || 0;
+    const completionTokens = result.usage?.completionTokens || 0;
     const totalTokens = promptTokens + completionTokens;
     
     console.log(`[transcribe-image] ✅ Completed in ${duration}ms`);
