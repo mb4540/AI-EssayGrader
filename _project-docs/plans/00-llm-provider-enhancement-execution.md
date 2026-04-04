@@ -48,8 +48,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 3 | Add multi-turn conversation support to providers | `APPROVED` | 2036d83 | Mike Berry | 2026-04-04 14:17 CDT |
 | Phase 4 | Add streaming support (`generateStream`) | `APPROVED` | 259da2b | Mike Berry | 2026-04-04 14:23 CDT |
 | Phase 5 | Update Settings UI with model selector dropdown | `APPROVED` | eec2f2c | Mike Berry | 2026-04-04 14:30 CDT |
-| Phase 6 | Create AI Gateway rules file | `IN PROGRESS` | | | |
-| Phase 7 | Update health-check, .env.example, and documentation | `NOT STARTED` | | | |
+| Phase 6 | Create AI Gateway rules file | `APPROVED` | d9e9f3b | Mike Berry | 2026-04-04 14:40 CDT |
+| Phase 7 | Update health-check, .env.example, and documentation | `IN PROGRESS` | | | |
 | Phase 8 | Final verification and regression testing | `NOT STARTED` | | | |
 
 **Status values:** `NOT STARTED` → `IN PROGRESS` → `COMPLETE` → `APPROVED`
@@ -69,6 +69,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 4:** No deviations. All three providers now have `generateStream()`. Extracted helper methods (`buildContents`/`getSystemInstruction` in Gemini, `buildMessages` in Anthropic, `buildMessages`/`buildTokenParam` in OpenAI) to share logic between `generate()` and `generateStream()`. OpenAI `buildTokenParam` helper was created but `generate()` still uses its inline version — minor duplication, can be cleaned up later.
 
 **Phase 5:** No deviations. Created `src/lib/model-registry.ts` with 16 models. SettingsModal now has dual provider+model dropdowns. `api.ts` reads `ai_model` directly from localStorage instead of hardcoded ternary. Bundle size increase: +1.7 kB (1,628 → 1,630 kB).
+
+**Phase 6:** Deviation: `ai-gateway.md` already existed (committed in Phase 1 as part of the comparison doc commit) but contained GenAIWidgets' version verbatim. Rewrote entirely for AI-EssayGrader: factory pattern examples, `@google/genai` SDK references, FERPA compliance section, model registry references, provider capability matrix. 338 → 255 lines (more concise, project-specific).
 
 ---
 
@@ -926,7 +928,14 @@ Check `.windsurf/rules/` for any overlapping content. The new file should comple
 
 ### 8.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (1):**
+- `.windsurf/rules/ai-gateway.md` — Full rewrite from GenAIWidgets' generic version to AI-EssayGrader-specific. Added: Architecture section with factory pattern usage, Key Files table, Provider Capabilities matrix, SDK Usage section with zero-config examples and GPT-5+ parameter note, Model Registry section referencing `models.ts` and `model-registry.ts`, FERPA Compliance section, factory-based error handling example, Do/Don't lists referencing factory and model registry. Removed: raw SDK instantiation examples, `@google/generative-ai` references, Vite plugin section, verbose rate limiting code. 338 → 255 lines.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** File already existed (accidentally committed in Phase 1 with GenAIWidgets content). Rewrote in-place rather than creating new. No functional impact — rules files are documentation only.
+
+**Verification:** No conflicts with existing rules files (grep confirmed). `npx tsc --noEmit` — zero errors. `npm run build` — succeeds. `npm test` — 588 passing. No regressions.
 
 ---
 

@@ -5,7 +5,7 @@ A privacy-conscious, production-ready web application that dramatically reduces 
 ## Features
 
 - 📝 **Multiple Input Methods**: Upload handwritten photos (OCR), DOCX files, or paste plain text
-- 🤖 **AI-Powered Grading**: OpenAI integration with structured feedback (grammar, spelling, structure, evidence)
+- 🤖 **AI-Powered Grading**: Multi-provider LLM support (Gemini, OpenAI, Anthropic) with structured feedback
 - ✏️ **Teacher Override**: Edit AI suggestions with full version history
 - 📊 **Dashboard**: Search, filter, and export submissions to CSV
 - 🔒 **FERPA Compliant**: Student names encrypted locally, only UUIDs stored in cloud
@@ -17,7 +17,7 @@ A privacy-conscious, production-ready web application that dramatically reduces 
 - **Frontend**: React + Vite, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend**: Netlify Functions (serverless)
 - **Database**: Neon Postgres (serverless)
-- **AI**: OpenAI (gpt-4o-mini or configurable)
+- **AI**: Netlify AI Gateway — 16 models across OpenAI, Gemini, and Anthropic (zero API key management)
 - **OCR**: tesseract.js (client-side)
 - **DOCX**: mammoth (client-side)
 
@@ -26,8 +26,7 @@ A privacy-conscious, production-ready web application that dramatically reduces 
 - Node.js 18+
 - npm or yarn
 - Neon Postgres account (free tier available)
-- OpenAI API key
-- Netlify account (for deployment)
+- Netlify account (for deployment — AI Gateway auto-injects LLM API keys)
 
 ## Setup Instructions
 
@@ -57,11 +56,15 @@ npm install
 
 2. Fill in your credentials:
    ```env
-   OPENAI_API_KEY=sk-...
-   OPENAI_MODEL=gpt-4o-mini
    DATABASE_URL=postgres://USER:PASSWORD@HOST/db
+   JWT_SECRET=your-secret-key
    ALLOW_BLOB_STORAGE=false
    APP_BASE_URL=http://localhost:8888
+   # LLM API keys are auto-injected by Netlify AI Gateway
+   # For local dev without `netlify dev`, add your own:
+   # GEMINI_API_KEY=your-key
+   # OPENAI_API_KEY=sk-your-key
+   # ANTHROPIC_API_KEY=sk-ant-your-key
    ```
 
 ### 4. Local Development
@@ -105,7 +108,8 @@ netlify deploy --prod
 5. Configure build settings (should auto-detect from `netlify.toml`)
 6. Add environment variables in Netlify dashboard:
    - Go to Site settings → Environment variables
-   - Add: `OPENAI_API_KEY`, `OPENAI_MODEL`, `DATABASE_URL`
+   - Add: `DATABASE_URL`, `JWT_SECRET`
+   - LLM keys are managed automatically by the Netlify AI Gateway
 
 ## Usage
 
@@ -249,14 +253,28 @@ FastAIGrader implements a **Student Identity Bridge** pattern to ensure FERPA co
 - Check Neon database is active (free tier may sleep after inactivity)
 - Ensure schema has been run (`schema.sql`)
 
-### OpenAI API errors
-- Verify `OPENAI_API_KEY` is valid
-- Check API quota/billing in OpenAI dashboard
-- Ensure `OPENAI_MODEL` is a valid model name
+### AI/LLM errors
+- Check Netlify AI Gateway status in site dashboard
+- Verify health-check endpoint: `/api/health-check` (shows API key status)
+- For local dev without `netlify dev`, ensure provider API keys are set in `.env`
+- Check model is valid in `netlify/functions/lib/llm/models.ts`
 
 ### Build errors
 - Clear node_modules and reinstall: `rm -rf node_modules package-lock.json && npm install`
 - Check Node.js version: `node --version` (should be 18+)
+
+## LLM Provider Layer
+
+AI-EssayGrader uses a class-based provider factory for all LLM interactions:
+
+- **16 models** across 3 providers (OpenAI, Gemini, Anthropic)
+- **Zero-config** — Netlify AI Gateway auto-injects API keys
+- **Streaming** — `generateStream()` for real-time grading feedback
+- **Multi-turn** — Conversation history support via `messages[]`
+- **Model registry** — Centralized catalog with capability flags (`netlify/functions/lib/llm/models.ts`)
+- **GPT-5+ aware** — Automatic `max_completion_tokens` handling for newer models
+
+Teachers select their preferred provider and model in Settings. See `.windsurf/rules/ai-gateway.md` for development guidelines.
 
 ## Contributing
 

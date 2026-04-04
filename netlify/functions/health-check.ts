@@ -1,5 +1,6 @@
 import type { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
 import { sql } from './db';
+import { MODEL_REGISTRY } from './lib/llm/models';
 
 const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
   try {
@@ -54,6 +55,10 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
           ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ? 'SET' : 'NOT SET',
           NETLIFY_AI_GATEWAY_KEY: process.env.NETLIFY_AI_GATEWAY_KEY ? 'SET' : 'NOT SET',
           NODE_VERSION: process.version,
+        },
+        model_registry: {
+          total_models: MODEL_REGISTRY.length,
+          providers: ['openai', 'gemini', 'anthropic'],
         }
       }),
     };
