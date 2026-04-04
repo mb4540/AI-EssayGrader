@@ -47,8 +47,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `APPROVED` | 8bce009 | Mike Berry | 2026-04-04 14:11 CDT |
 | Phase 3 | Add multi-turn conversation support to providers | `APPROVED` | 2036d83 | Mike Berry | 2026-04-04 14:17 CDT |
 | Phase 4 | Add streaming support (`generateStream`) | `APPROVED` | 259da2b | Mike Berry | 2026-04-04 14:23 CDT |
-| Phase 5 | Update Settings UI with model selector dropdown | `IN PROGRESS` | | | |
-| Phase 6 | Create AI Gateway rules file | `NOT STARTED` | | | |
+| Phase 5 | Update Settings UI with model selector dropdown | `APPROVED` | eec2f2c | Mike Berry | 2026-04-04 14:30 CDT |
+| Phase 6 | Create AI Gateway rules file | `IN PROGRESS` | | | |
 | Phase 7 | Update health-check, .env.example, and documentation | `NOT STARTED` | | | |
 | Phase 8 | Final verification and regression testing | `NOT STARTED` | | | |
 
@@ -67,6 +67,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 3:** No deviations. `annotation-chat.ts` uses single-turn only — no migration needed (backward compatible).
 
 **Phase 4:** No deviations. All three providers now have `generateStream()`. Extracted helper methods (`buildContents`/`getSystemInstruction` in Gemini, `buildMessages` in Anthropic, `buildMessages`/`buildTokenParam` in OpenAI) to share logic between `generate()` and `generateStream()`. OpenAI `buildTokenParam` helper was created but `generate()` still uses its inline version — minor duplication, can be cleaned up later.
+
+**Phase 5:** No deviations. Created `src/lib/model-registry.ts` with 16 models. SettingsModal now has dual provider+model dropdowns. `api.ts` reads `ai_model` directly from localStorage instead of hardcoded ternary. Bundle size increase: +1.7 kB (1,628 → 1,630 kB).
 
 ---
 
@@ -859,7 +861,18 @@ Remove the hardcoded model mapping ternary (lines 72-76). The model is now store
 
 ### 7.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files created (1):**
+- `src/lib/model-registry.ts` — 47 lines. `ModelOption` interface, `MODEL_CATALOG` array with 16 models (7 OpenAI, 4 Gemini, 5 Anthropic) with descriptions. `PROVIDER_LABELS` map. Helper functions: `getModelsByProvider`, `getDefaultModel`.
+
+**Files modified (2):**
+- `src/components/SettingsModal.tsx` — Added `model-registry` import. Added `llmModel` state. Replaced single 3-option Select with dual provider+model grid layout. Provider change auto-selects default model. Model Details box reads from registry's `description` field dynamically. Gateway info box updated. Load/save now includes `ai_model` in localStorage. Backward compatible: falls back to default model if only `ai_provider` exists.
+- `src/lib/api.ts` — Replaced 5-line hardcoded ternary model mapping with single `localStorage.getItem('ai_model')` read.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** None.
+
+**Verification:** `npx tsc --noEmit` — zero errors. `npm run build` — succeeds (index.js 1,630 kB, +1.7 kB from model registry). `npm test` — 588 passing, 4 skipped, 2 pre-existing failures. No regressions.
 
 ---
 

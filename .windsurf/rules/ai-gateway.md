@@ -3,29 +3,67 @@ trigger: always
 ---
 # AI Gateway Rules
 
-Guidelines for using Netlify's AI Gateway to integrate AI models into your project.
+Guidelines for using the Netlify AI Gateway in AI-EssayGrader. All LLM calls MUST go through the provider factory — never instantiate SDKs directly.
 
 ---
 
 ## Overview
 
-Netlify AI Gateway provides access to popular AI models (OpenAI, Anthropic, Google Gemini) without managing separate provider accounts or API keys. Netlify handles authentication and billing based on token usage.
+Netlify AI Gateway provides access to OpenAI, Anthropic, and Google Gemini without managing API keys. Netlify auto-injects credentials and routes requests through its Gateway proxy. AI-EssayGrader uses a class-based provider factory (`netlify/functions/lib/llm/`) that wraps all three SDKs with zero-config constructors.
 
 ---
 
 ## Prerequisites
 
-- Project must have at least one **production deployment** to activate AI Gateway
+- At least one **production deployment** to activate Gateway
 - Credit-based Netlify plan (Free, Personal, or Pro)
-- AI features only work in Netlify compute contexts (Functions, Edge Functions)
+- AI features only work in Netlify compute contexts (Functions)
+
+---
+
+## Architecture — Provider Factory
+
+**NEVER instantiate SDKs directly in function files.** Always use the factory:
+
+```typescript
+import { getLLMProvider } from './lib/llm/factory';
+
+const provider = getLLMProvider('gemini', 'gemini-2.5-pro');
+const result = await provider.generate({
+  systemMessage: 'You are a grading assistant.',
+  userMessage: studentEssay,
+  temperature: 0.7,
+});
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `netlify/functions/lib/llm/types.ts` | `LLMProvider`, `LLMRequest`, `LLMResponse`, `LLMStreamChunk` interfaces |
+| `netlify/functions/lib/llm/factory.ts` | `getLLMProvider(provider, model?)` — returns the correct provider |
+| `netlify/functions/lib/llm/models.ts` | `MODEL_REGISTRY` with 16+ models, capability flags, parameter styles |
+| `netlify/functions/lib/llm/openai-provider.ts` | OpenAI SDK wrapper (`new OpenAI()` zero-config) |
+| `netlify/functions/lib/llm/gemini-provider.ts` | Google GenAI wrapper (`new GoogleGenAI({})` zero-config) |
+| `netlify/functions/lib/llm/anthropic-provider.ts` | Anthropic SDK wrapper (`new Anthropic()` zero-config) |
+
+### Provider Capabilities
+
+| Feature | OpenAI | Gemini | Anthropic |
+|---------|--------|--------|-----------|
+| Streaming | ✅ | ✅ | ✅ |
+| Multi-turn | ✅ | ✅ | ✅ |
+| Multimodal | ✅ (some) | ✅ | ✅ (some) |
+| JSON Mode | ✅ | ✅ | ❌ |
+| JSON Schema | ✅ | ❌ | ❌ |
 
 ---
 
 ## Environment Variables
 
-### Auto-Injected Variables
+### Auto-Injected by Gateway
 
-In Netlify compute contexts, these are automatically set:
+In Netlify compute contexts, these are set automatically:
 
 | Provider | API Key Variable | Base URL Variable |
 |----------|------------------|-------------------|
@@ -45,99 +83,61 @@ In Netlify compute contexts, these are automatically set:
 
 ---
 
-## Using Official Client Libraries
+## SDK Usage (via Provider Classes)
 
-### OpenAI
-
-```typescript
-import OpenAI from 'openai';
-
-// No configuration needed - picks up env vars automatically
-const openai = new OpenAI();
-
-const response = await openai.chat.completions.create({
-  model: 'gpt-4',
-  messages: [{ role: 'user', content: 'Hello' }],
-});
-```
-
-### Anthropic
+All SDKs use zero-config constructors — they read env vars automatically:
 
 ```typescript
-import Anthropic from '@anthropic-ai/sdk';
+// OpenAI — reads OPENAI_API_KEY + OPENAI_BASE_URL
+new OpenAI();
 
-// No configuration needed
-const anthropic = new Anthropic();
+// Gemini — reads GEMINI_API_KEY + GOOGLE_GEMINI_BASE_URL
+new GoogleGenAI({});
 
-const response = await anthropic.messages.create({
-  model: 'claude-3-sonnet-20240229',
-  max_tokens: 1024,
-  messages: [{ role: 'user', content: 'Hello' }],
-});
+// Anthropic — reads ANTHROPIC_API_KEY + ANTHROPIC_BASE_URL
+new Anthropic();
 ```
 
-### Google GenAI
+**Do NOT pass explicit API keys.** The Gateway injects them.
 
-```typescript
-import { GoogleGenerativeAI } from '@google/generative-ai';
+### GPT-5+ Model Parameter Handling
 
-// Must pass API key explicitly
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-
-const result = await model.generateContent('Hello');
-```
-
----
-
-## Using Third-Party Libraries or REST
-
-When using libraries that don't auto-detect environment variables:
-
-```typescript
-// Manually pass credentials
-const client = new SomeAIClient({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL,
-});
-```
-
-### Direct REST Calls
-
-```typescript
-const response = await fetch(`${process.env.OPENAI_BASE_URL}/chat/completions`, {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    model: 'gpt-4',
-    messages: [{ role: 'user', content: 'Hello' }],
-  }),
-});
-```
+Newer OpenAI models (GPT-5, GPT-4.1, O3, O4) require `max_completion_tokens` instead of `max_tokens`. The `OpenAIProvider` handles this automatically using the `isCompletionTokensModel()` helper from the model registry.
 
 ---
 
 ## Local Development
 
-### Using Netlify CLI
+### Using Netlify CLI (Recommended)
 
 ```bash
-# Start dev server with AI Gateway access
-netlify dev
+npx netlify dev
 ```
 
-### Using Vite Plugin
+Gateway keys are auto-injected during `netlify dev`.
 
-Install `@netlify/vite-plugin` for local AI Gateway functionality.
+### Without Netlify CLI
 
-### Without Netlify Tools
+Set your own provider API keys in `.env`:
 
-For local development without Netlify CLI:
-- Set your own provider API keys in `.env`
-- Or mock AI responses for testing
+```
+GEMINI_API_KEY=your-gemini-key
+OPENAI_API_KEY=sk-your-openai-key
+ANTHROPIC_API_KEY=sk-ant-your-anthropic-key
+```
+
+---
+
+## Model Registry
+
+Models are defined in `netlify/functions/lib/llm/models.ts`. Each model has:
+
+- **`id`** — Model identifier sent to the provider API
+- **`provider`** — `openai`, `gemini`, or `anthropic`
+- **`capabilities`** — Streaming, tool calling, multimodal, JSON mode, JSON schema
+- **`parameterStyle`** — `standard` or `completion_tokens` (for GPT-5+ models)
+
+The frontend mirror is at `src/lib/model-registry.ts`. Keep both in sync.
 
 ---
 
@@ -148,120 +148,68 @@ For local development without Netlify CLI:
 - **Tokens-per-minute (TPM)** limits per account
 - Both input and output tokens count
 - Limits vary by plan and model
-- Check Netlify documentation for current limits
 
-### Implementing Client Rate Limiting
+### Cost Management
 
-```typescript
-import { Handler } from '@netlify/functions';
-
-// Simple in-memory rate limiting (use Redis for production)
-const requestCounts = new Map<string, { count: number; resetAt: number }>();
-
-const RATE_LIMIT = 10; // requests per minute
-const WINDOW_MS = 60000;
-
-function checkRateLimit(clientId: string): boolean {
-  const now = Date.now();
-  const record = requestCounts.get(clientId);
-  
-  if (!record || now > record.resetAt) {
-    requestCounts.set(clientId, { count: 1, resetAt: now + WINDOW_MS });
-    return true;
-  }
-  
-  if (record.count >= RATE_LIMIT) {
-    return false;
-  }
-  
-  record.count++;
-  return true;
-}
-
-export const handler: Handler = async (event) => {
-  const clientId = event.headers['x-forwarded-for'] || 'unknown';
-  
-  if (!checkRateLimit(clientId)) {
-    return {
-      statusCode: 429,
-      headers: { 'Retry-After': '60' },
-      body: JSON.stringify({ error: 'Rate limit exceeded' }),
-    };
-  }
-  
-  // Process AI request...
-};
-```
-
----
-
-## Cost Management
-
-### Monitoring Usage
-
-- Monitor token usage in Netlify dashboard
-- Set up billing alerts
-- Track per-endpoint usage in application logs
-
-### Reducing Costs
-
-- Use appropriate model sizes (don't use GPT-4 for simple tasks)
-- Implement caching for repeated queries
-- Limit max tokens in responses
-- Use streaming for long responses (better UX, same cost)
+- Use appropriate model sizes (don't use GPT-4o for simple OCR cleanup)
+- Set `maxOutputTokens` in requests to limit response length
+- Monitor token usage via `response.usage` in `LLMResponse`
+- Use streaming for better UX (same cost, better perceived performance)
 
 ---
 
 ## Limitations
 
-### Current Constraints
-
 | Limitation | Details |
 |------------|---------|
-| Production deploy required | AI Gateway activates after first production deploy |
+| Production deploy required | Gateway activates after first production deploy |
 | Context window | Limited to 200k tokens |
-| Caching | Provider-specific limitations apply |
-| Headers | Custom headers not passed through |
+| Custom headers | Not passed through Gateway |
 | Batch inference | Not supported |
 | Priority processing | Not supported |
 
-### Handling Limitations
-
-- Deploy to production before testing AI features
-- Split large documents to fit context window
-- Implement application-level caching
-- Use standard request/response patterns
-
 ---
 
-## Security & Privacy
+## Security & FERPA Compliance
 
 ### Data Handling
 
 - Netlify AI Gateway **does not store** prompts or model outputs
-- Data passes through to providers
-- Follow provider-specific privacy policies
+- Data passes through to providers — follow provider privacy policies
 
-### Security Rules
+### FERPA Requirements
 
-- Never send sensitive PII in prompts
-- Never log prompts or responses containing user data
+- **Never send student names** in prompts — use anonymized identifiers
+- **Never log prompts** or LLM responses containing student work
 - Follow `security.md` logging restrictions
 - Sanitize user input before including in prompts
 
 ### Prompt Injection Prevention
 
 ```typescript
-// Sanitize user input
 function sanitizeForPrompt(userInput: string): string {
-  // Remove potential injection patterns
   return userInput
     .replace(/```/g, '')
     .replace(/\n{3,}/g, '\n\n')
-    .slice(0, 1000); // Limit length
+    .slice(0, 10000);
 }
+```
 
-const prompt = `Summarize this text: "${sanitizeForPrompt(userInput)}"`;
+---
+
+## Error Handling
+
+All LLM functions should wrap provider calls in try/catch:
+
+```typescript
+try {
+  const provider = getLLMProvider(providerName, model);
+  const result = await provider.generate({ systemMessage, userMessage });
+  return result.content;
+} catch (error) {
+  console.error('[function-name] LLM error:', error instanceof Error ? error.message : error);
+  return { statusCode: 500, body: JSON.stringify({ error: 'AI service unavailable' }) };
+}
 ```
 
 ---
@@ -270,68 +218,37 @@ const prompt = `Summarize this text: "${sanitizeForPrompt(userInput)}"`;
 
 ### Do
 
-- Use official client libraries for AI calls
-- Rely on automatically injected environment variables
-- Implement rate limiting on your endpoints
-- Deploy to production before using AI features
-- Handle API errors gracefully
-- Set reasonable max_tokens limits
-- Use streaming for better UX on long responses
+- Use `getLLMProvider()` factory for all LLM calls
+- Use models from `MODEL_REGISTRY` — do not hardcode model strings
+- Set `maxOutputTokens` to limit response length
+- Use `generateStream()` for real-time UX
+- Handle loading and error states in the frontend
+- Log token usage for cost monitoring (`response.usage`)
 
 ### Don't
 
+- Instantiate `new OpenAI()`, `new GoogleGenAI()`, or `new Anthropic()` outside provider classes
 - Hardcode API keys or base URLs
-- Pass custom headers for experimental provider features
-- Implement batch inference or priority processing
-- Store or log AI prompts or outputs
-- Send sensitive data in prompts
+- Send student PII in prompts
+- Log prompts or LLM responses containing student data
 - Assume unlimited rate limits
 - Skip error handling for AI calls
 
 ---
 
-## Error Handling
-
-```typescript
-try {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4',
-    messages: [{ role: 'user', content: prompt }],
-  });
-  return response.choices[0].message.content;
-} catch (error) {
-  if (error instanceof OpenAI.APIError) {
-    if (error.status === 429) {
-      // Rate limited - implement backoff
-      console.error('Rate limited by AI provider');
-      return { error: 'Service busy, please try again' };
-    }
-    if (error.status === 400) {
-      // Bad request - likely prompt issue
-      console.error('Invalid AI request:', error.message);
-      return { error: 'Invalid request' };
-    }
-  }
-  console.error('AI call failed:', error);
-  return { error: 'AI service unavailable' };
-}
-```
-
----
-
 ## Checklist
 
-Before using AI Gateway:
+Before adding or modifying AI features:
 
-- [ ] Production deployment completed
-- [ ] Rate limiting implemented
-- [ ] Error handling in place
-- [ ] No hardcoded API keys
-- [ ] Sensitive data not sent in prompts
-- [ ] Prompts not logged
-- [ ] Cost monitoring set up
-- [ ] Appropriate model selected for task
+- [ ] Uses `getLLMProvider()` factory — no raw SDK instantiation
+- [ ] Model is from `MODEL_REGISTRY` or passed from frontend
+- [ ] `maxOutputTokens` is set appropriately
+- [ ] Error handling wraps the provider call
+- [ ] No student PII in prompts (FERPA)
+- [ ] No logging of prompts or responses with student data
+- [ ] Tested with `netlify dev` locally
+- [ ] Production deployment exists (Gateway prerequisite)
 
 ---
 
-*AI capabilities are powerful. Use them responsibly and efficiently.*
+*All LLM calls route through the factory. The Gateway handles keys. Focus on prompts, not plumbing.*
