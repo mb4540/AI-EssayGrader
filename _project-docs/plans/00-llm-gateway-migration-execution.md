@@ -47,7 +47,7 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 | Phase 4 | Consolidate enhance-rubric functions to use factory | `APPROVED` | 4c0eec1 | Mike Berry | 2026-04-04 08:00 CDT |
 | Phase 5 | Add Anthropic Claude provider | `APPROVED` | b71cf31 | Mike Berry | 2026-04-04 08:05 CDT |
 | Phase 6 | Update frontend Settings UI and API calls | `APPROVED` | 11a2600 | Mike Berry | 2026-04-04 08:11 CDT |
-| Phase 7 | Update .env.example, health-check, and documentation | `IN PROGRESS` | | | |
+| Phase 7 | Update .env.example, health-check, and documentation | `COMPLETE` | bd75551 | | |
 | Phase 8 | Final verification and Gateway activation | `NOT STARTED` | | | |
 
 **Status values:** `NOT STARTED` → `IN PROGRESS` → `COMPLETE` → `APPROVED`
@@ -71,6 +71,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 5:** No deviations.
 
 **Phase 6:** No deviations.
+
+**Phase 7:** No deviations.
 
 ---
 
@@ -850,7 +852,14 @@ environment: {
 
 ### 9.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (3):**
+- `.env.example` — Replaced 8-line LLM config with 13-line AI Gateway documentation. Keys are commented out (only needed for local dev without `netlify dev`). Added Anthropic key example.
+- `netlify/functions/health-check.ts` — Added `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, and `NETLIFY_AI_GATEWAY_KEY` status checks to all 3 environment response blocks (error, success, connection-failed).
+- `netlify/functions/grade.ts` — Added legacy annotation comment at line 1.
+
+**Verified:** `@google/generative-ai` absent from `package.json`; `@google/genai` present.
+
+**Verification:** `tsc` zero errors, build succeeds, 588/588 passing tests unchanged.
 
 ---
 
