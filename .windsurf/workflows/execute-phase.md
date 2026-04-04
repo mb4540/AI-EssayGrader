@@ -12,9 +12,9 @@ description: Execute one phase of an execution plan, wait for approval, update c
 ### 1. Read the execution plan
 
 Read `PLAN_FILE` in full. Locate:
-- The **Phase Checklist** table (Section 1)
-- The **Implementation Notes** section (Section 2)
-- The **phase section** matching `PHASE_NUMBER` (look for `Phase {PHASE_NUMBER}:` in a heading)
+- The **Phase Checklist** table (under `## Phase Checklist`)
+- The **Implementation Notes** section (under `## Implementation Notes (deviations from plan)`)
+- The **phase section** matching `PHASE_NUMBER` (look for `Phase {PHASE_NUMBER}:` in a heading — note: phase headings are prefixed with an outer section number, e.g., `## 3. Phase 1:`, `## 4. Phase 2:`, etc.)
 - All prior phases' **Implementation Notes** subsections to understand the as-built state
 
 ### 2. Check prerequisites
@@ -55,9 +55,9 @@ Edit the Phase Checklist table: set `Phase {PHASE_NUMBER}` status to `COMPLETE` 
 
 Update **two** places:
 
-1. **Per-phase notes** — Edit the `### X.Y Implementation Notes` subsection at the bottom of the phase section. Replace the placeholder text with a concise summary of what was actually built (file names, line counts), any issues encountered and how they were resolved, and anything the next phase should know.
+1. **Per-phase notes** — Edit the `### {OUTER}.3 Implementation Notes` subsection at the bottom of the phase section (e.g., `### 3.3 Implementation Notes` for Phase 1, `### 4.3 Implementation Notes` for Phase 2, etc.). Replace the placeholder text with a concise summary of what was actually built (file names, line counts), any issues encountered and how they were resolved, and anything the next phase should know.
 
-2. **Top-level deviations** — Append to **Section 2. Implementation Notes (deviations from plan)** at the top of the plan file. Add a `**Phase {PHASE_NUMBER}:**` heading followed by bullet points for any deviations from the plan and why, fixes applied during review, and anything that changes assumptions for later phases. If there were no deviations, write `**Phase {PHASE_NUMBER}:** No deviations.`
+2. **Top-level deviations** — Append to the `## Implementation Notes (deviations from plan)` section near the top of the plan file. Add a `**Phase {PHASE_NUMBER}:**` heading followed by bullet points for any deviations from the plan and why, fixes applied during review, and anything that changes assumptions for later phases. If there were no deviations, write `**Phase {PHASE_NUMBER}:** No deviations.`
 
 ### 9. Present for review
 

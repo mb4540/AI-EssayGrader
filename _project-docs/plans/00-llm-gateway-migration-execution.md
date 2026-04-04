@@ -41,7 +41,7 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 
 | Phase | Description | Status | Commit Hash | Approved By | Date |
 |---|---|---|---|---|---|
-| Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `NOT STARTED` | | | |
+| Phase 1 | Upgrade Gemini SDK and rewrite GeminiProvider | `IN PROGRESS` | | | |
 | Phase 2 | Update OpenAI provider to zero-config | `NOT STARTED` | | | |
 | Phase 3 | Consolidate hardcoded Gemini functions into factory | `NOT STARTED` | | | |
 | Phase 4 | Consolidate enhance-rubric functions to use factory | `NOT STARTED` | | | |
