@@ -45,8 +45,8 @@ Update this checklist after each phase completes. Mark `APPROVED` only after hum
 |---|---|---|---|---|---|
 | Phase 1 | Create shared model registry and types | `APPROVED` | 543721c | Mike Berry | 2026-04-04 14:07 CDT |
 | Phase 2 | GPT-5+ parameter handling in OpenAIProvider | `APPROVED` | 8bce009 | Mike Berry | 2026-04-04 14:11 CDT |
-| Phase 3 | Add multi-turn conversation support to providers | `IN PROGRESS` | | | |
-| Phase 4 | Add streaming support (`generateStream`) | `NOT STARTED` | | | |
+| Phase 3 | Add multi-turn conversation support to providers | `APPROVED` | 2036d83 | Mike Berry | 2026-04-04 14:17 CDT |
+| Phase 4 | Add streaming support (`generateStream`) | `IN PROGRESS` | | | |
 | Phase 5 | Update Settings UI with model selector dropdown | `NOT STARTED` | | | |
 | Phase 6 | Create AI Gateway rules file | `NOT STARTED` | | | |
 | Phase 7 | Update health-check, .env.example, and documentation | `NOT STARTED` | | | |
@@ -63,6 +63,8 @@ Record deviations here after each phase so subsequent phases can account for the
 **Phase 1:** No deviations. Created `models.ts` with 16 models (7 OpenAI, 4 Gemini, 5 Anthropic) and updated `factory.ts` with model/provider mismatch validation. No barrel `index.ts` exists — callers import directly.
 
 **Phase 2:** No deviations.
+
+**Phase 3:** No deviations. `annotation-chat.ts` uses single-turn only — no migration needed (backward compatible).
 
 ---
 
@@ -574,7 +576,17 @@ Review `annotation-chat.ts` — if it constructs a conversation context, refacto
 
 ### 5.3 Implementation Notes
 
-_(to be filled during execution)_
+**Files modified (4):**
+- `netlify/functions/lib/llm/types.ts` — Added `LLMMessage` interface (`role: 'system' | 'user' | 'assistant'`, `content: string`). Added optional `messages?: LLMMessage[]` to `LLMRequest`. 31 → 37 lines.
+- `netlify/functions/lib/llm/openai-provider.ts` — `generate()` now builds messages from `request.messages` if provided, else falls back to single-turn `systemMessage`/`userMessage`. 51 → 55 lines.
+- `netlify/functions/lib/llm/anthropic-provider.ts` — `generate()` extracts system message from `request.messages` array and separates non-system messages for Anthropic API. 38 → 50 lines.
+- `netlify/functions/lib/llm/gemini-provider.ts` — `generate()` maps `request.messages` to Gemini format (`assistant` → `model` role), extracts system instruction from messages array. 44 → 61 lines.
+
+**Dependencies added:** None.
+
+**Deviations from plan:** Step 5 (migrate `annotation-chat.ts`) skipped — it uses single-turn only, no conversation context to migrate. Fully backward compatible.
+
+**Verification:** `npx tsc --noEmit` — zero errors. `npm run build` — succeeds (index.js 1,628 kB). `npm test` — 588 passing, 4 skipped, 2 pre-existing failures. No regressions.
 
 ---
 

@@ -31,6 +31,12 @@ export interface LLMResponse {
   };
 }
 
+export interface LLMStreamChunk {
+  content: string;
+  done: boolean;
+}
+
 export interface LLMProvider {
   generate(request: LLMRequest): Promise<LLMResponse>;
+  generateStream?(request: LLMRequest): AsyncIterable<LLMStreamChunk>;
 }

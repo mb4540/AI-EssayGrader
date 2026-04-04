@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { LLMProvider, LLMRequest, LLMResponse } from './types';
+import { LLMProvider, LLMRequest, LLMResponse, LLMStreamChunk } from './types';
 
 export class GeminiProvider implements LLMProvider {
     private client: GoogleGenAI;
@@ -10,7 +10,7 @@ export class GeminiProvider implements LLMProvider {
         this.model = model;
     }
 
-    async generate(request: LLMRequest): Promise<LLMResponse> {
+    private buildContents(request: LLMRequest): any[] {
         const contents: any[] = [];
 
         if (request.messages) {
@@ -34,9 +34,18 @@ export class GeminiProvider implements LLMProvider {
             }
         }
 
-        const systemInstruction = request.messages
+        return contents;
+    }
+
+    private getSystemInstruction(request: LLMRequest): string {
+        return request.messages
             ? request.messages.find(m => m.role === 'system')?.content || request.systemMessage
             : request.systemMessage;
+    }
+
+    async generate(request: LLMRequest): Promise<LLMResponse> {
+        const contents = this.buildContents(request);
+        const systemInstruction = this.getSystemInstruction(request);
 
         const result = await this.client.models.generateContent({
             model: this.model,
@@ -56,5 +65,26 @@ export class GeminiProvider implements LLMProvider {
                 completionTokens: result.usageMetadata?.candidatesTokenCount ?? 0,
             }
         };
+    }
+
+    async *generateStream(request: LLMRequest): AsyncIterable<LLMStreamChunk> {
+        const contents = this.buildContents(request);
+        const systemInstruction = this.getSystemInstruction(request);
+
+        const stream = await this.client.models.generateContentStream({
+            model: this.model,
+            config: {
+                systemInstruction,
+                responseMimeType: 'text/plain',
+                temperature: request.temperature,
+                maxOutputTokens: request.maxOutputTokens,
+            },
+            contents,
+        });
+
+        for await (const chunk of stream) {
+            yield { content: chunk.text ?? '', done: false };
+        }
+        yield { content: '', done: true };
     }
 }
